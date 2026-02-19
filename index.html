@@ -88,11 +88,14 @@
             <p class="section-label">Contact</p>
             <h2>First Contact</h2>
             <p style="color: var(--muted); margin-top: 8px;">Questions, feedback, or just want to talk about the night sky?</p>
-            <!-- Sign up at formspree.io and replace YOUR_FORM_ID below -->
-            <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+            <form action="https://api.web3forms.com/submit" method="POST">
+                <input type="hidden" name="access_key" value="82d70441-be9a-4f81-a119-607cf1d0f62a">
+                <input type="hidden" name="subject" value="Message from sidestepstudio.com">
+                <input type="hidden" name="redirect" value="https://sidestepstudio.com">
                 <input type="text" name="name" placeholder="Your name" required>
                 <input type="email" name="email" placeholder="Your email" required>
                 <textarea name="message" placeholder="Your message" required></textarea>
+                <div style="display:none"><input type="checkbox" name="botcheck"></div>
                 <button type="submit">Send Message</button>
             </form>
         </section>
