@@ -1,0 +1,269 @@
+/* ===== Sidestep Studio ===== */
+
+:root {
+    --bg: #0a0c12;
+    --bg2: #111520;
+    --accent: #5b9cf6;
+    --accent2: #a78bfa;
+    --text: #e8eaf0;
+    --muted: #8892a4;
+    --border: #1e2535;
+    --card: #131825;
+    --radius: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 17px;
+    line-height: 1.7;
+}
+
+/* ── Layout ── */
+
+.container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* ── Header ── */
+
+header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 0;
+}
+
+header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.logo span { color: var(--accent); }
+
+nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-left: 24px;
+    transition: color 0.2s;
+}
+
+nav a:hover { color: var(--text); }
+
+/* ── Hero ── */
+
+.hero {
+    padding: 80px 0 60px;
+    text-align: center;
+}
+
+.hero .eyebrow {
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+}
+
+.hero h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--text) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+/* ── Section ── */
+
+section {
+    padding: 60px 0;
+    border-top: 1px solid var(--border);
+}
+
+section h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.section-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+}
+
+/* ── Card ── */
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-top: 24px;
+}
+
+.card h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.card p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+
+.card .tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    background: rgba(167, 139, 250, 0.1);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    margin-bottom: 12px;
+}
+
+.card .tag.blue {
+    color: var(--accent);
+    background: rgba(91, 156, 246, 0.1);
+    border-color: rgba(91, 156, 246, 0.2);
+}
+
+.app-store-btn {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 10px 20px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.app-store-btn:hover { opacity: 0.85; }
+
+/* ── Features list ── */
+
+.features {
+    list-style: none;
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.features li {
+    font-size: 0.92rem;
+    color: var(--muted);
+    padding-left: 16px;
+    position: relative;
+}
+
+.features li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+}
+
+/* ── Contact form ── */
+
+form {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+form input,
+form textarea {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+}
+
+form input:focus,
+form textarea:focus {
+    border-color: var(--accent);
+}
+
+form textarea { min-height: 130px; resize: vertical; }
+
+form button {
+    align-self: flex-start;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 12px 28px;
+    transition: opacity 0.2s;
+}
+
+form button:hover { opacity: 0.85; }
+
+/* ── Footer ── */
+
+footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+footer a { color: var(--muted); text-decoration: none; }
+footer a:hover { color: var(--text); }
+footer .sep { margin: 0 10px; }
+
+/* ── Privacy page ── */
+
+.prose h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+.prose .updated { color: var(--muted); font-size: 0.88rem; margin-bottom: 40px; }
+.prose h2 { font-size: 1.1rem; font-weight: 700; margin: 32px 0 10px; color: var(--accent); }
+.prose p { color: var(--muted); margin-bottom: 14px; }
+.prose ul { color: var(--muted); padding-left: 20px; margin-bottom: 14px; }
+.prose ul li { margin-bottom: 6px; }
+.prose strong { color: var(--text); }
