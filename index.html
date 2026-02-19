@@ -34,7 +34,12 @@
         <section id="projects">
             <p class="section-label">Photography</p>
             <h2>Astrophotography</h2>
-            <p style="color: var(--muted); margin-top: 8px;">Deep-sky imaging from dark sites across the Southeast — nebulae, galaxies, and star clusters captured under dark skies.</p>
+            <div class="thumbs" style="display:flex; gap:12px; margin-top:16px;">
+                <div style="flex:1; aspect-ratio:4/3; background:var(--bg2); border:1px solid var(--border); border-radius:8px;"></div>
+                <div style="flex:1; aspect-ratio:4/3; background:var(--bg2); border:1px solid var(--border); border-radius:8px;"></div>
+                <div style="flex:1; aspect-ratio:4/3; background:var(--bg2); border:1px solid var(--border); border-radius:8px;"></div>
+            </div>
+            <p style="margin-top:14px;"><a href="/astrophotography" style="color:var(--accent); text-decoration:none; font-size:0.95rem;">View gallery →</a></p>
             <div class="card">
                 <span class="tag blue">@see_theShow</span>
                 <h3>See the Show</h3>
@@ -46,11 +51,11 @@
 
         <!-- Moondance -->
         <section>
-            <p class="section-label">iOS App</p>
+            <p class="section-label">iOS Apps</p>
             <h2>Moondance</h2>
             <p style="color: var(--muted); margin-top: 8px;">A configurable, long-range, multi-target, moon-aware, deep-sky imaging session planner.</p>
             <div class="card">
-                <span class="tag blue">@SidestepStudio</span>
+                <a class="tag blue" href="https://x.com/SidestepStudio" target="_blank" rel="noopener" style="text-decoration:none;">@SidestepStudio</a>
                 <h3>Moondance Astrophotography Planner</h3>
                 <ul class="features">
                     <li>Plan imaging sessions weeks or months in advance</li>
