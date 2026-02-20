@@ -317,7 +317,7 @@ footer .sep { margin: 0 10px; }
         padding-bottom: 8px;
     }
 
-    .thumbs img {
+    .thumbs a {
         flex: 0 0 72vw !important;
         width: 72vw !important;
     }
