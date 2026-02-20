@@ -17,12 +17,23 @@
 html { scroll-behavior: smooth; }
 
 body {
-    background: var(--bg);
+    background: var(--bg) url('../images/moondanceBG.jpg') no-repeat center top / cover fixed;
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 17px;
     line-height: 1.7;
 }
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 12, 18, 0.82);
+    z-index: 0;
+    pointer-events: none;
+}
+
+header, main, footer { position: relative; z-index: 1; }
 
 /* ── Layout ── */
 
