@@ -270,6 +270,68 @@ footer a { color: var(--muted); text-decoration: none; }
 footer a:hover { color: var(--text); }
 footer .sep { margin: 0 10px; }
 
+/* ── Mobile ── */
+
+@media (max-width: 620px) {
+
+    body {
+        background-attachment: scroll; /* iOS Safari fix */
+        font-size: 16px;
+    }
+
+    header .container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    nav a {
+        margin-left: 0;
+        margin-right: 16px;
+    }
+
+    .hero {
+        padding: 24px 0 12px;
+    }
+
+    .hero h2 {
+        font-size: 1.5rem !important;
+    }
+
+    section {
+        padding: 36px 0;
+    }
+
+    section h2 {
+        font-size: 1.3rem !important;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .thumbs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 8px;
+    }
+
+    .thumbs img {
+        flex: 0 0 72vw !important;
+        width: 72vw !important;
+    }
+
+    .app-store-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    form button {
+        width: 100%;
+    }
+}
+
 /* ── Privacy page ── */
 
 .prose h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
