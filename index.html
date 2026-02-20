@@ -11,7 +11,7 @@
 
 <header>
     <div class="container">
-        <a class="logo" href="/">Sidestep<span>Studio</span><br><small style="font-size:0.65em; font-weight:400; letter-spacing:normal; color:var(--muted);">by Peter F Wingard</small></a>
+        <a class="logo" href="/">@see_theShow's Sidestep<span>Studio</span></a>
         <nav>
             <a href="#projects">Projects</a>
             <a href="#contact">Contact</a>
@@ -25,53 +25,64 @@
 
         <!-- Hero -->
         <section class="hero" style="border-top: none;">
-            <h1>Author, Astrophotographer,<br>and Mobile App Developer</h1>
-            <p>Creator of Moondance and See the Show</p>
+            <h2>Astrophotography, Mobile App Development, and Occasional Works of Science Fiction</h2>
         </section>
 
         <!-- Astrophotography -->
         <section id="projects">
-            <h2 style="font-weight:700; color:#fff;">See the Show!</h2>
+            <h2 style="font-weight:700; color:#fff;">Astrophotography</h2>
             <div class="card">
                 <a class="tag blue" href="https://x.com/see_theShow" target="_blank" rel="noopener" style="text-decoration:none;">@see_theShow</a>
-                <p>Follow along an astrophotographer and see the nighttime show through an astrophotographer's lens.</p>
+                <p>Follow along on X an astrophotographer and see the nighttime show through his lens.</p>
             </div>
             <div class="thumbs" style="display:flex; gap:12px; margin-top:16px;">
                 <div style="flex:1; aspect-ratio:4/3; background:var(--bg2); border:1px solid var(--border); border-radius:8px;"></div>
                 <div style="flex:1; aspect-ratio:4/3; background:var(--bg2); border:1px solid var(--border); border-radius:8px;"></div>
                 <div style="flex:1; aspect-ratio:4/3; background:var(--bg2); border:1px solid var(--border); border-radius:8px;"></div>
             </div>
-            <p style="margin-top:14px;"><a href="/astrophotography" style="color:var(--accent); text-decoration:none; font-size:0.95rem;">View gallery →</a></p>
+            <p style="margin-top:14px;"><a href="#" onclick="showComingSoon('The gallery is on its way.'); return false;" style="color:var(--accent); text-decoration:none; font-size:0.95rem;">View gallery →</a></p>
         </section>
+
+        <!-- Coming Soon Modal -->
+        <div id="coming-soon" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:100; align-items:center; justify-content:center;" onclick="this.style.display='none'">
+            <div style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:40px 48px; text-align:center;" onclick="event.stopPropagation()">
+                <h3 style="margin-bottom:10px;">Coming Soon</h3>
+                <p id="coming-soon-msg" style="color:var(--muted); font-size:0.95rem;"></p>
+                <button onclick="document.getElementById('coming-soon').style.display='none'" style="margin-top:24px; background:var(--accent); border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:0.9rem; font-weight:600; padding:10px 24px;">OK</button>
+            </div>
+        </div>
+        <script>
+            function showComingSoon(msg) {
+                document.getElementById('coming-soon-msg').textContent = msg;
+                document.getElementById('coming-soon').style.display = 'flex';
+            }
+        </script>
 
         <!-- Moondance -->
         <section>
-            <p class="section-label">iOS App</p>
-            <h2>Moondance</h2>
+            <h2 style="font-weight:700; color:#fff;">Mobile Apps</h2>
+            <p class="section-label">Sidestep Studio's Moondance</p>
             <p style="color: var(--muted); margin-top: 8px;">A configurable, long-range, multi-target, moon-aware, deep-sky imaging session planner.</p>
             <div class="card">
-                <a class="tag blue" href="https://x.com/SidestepStudio" target="_blank" rel="noopener" style="text-decoration:none;">@SidestepStudio</a>
-                <h3>Moondance Astrophotography Planner</h3>
                 <ul class="features">
-                    <li>Plan imaging sessions weeks or months in advance</li>
-                    <li>Moon-aware scheduling — find the dark hours automatically</li>
-                    <li>Multi-target comparison with visibility bar charts</li>
-                    <li>Smart suggestions that fill gaps in your night</li>
-                    <li>Import custom targets via CSV</li>
-                    <li>Configurable minimum altitude and horizon profiles</li>
+                    <li>Plans imaging sessions weeks or months in advance</li>
+                    <li>Finds the dark hours automatically with moon-aware scheduling</li>
+                    <li>Graphically compares the availability and visibility of multiple targets simultaneously against the moon</li>
+                    <li>Provides smart suggestions to fill gaps in your imaging schedule</li>
+                    <li>Imports custom targets via CSV</li>
+                    <li>Configures altitudinal clearances using eight compass points</li>
                     <li>And more</li>
                 </ul>
-                <a class="app-store-btn" href="https://apps.apple.com/app/moondance-astrophotography/id6738912142" target="_blank" rel="noopener">Download on the App Store</a>
+                <a class="app-store-btn" href="#" onclick="showComingSoon('The iOS app is coming soon.'); return false;">Download on the App Store</a>
             </div>
         </section>
 
         <!-- Book -->
         <section>
-            <p class="section-label">Works of Fiction</p>
-            <h2>See the Show!</h2>
+            <h2 style="font-weight:700; color:#fff;">Works of Fiction</h2>
             <div class="card">
+                <p class="section-label" style="text-transform:none;">See the Show! &nbsp;·&nbsp; Coming to reading glasses soon.</p>
                 <span class="tag">Fiction · Sci-Fi</span>
-                <h3>Coming to reading glasses soon.</h3>
                 <p>
                     After a near-extinction-level event, the country appears back to normal. It is far from it.
                     Strangers are still killing strangers over resources that are no longer in short supply —
@@ -82,6 +93,7 @@
                     <em>See the Show!</em> tells the story of an unlikely pair: a gun-toting clown and his female AI sidekick.
                     Alone, the two go up against those who would murder others in an undeclared stranger war.
                 </p>
+                <a class="app-store-btn" href="#" onclick="showComingSoon('Available soon.'); return false;">Get Your Copy</a>
             </div>
         </section>
 
@@ -98,7 +110,7 @@
                 <div style="display:none"><input type="checkbox" name="botcheck"></div>
                 <button type="submit">Send Message</button>
             </form>
-            <p style="margin-top: 28px;">Follow <a href="https://x.com/SidestepStudio" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">Sidestep Studio</a> on X</p>
+            <p style="margin-top: 28px;">Follow <a href="https://x.com/SidestepStudio" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">SidestepStudio</a> on X</p>
             <p style="margin-top: 16px; color: var(--muted); font-size: 0.85rem;">
                 &copy; 2026 Sidestep Studio
                 <span style="margin: 0 10px;">·</span>

@@ -169,6 +169,7 @@ section h2 {
     color: var(--accent);
     background: rgba(91, 156, 246, 0.1);
     border-color: rgba(91, 156, 246, 0.2);
+    text-transform: none;
 }
 
 .app-store-btn {
