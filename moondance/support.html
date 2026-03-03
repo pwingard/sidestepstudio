@@ -42,8 +42,18 @@
             <h2>Report a Bug</h2>
             <p>The easiest way to report a problem is from inside the app. Open <strong>Settings → Report a Bug</strong> and your email client will open with device and app information pre-filled. Describe what happened and send — we'll follow up.</p>
 
-            <h2>Contact Us Directly</h2>
-            <p>You can also reach us directly at <a href="mailto:firstcontact@sidestepstudio.com" style="color: var(--accent);">firstcontact@sidestepstudio.com</a>. Include your iOS version and a description of the issue and we'll get back to you.</p>
+            <h2>Contact Us</h2>
+            <p>Use the form below and we'll get back to you. Include your iOS version and a description of the issue.</p>
+            <form action="https://api.web3forms.com/submit" method="POST" style="margin-top: 16px;">
+                <input type="hidden" name="access_key" value="82d70441-be9a-4f81-a119-607cf1d0f62a">
+                <input type="hidden" name="subject" value="Moondance Support Request">
+                <input type="hidden" name="redirect" value="https://sidestepstudio.com/moondance/support.html">
+                <input type="text" name="name" placeholder="Your name" required>
+                <input type="email" name="email" placeholder="Your email" required>
+                <textarea name="message" placeholder="Describe the issue" required></textarea>
+                <div style="display:none"><input type="checkbox" name="botcheck"></div>
+                <button type="submit">Send</button>
+            </form>
 
             <h2>User Guide</h2>
             <p>A full walkthrough of the app is available in the <a href="/moondance/user-guide.pdf" style="color: var(--accent);">Moondance User Guide (PDF)</a>.</p>
