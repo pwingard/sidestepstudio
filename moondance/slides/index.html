@@ -136,6 +136,12 @@
     color: var(--ss-muted);
     font-weight: 400;
     letter-spacing: 0.3px;
+    text-decoration: none;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  a.chip:hover, a.chip:active {
+    color: var(--ss-accent);
+    border-color: var(--ss-accent);
   }
   .chip .dot {
     width: 5px;
@@ -397,9 +403,9 @@
         <div class="label">Introduction</div>
         <p>Peter F. Wingard</p>
         <div class="chips">
-          <span class="chip"><span class="dot"></span>sidestepstudio.com</span>
-          <span class="chip"><span class="dot"></span>@see_theshow · X</span>
-          <span class="chip"><span class="dot"></span>@see_theshow · YouTube</span>
+          <a class="chip" href="https://sidestepstudio.com" target="_blank" rel="noopener"><span class="dot"></span>sidestepstudio.com</a>
+          <a class="chip" href="https://x.com/see_theshow" target="_blank" rel="noopener"><span class="dot"></span>@see_theshow · X</a>
+          <a class="chip" href="https://www.youtube.com/@See_theShow" target="_blank" rel="noopener"><span class="dot"></span>@See_theShow · YouTube</a>
         </div>
       </div>
       <div class="pullquote">
@@ -440,6 +446,11 @@
       <img class="moon" src="moon.jpg" alt="Moondance">
       <h1><span class="accent">Moon</span>dance</h1>
       <p class="tagline">Build Collections · Image Methodically</p>
+      <div class="chips">
+        <a class="chip" href="https://sidestepstudio.com" target="_blank" rel="noopener"><span class="dot"></span>sidestepstudio.com</a>
+        <a class="chip" href="https://x.com/see_theshow" target="_blank" rel="noopener"><span class="dot"></span>@see_theshow · X</a>
+        <a class="chip" href="https://www.youtube.com/@See_theShow" target="_blank" rel="noopener"><span class="dot"></span>@See_theShow · YouTube</a>
+      </div>
     </div>
     <div class="divider"></div>
     <div class="body">
