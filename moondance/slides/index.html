@@ -68,6 +68,38 @@
     gap: 12px;
   }
 
+  .divider {
+    height: 1px;
+    width: 100%;
+    background: var(--ss-border);
+    margin: 4px 0 8px;
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+  }
+
+  .label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ss-accent);
+    font-weight: 500;
+  }
+
+  .body p {
+    font-size: clamp(15px, 3.8vw, 19px);
+    line-height: 1.5;
+    color: var(--ss-text);
+    font-weight: 300;
+  }
+
+  .body p .muted { color: var(--ss-muted); }
+  .body p strong { color: var(--ss-accent); font-weight: 500; }
+
   .eyebrow {
     font-size: 13px;
     letter-spacing: 4px;
@@ -217,12 +249,17 @@
       <h1><span class="accent">Moon</span>dance</h1>
       <p class="tagline">Build Collections · Maximize Darkness · Image Methodically</p>
     </div>
-    <ul>
-      <!-- Add bullets here, e.g.:
-      <li>Your talking point</li>
-      <li>Another talking point</li>
-      -->
-    </ul>
+    <div class="divider"></div>
+    <div class="body">
+      <div>
+        <div class="label">Introduction</div>
+        <p>Peter F. Wingard &middot; <span class="muted">sidestepstudio.com</span> &middot; <span class="muted">@see_theshow on X &amp; YouTube</span></p>
+      </div>
+      <div>
+        <div class="label">What Moondance is</div>
+        <p>An iPhone astrophotography planning app that lets you methodically build <strong>collections</strong> of objects to image in the night sky.</p>
+      </div>
+    </div>
   </section>
 
   <!--
