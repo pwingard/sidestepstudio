@@ -56,9 +56,9 @@
   .slide.center { align-items: center; text-align: center; }
   .slide.middle { justify-content: center; }
 
-  /* Groups moon + title + tagline into the top third of the slide */
+  /* Groups moon + title + tagline into the top block of the slide */
   .hero {
-    height: 33vh;
+    min-height: 33vh;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -67,6 +67,7 @@
     text-align: center;
     gap: 12px;
   }
+  .hero .chips { justify-content: center; margin-top: 4px; }
 
   .divider {
     height: 1px;
@@ -162,6 +163,45 @@
     font-weight: 400;
   }
 
+  /* Numbered step list */
+  ol.steps {
+    list-style: none;
+    counter-reset: step;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+  ol.steps li {
+    counter-increment: step;
+    padding-left: 44px;
+    font-size: clamp(15px, 3.8vw, 18px);
+    line-height: 1.5;
+    color: var(--ss-text);
+    font-weight: 300;
+    position: relative;
+  }
+  ol.steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid var(--ss-accent);
+    color: var(--ss-accent);
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 12px rgba(91, 156, 246, 0.2);
+  }
+  ol.steps li .muted { color: var(--ss-muted); font-size: 0.88em; }
+  ol.steps li strong { color: var(--ss-accent); font-weight: 500; }
+
   /* Entrance animation */
   .slide > * {
     opacity: 0;
@@ -171,6 +211,7 @@
   .slide > *:nth-child(1) { animation-delay: 0.05s; }
   .slide > *:nth-child(2) { animation-delay: 0.20s; }
   .slide > *:nth-child(3) { animation-delay: 0.35s; }
+  .slide > *:nth-child(4) { animation-delay: 0.50s; }
 
   @keyframes slide-in {
     to { opacity: 1; transform: translateY(0); }
@@ -383,6 +424,29 @@
     </section>
     ========================================================================
   -->
+
+  <!-- SLIDE 2 — Quick Start -->
+  <section class="slide">
+    <div class="hero">
+      <img class="moon" src="moon.jpg" alt="Moondance">
+      <h1><span class="accent">Moon</span>dance</h1>
+      <p class="tagline">Build Collections · Image Methodically</p>
+      <div class="chips">
+        <span class="chip"><span class="dot"></span>sidestepstudio.com</span>
+        <span class="chip"><span class="dot"></span>@see_theshow · X</span>
+        <span class="chip"><span class="dot"></span>@see_theshow · YouTube</span>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="body">
+      <div class="label">Quick Start</div>
+      <ol class="steps">
+        <li>Open the app.</li>
+        <li>Go to <strong>Settings</strong> at the bottom and set your location. <span class="muted">(Other settings covered later.)</span></li>
+        <li>Go to <strong>Sky Map</strong> and start building collections.</li>
+      </ol>
+    </div>
+  </section>
 
 </div>
 
