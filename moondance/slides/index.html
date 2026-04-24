@@ -144,6 +144,24 @@
     box-shadow: 0 0 6px var(--ss-accent);
   }
 
+  .pullquote {
+    border-left: 2px solid var(--ss-accent);
+    padding: 4px 0 4px 16px;
+    margin: 4px 0;
+  }
+  .pullquote p {
+    font-style: italic;
+    font-size: clamp(15px, 3.8vw, 18px);
+    color: var(--ss-text);
+    font-weight: 300;
+    line-height: 1.45;
+  }
+  .pullquote em {
+    font-style: italic;
+    color: var(--ss-accent);
+    font-weight: 400;
+  }
+
   /* Entrance animation */
   .slide > * {
     opacity: 0;
@@ -333,6 +351,9 @@
           <span class="chip"><span class="dot"></span>@see_theshow · X</span>
           <span class="chip"><span class="dot"></span>@see_theshow · YouTube</span>
         </div>
+      </div>
+      <div class="pullquote">
+        <p>An astrophotography app <em>built by an astrophotographer</em> for astrophotographers.</p>
       </div>
       <div>
         <div class="label">What Moondance is</div>
