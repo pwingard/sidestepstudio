@@ -71,34 +71,92 @@
   .divider {
     height: 1px;
     width: 100%;
-    background: var(--ss-border);
+    background: linear-gradient(90deg,
+      transparent 0%,
+      var(--ss-border) 20%,
+      var(--ss-accent) 50%,
+      var(--ss-border) 80%,
+      transparent 100%);
+    opacity: 0.6;
     margin: 4px 0 8px;
   }
 
   .body {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 24px;
     width: 100%;
   }
 
   .label {
-    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
     letter-spacing: 3px;
     text-transform: uppercase;
     color: var(--ss-accent);
-    font-weight: 500;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .label::before {
+    content: "";
+    width: 18px;
+    height: 1px;
+    background: var(--ss-accent);
   }
 
   .body p {
-    font-size: clamp(15px, 3.8vw, 19px);
-    line-height: 1.5;
+    font-size: clamp(15px, 3.8vw, 18px);
+    line-height: 1.55;
     color: var(--ss-text);
     font-weight: 300;
   }
 
   .body p .muted { color: var(--ss-muted); }
   .body p strong { color: var(--ss-accent); font-weight: 500; }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--ss-border);
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--ss-muted);
+    font-weight: 400;
+    letter-spacing: 0.3px;
+  }
+  .chip .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--ss-accent);
+    box-shadow: 0 0 6px var(--ss-accent);
+  }
+
+  /* Entrance animation */
+  .slide > * {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: slide-in 0.6s ease-out forwards;
+  }
+  .slide > *:nth-child(1) { animation-delay: 0.05s; }
+  .slide > *:nth-child(2) { animation-delay: 0.20s; }
+  .slide > *:nth-child(3) { animation-delay: 0.35s; }
+
+  @keyframes slide-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
 
   .eyebrow {
     font-size: 13px;
@@ -108,14 +166,12 @@
     font-weight: 500;
   }
 
-  h1 {
-    font-size: clamp(42px, 10vw, 72px);
-    line-height: 1.05;
-    font-weight: 200;
-    letter-spacing: -1px;
+  h1 .accent {
+    background: linear-gradient(135deg, var(--ss-accent) 0%, var(--ss-accent2) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
-
-  h1 .accent { color: var(--ss-accent); }
   h1 .accent2 { color: var(--ss-accent2); }
 
   h2 {
@@ -126,9 +182,10 @@
   }
 
   .tagline {
-    font-size: clamp(18px, 4vw, 24px);
+    font-size: clamp(13px, 3vw, 16px);
     color: var(--ss-muted);
-    font-weight: 300;
+    font-weight: 400;
+    letter-spacing: 1px;
     line-height: 1.4;
   }
 
@@ -167,11 +224,28 @@
   }
 
   .moon {
-    width: clamp(80px, 22vw, 120px);
-    height: clamp(80px, 22vw, 120px);
+    width: clamp(80px, 20vw, 110px);
+    height: clamp(80px, 20vw, 110px);
     border-radius: 22%;
     object-fit: cover;
-    box-shadow: 0 0 40px rgba(255, 200, 90, 0.25);
+    box-shadow:
+      0 0 60px rgba(255, 200, 90, 0.22),
+      0 0 120px rgba(255, 200, 90, 0.08),
+      0 4px 16px rgba(0, 0, 0, 0.5);
+    animation: moon-float 6s ease-in-out infinite;
+  }
+
+  @keyframes moon-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+
+  h1 {
+    font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: clamp(40px, 9vw, 60px);
+    line-height: 1;
+    font-weight: 200;
+    letter-spacing: -2px;
   }
 
   .cta {
@@ -253,7 +327,12 @@
     <div class="body">
       <div>
         <div class="label">Introduction</div>
-        <p>Peter F. Wingard &middot; <span class="muted">sidestepstudio.com</span> &middot; <span class="muted">@see_theshow on X &amp; YouTube</span></p>
+        <p>Peter F. Wingard</p>
+        <div class="chips">
+          <span class="chip"><span class="dot"></span>sidestepstudio.com</span>
+          <span class="chip"><span class="dot"></span>@see_theshow · X</span>
+          <span class="chip"><span class="dot"></span>@see_theshow · YouTube</span>
+        </div>
       </div>
       <div>
         <div class="label">What Moondance is</div>
