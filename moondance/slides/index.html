@@ -56,6 +56,18 @@
   .slide.center { align-items: center; text-align: center; }
   .slide.middle { justify-content: center; }
 
+  /* Groups moon + title + tagline into the top third of the slide */
+  .hero {
+    height: 33vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+  }
+
   .eyebrow {
     font-size: 13px;
     letter-spacing: 4px;
@@ -199,11 +211,13 @@
 <div class="deck" id="deck">
 
   <!-- SLIDE 1 -->
-  <section class="slide center middle">
-    <img class="moon" src="moon.jpg" alt="Moondance">
-    <h1><span class="accent">Moon</span>dance</h1>
-    <p class="tagline">Build Collections · Maximize Darkness · Image Methodically</p>
-    <ul style="align-self: stretch; text-align: left; margin-top: 28px;">
+  <section class="slide">
+    <div class="hero">
+      <img class="moon" src="moon.jpg" alt="Moondance">
+      <h1><span class="accent">Moon</span>dance</h1>
+      <p class="tagline">Build Collections · Maximize Darkness · Image Methodically</p>
+    </div>
+    <ul>
       <!-- Add bullets here, e.g.:
       <li>Your talking point</li>
       <li>Another talking point</li>
