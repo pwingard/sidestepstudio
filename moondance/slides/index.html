@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Moondance">
+<meta name="theme-color" content="#0a0c12">
+<title>Moondance Talking Points</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<style>
+  :root {
+    --ss-bg:       #0a0c12;
+    --ss-accent:   #5b9cf6;
+    --ss-accent2:  #a78bfa;
+    --ss-text:     #e8eaf0;
+    --ss-muted:    #abb4c4;
+    --ss-border:   #1e2535;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: radial-gradient(ellipse at 50% 30%, #121826 0%, var(--ss-bg) 70%);
+    color: var(--ss-text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Helvetica Neue", sans-serif;
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: pan-y;
+  }
+
+  .deck {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    transition: transform 0.35s cubic-bezier(0.22, 0.8, 0.36, 1);
+  }
+
+  .slide {
+    flex: 0 0 100%;
+    height: 100%;
+    padding: max(env(safe-area-inset-top), 40px) 32px max(env(safe-area-inset-bottom), 60px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .slide.center { align-items: center; text-align: center; }
+
+  .eyebrow {
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--ss-accent);
+    font-weight: 500;
+  }
+
+  h1 {
+    font-size: clamp(42px, 10vw, 72px);
+    line-height: 1.05;
+    font-weight: 200;
+    letter-spacing: -1px;
+  }
+
+  h1 .accent { color: var(--ss-accent); }
+  h1 .accent2 { color: var(--ss-accent2); }
+
+  h2 {
+    font-size: clamp(32px, 7vw, 52px);
+    line-height: 1.1;
+    font-weight: 300;
+    letter-spacing: -0.5px;
+  }
+
+  .tagline {
+    font-size: clamp(18px, 4vw, 24px);
+    color: var(--ss-muted);
+    font-weight: 300;
+    line-height: 1.4;
+  }
+
+  .tagline strong {
+    color: var(--ss-accent);
+    font-weight: 500;
+  }
+
+  ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 12px;
+  }
+
+  li {
+    font-size: clamp(18px, 4.5vw, 26px);
+    line-height: 1.35;
+    color: var(--ss-text);
+    font-weight: 300;
+    padding-left: 28px;
+    position: relative;
+  }
+
+  li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--ss-accent);
+    box-shadow: 0 0 12px var(--ss-accent);
+  }
+
+  .moon {
+    width: clamp(120px, 35vw, 180px);
+    height: clamp(120px, 35vw, 180px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff 0%, #c7d1e0 40%, #6a7a95 80%, #2a3448 100%);
+    box-shadow:
+      0 0 60px rgba(91, 156, 246, 0.35),
+      inset -16px -20px 40px rgba(0, 0, 0, 0.5);
+    margin-bottom: 8px;
+  }
+
+  .cta {
+    margin-top: 16px;
+    padding: 14px 28px;
+    border: 1px solid var(--ss-accent);
+    color: var(--ss-accent);
+    border-radius: 999px;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+
+  .dots {
+    position: fixed;
+    bottom: max(env(safe-area-inset-bottom), 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+    opacity: 0.55;
+    transition: opacity 0.3s;
+  }
+  .dots.hidden { opacity: 0; pointer-events: none; }
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ss-muted);
+    transition: all 0.3s;
+  }
+  .dot.active {
+    background: var(--ss-accent);
+    width: 22px;
+    border-radius: 10px;
+  }
+
+  .brand {
+    position: fixed;
+    top: max(env(safe-area-inset-top), 18px);
+    right: 22px;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ss-muted);
+    opacity: 0.45;
+    z-index: 10;
+    transition: opacity 0.3s;
+  }
+  .brand.hidden { opacity: 0; }
+
+  /* Tap zones for navigation (invisible) */
+  .tap-left, .tap-right {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 35%;
+    z-index: 5;
+  }
+  .tap-left  { left: 0; }
+  .tap-right { right: 0; }
+</style>
+</head>
+<body>
+
+<div class="brand" id="brand">Sidestep Studio</div>
+
+<div class="deck" id="deck">
+
+  <!-- SLIDE 1 -->
+  <section class="slide center">
+    <div class="moon"></div>
+    <h1><span class="accent">Moon</span>dance</h1>
+    <p class="tagline">Build Collections · Maximize Darkness · Image Methodically</p>
+  </section>
+
+  <!--
+    ========================================================================
+    ADD MORE SLIDES BELOW. Each <section class="slide"> is one slide.
+    Add `center` class for centered layout. Examples:
+
+    <section class="slide">
+      <div class="eyebrow">SECTION LABEL</div>
+      <h2>Big headline with an <span class="accent">accent color</span>.</h2>
+      <p class="tagline">Supporting line, or skip this.</p>
+      <ul>
+        <li>Bullet one</li>
+        <li>Bullet two</li>
+      </ul>
+    </section>
+
+    <section class="slide center">
+      <h2>Centered slide.</h2>
+      <div class="cta">Call to action</div>
+    </section>
+    ========================================================================
+  -->
+
+</div>
+
+<div class="tap-left" id="tapLeft"></div>
+<div class="tap-right" id="tapRight"></div>
+
+<div class="dots" id="dots"></div>
+
+<script>
+  const deck     = document.getElementById('deck');
+  const slides   = deck.querySelectorAll('.slide');
+  const dotsWrap = document.getElementById('dots');
+  const brand    = document.getElementById('brand');
+  let current = 0;
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => go(i));
+    dotsWrap.appendChild(d);
+  });
+
+  function go(i) {
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    deck.style.transform = `translateX(-${current * 100}%)`;
+    dotsWrap.querySelectorAll('.dot').forEach((d, idx) => {
+      d.classList.toggle('active', idx === current);
+    });
+  }
+
+  function next() { go(current + 1); }
+  function prev() { go(current - 1); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') next();
+    if (e.key === 'ArrowLeft') prev();
+    if (e.key === 'h') toggleChrome();
+  });
+
+  document.getElementById('tapLeft').addEventListener('click', prev);
+  document.getElementById('tapRight').addEventListener('click', next);
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) dx < 0 ? next() : prev();
+  }, { passive: true });
+
+  let pressTimer;
+  document.addEventListener('touchstart', () => {
+    pressTimer = setTimeout(toggleChrome, 700);
+  }, { passive: true });
+  document.addEventListener('touchend', () => clearTimeout(pressTimer));
+  document.addEventListener('touchmove', () => clearTimeout(pressTimer), { passive: true });
+
+  function toggleChrome() {
+    dotsWrap.classList.toggle('hidden');
+    brand.classList.toggle('hidden');
+  }
+</script>
+
+</body>
+</html>
