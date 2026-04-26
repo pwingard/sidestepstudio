@@ -32,15 +32,15 @@
     margin-bottom: 28px;
   }
   .panel {
-    margin-bottom: 36px;
+    margin-bottom: 32px;
     border-top: 1px solid var(--ss-border);
-    padding-top: 20px;
+    padding-top: 16px;
   }
   .panel-header {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   .panel-title {
     font-size: 11px;
@@ -77,6 +77,13 @@
     color: var(--ss-muted);
     line-height: 1.5;
   }
+  .footprint {
+    font-size: 11px;
+    color: var(--ss-muted);
+    margin-top: 8px;
+    font-family: ui-monospace, SF Mono, Menlo, monospace;
+  }
+  .footprint strong { color: var(--ss-text); font-weight: 600; }
   .note {
     font-size: 12px;
     color: var(--ss-muted);
@@ -87,7 +94,6 @@
     border-radius: 8px;
     margin-bottom: 28px;
   }
-  .note strong { color: var(--ss-text); }
 </style>
 </head>
 <body>
@@ -96,7 +102,7 @@
 <p class="subtitle">M20 Trifid Nebula — Peter F. Wingard, See_theShow!</p>
 
 <div class="note">
-  Pinch to zoom on any image. The "1 px" line below tells you how big each image renders at full resolution. <strong>Smaller files load faster but show less detail when zoomed in.</strong>
+  Pinch to zoom on each image. App baseline ≈ 30 MB. iPhone Pro Max screen is ~1125 actual pixels wide.
 </div>
 
 <!-- Thumbnail (90px) -->
@@ -107,47 +113,48 @@
   </div>
   <div class="thumb-row">
     <img src="m20_thumb.jpg" alt="thumbnail">
-    <div class="text">
-      What you see in target rows.<br>
-      Inline only — never opened by itself.
-    </div>
+    <div class="text">Inline list-row size — never opened by itself.</div>
   </div>
 </div>
 
-<!-- Low-end medium (1024px) -->
+<!-- 480px -->
 <div class="panel">
   <div class="panel-header">
-    <div class="panel-title">Low-end Medium</div>
-    <div class="panel-stats">1024 × 678 · 204 KB</div>
+    <div class="panel-title">Small</div>
+    <div class="panel-stats">480 × 318 · 54 KB</div>
   </div>
-  <img src="m20_lowmed.jpg" alt="low-end medium 1024">
-  <p class="note" style="margin-top: 12px; margin-bottom: 0;">
-    100 images ≈ <strong>20 MB</strong> · 1,000 images ≈ <strong>200 MB</strong>
-  </p>
+  <img src="m20_480.jpg" alt="480">
+  <p class="footprint">100 imgs ≈ <strong>5 MB</strong> · 1,000 imgs ≈ <strong>54 MB</strong></p>
 </div>
 
-<!-- High-end medium (1920px) -->
+<!-- 600px -->
 <div class="panel">
   <div class="panel-header">
-    <div class="panel-title">High-end Medium</div>
-    <div class="panel-stats">1920 × 1271 · 628 KB</div>
+    <div class="panel-title">Medium</div>
+    <div class="panel-stats">600 × 397 · 84 KB</div>
   </div>
-  <img src="m20_highmed.jpg" alt="high-end medium 1920">
-  <p class="note" style="margin-top: 12px; margin-bottom: 0;">
-    100 images ≈ <strong>63 MB</strong> · 1,000 images ≈ <strong>630 MB</strong>
-  </p>
+  <img src="m20_600.jpg" alt="600">
+  <p class="footprint">100 imgs ≈ <strong>8 MB</strong> · 1,000 imgs ≈ <strong>84 MB</strong></p>
 </div>
 
-<!-- Original (2065px) — for reference -->
+<!-- 800px -->
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">Large</div>
+    <div class="panel-stats">800 × 530 · 128 KB</div>
+  </div>
+  <img src="m20_800.jpg" alt="800">
+  <p class="footprint">100 imgs ≈ <strong>13 MB</strong> · 1,000 imgs ≈ <strong>128 MB</strong></p>
+</div>
+
+<!-- Original (reference) -->
 <div class="panel">
   <div class="panel-header">
     <div class="panel-title">Original (reference)</div>
     <div class="panel-stats">2065 × 1367 · 1.0 MB</div>
   </div>
   <img src="m20_orig.jpg" alt="original">
-  <p class="note" style="margin-top: 12px; margin-bottom: 0;">
-    100 images ≈ <strong>100 MB</strong> · 1,000 images ≈ <strong>1.0 GB</strong>
-  </p>
+  <p class="footprint">100 imgs ≈ <strong>100 MB</strong> · 1,000 imgs ≈ <strong>1.0 GB</strong></p>
 </div>
 
 </body>
