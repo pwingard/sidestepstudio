@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Image Size Test — M20 Trifid</title>
+<style>
+  :root {
+    --ss-bg:      #0a0c12;
+    --ss-accent:  #5b9cf6;
+    --ss-text:    #e8eaf0;
+    --ss-muted:   #abb4c4;
+    --ss-border:  #1e2535;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--ss-bg);
+    color: var(--ss-text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 24px 16px 60px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--ss-muted);
+    margin-bottom: 28px;
+  }
+  .panel {
+    margin-bottom: 36px;
+    border-top: 1px solid var(--ss-border);
+    padding-top: 20px;
+  }
+  .panel-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .panel-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ss-accent);
+  }
+  .panel-stats {
+    font-size: 11px;
+    color: var(--ss-muted);
+    font-family: ui-monospace, SF Mono, Menlo, monospace;
+  }
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    background: #000;
+  }
+  .thumb-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .thumb-row img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .thumb-row .text {
+    font-size: 12px;
+    color: var(--ss-muted);
+    line-height: 1.5;
+  }
+  .note {
+    font-size: 12px;
+    color: var(--ss-muted);
+    line-height: 1.5;
+    padding: 12px 14px;
+    background: rgba(91, 156, 246, 0.06);
+    border: 1px solid var(--ss-border);
+    border-radius: 8px;
+    margin-bottom: 28px;
+  }
+  .note strong { color: var(--ss-text); }
+</style>
+</head>
+<body>
+
+<h1>Image Size Test</h1>
+<p class="subtitle">M20 Trifid Nebula — Peter F. Wingard, See_theShow!</p>
+
+<div class="note">
+  Pinch to zoom on any image. The "1 px" line below tells you how big each image renders at full resolution. <strong>Smaller files load faster but show less detail when zoomed in.</strong>
+</div>
+
+<!-- Thumbnail (90px) -->
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">Thumbnail</div>
+    <div class="panel-stats">90 × 60 · 5.8 KB</div>
+  </div>
+  <div class="thumb-row">
+    <img src="m20_thumb.jpg" alt="thumbnail">
+    <div class="text">
+      What you see in target rows.<br>
+      Inline only — never opened by itself.
+    </div>
+  </div>
+</div>
+
+<!-- Low-end medium (1024px) -->
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">Low-end Medium</div>
+    <div class="panel-stats">1024 × 678 · 204 KB</div>
+  </div>
+  <img src="m20_lowmed.jpg" alt="low-end medium 1024">
+  <p class="note" style="margin-top: 12px; margin-bottom: 0;">
+    100 images ≈ <strong>20 MB</strong> · 1,000 images ≈ <strong>200 MB</strong>
+  </p>
+</div>
+
+<!-- High-end medium (1920px) -->
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">High-end Medium</div>
+    <div class="panel-stats">1920 × 1271 · 628 KB</div>
+  </div>
+  <img src="m20_highmed.jpg" alt="high-end medium 1920">
+  <p class="note" style="margin-top: 12px; margin-bottom: 0;">
+    100 images ≈ <strong>63 MB</strong> · 1,000 images ≈ <strong>630 MB</strong>
+  </p>
+</div>
+
+<!-- Original (2065px) — for reference -->
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">Original (reference)</div>
+    <div class="panel-stats">2065 × 1367 · 1.0 MB</div>
+  </div>
+  <img src="m20_orig.jpg" alt="original">
+  <p class="note" style="margin-top: 12px; margin-bottom: 0;">
+    100 images ≈ <strong>100 MB</strong> · 1,000 images ≈ <strong>1.0 GB</strong>
+  </p>
+</div>
+
+</body>
+</html>
