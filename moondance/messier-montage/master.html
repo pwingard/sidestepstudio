@@ -36,7 +36,7 @@
   /* Scene 1 — portrait, slow push into Messier's right eye (viewer's left). */
   #portrait img {
     transform-origin: 37% 31%;
-    transition: transform 16500ms ease-in-out;  /* extended for full setup */
+    transition: transform 18500ms ease-in-out;  /* extended for full setup */
   }
   #portrait.zooming img {
     transform: scale(5.2);
@@ -93,12 +93,13 @@
   <div id="flash"    class="scene"><img id="flash-img" src="" alt=""></div>
   <div id="landing"  class="scene"><img src="M016.jpg" alt=""></div>
   <div id="caption"></div>
+  <audio id="audio" src="soundtrack.mp3" preload="auto"></audio>
   <div id="start">Click to start the master montage</div>
 
 <script>
   // ===== TIMING (all ms) =====
   const PORTRAIT_HOLD       = 700;    // beat after fade-in before zoom kicks off
-  const PORTRAIT_ZOOM       = 16500;  // duration of eye push-in (matches CSS)
+  const PORTRAIT_ZOOM       = 18500;  // duration of eye push-in (matches CSS)
   const PORTRAIT_TAIL       = 600;    // hold on the eye after zoom
 
   // Captions during the portrait zoom. Each fades in at `at` ms (relative to
@@ -109,7 +110,7 @@
     { at:   5900, hold: 2600, text: 'He was obsessed with discovering new comets.' },
     { at:   8800, hold: 3100, text: 'Frustrated by objects in the night sky that didn’t seem to move,' },
     { at:  12200, hold: 1800, text: 'he began cataloging them' },
-    { at:  14300, hold: 2200, text: 'as “Not-a-Comet’s” — to be ignored in his continuing searches.' },
+    { at:  14300, hold: 4200, text: 'as “Not-a-Comet’s” — to be ignored in his continuing searches.' },
   ];
 
   // Captions during the flash montage. The catalog reveal punctuated by three
@@ -137,7 +138,14 @@
   const flashImg = document.getElementById('flash-img');
   const landing  = document.getElementById('landing');
   const caption  = document.getElementById('caption');
+  const audio    = document.getElementById('audio');
   const start    = document.getElementById('start');
+
+  // ===== AUDIO =====
+  const AUDIO_PEAK_VOL  = 0.55;  // peak volume (0–1)
+  const AUDIO_FADE_IN   = 1500;  // ramp up over this many ms
+  const AUDIO_FADE_OUT  = 2500;  // ramp down at end of show
+  const AUDIO_FADE_STEP = 50;    // ramp tick (ms)
 
   // Flash sequence: M1..M110 in order, skipping M16 (saved for landing).
   const sequence = [];
@@ -169,8 +177,33 @@
     document.getElementById(id).classList.add('show');
   }
 
+  function fadeAudioTo(target, durationMs) {
+    if (!audio.src || audio.error) return;
+    const startVol = audio.volume;
+    const ticks = Math.max(1, Math.floor(durationMs / AUDIO_FADE_STEP));
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      audio.volume = Math.max(0, Math.min(1,
+        startVol + (target - startVol) * (i / ticks)));
+      if (i >= ticks) clearInterval(interval);
+    }, AUDIO_FADE_STEP);
+  }
+
+  function startAudio() {
+    audio.volume = 0;
+    const promise = audio.play();
+    if (promise && promise.catch) promise.catch(() => {});  // ignore "no source" / autoplay
+    fadeAudioTo(AUDIO_PEAK_VOL, AUDIO_FADE_IN);
+  }
+
+  function stopAudio(delayMs) {
+    setTimeout(() => fadeAudioTo(0, AUDIO_FADE_OUT), delayMs);
+  }
+
   async function play() {
     start.classList.add('hide');
+    startAudio();
 
     // Scene 1: portrait, push into the eye + caption track.
     showOnly('portrait');
@@ -194,6 +227,9 @@
     await sleep(LANDING_PRE);
     landing.classList.add('zooming');
     runCaptions(LANDING_CAPTIONS);
+
+    // Fade the soundtrack out at the end of the Pillars zoom.
+    stopAudio(6500);
   }
 
   // Schedule a sequence of captions. Each fades in at `at`, stays for `hold`
