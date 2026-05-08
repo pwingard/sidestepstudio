@@ -160,7 +160,7 @@
   const FLASH_CAPTIONS = [
     { at:    200, hold: 2300, text: 'What he accomplished instead…' },
     { at:   2700, hold: 6400, text: 'was a catalog of 110 of the most beautiful' },
-    { at:   9400, hold: 7300, text: '“Not-a-Comet” in the night sky.' },
+    { at:   9400, hold: 7300, text: '“Not-a-Comet” objects found in the night sky.' },
   ];
 
   const FLASH_M1_HOLD_MS    = 1200;   // M1 special hold — let it land
@@ -169,9 +169,10 @@
 
   const LANDING_PRE         = 600;    // beat before Pillars zoom starts
 
-  // Pillars zoom — caption waits for the Hubble close-up to fully resolve
-  // before the brand tag appears. (Pillars cross-fade completes ~6900ms in.)
+  // Pillars zoom — first a reflective beat over the wide M16 hold, then the
+  // brand tag once the Hubble close-up has fully resolved.
   const LANDING_CAPTIONS = [
+    { at: 1000, hold: 4000, text: 'Then… thank you, Monsieur Messier.' },
     { at: 7500, hold: null, text: 'See the Show!', title: true },
   ];
 
