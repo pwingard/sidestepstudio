@@ -54,10 +54,13 @@
   }
   #landing-base {
     transform-origin: 50% 55%;
-    transition: transform 6500ms ease-in-out;
+    transition: transform 6500ms ease-in-out, opacity 1700ms ease-in-out;
   }
   #landing.zooming #landing-base {
     transform: scale(3.4);
+  }
+  #landing.show-pillars #landing-base {
+    opacity: 0;  /* fade the wide M16 out behind the close-up */
   }
   #landing-pillars {
     opacity: 0;
@@ -105,6 +108,22 @@
     z-index: 10;
   }
   #start.hide { display: none; }
+
+  /* Catalog-number tag on each flash image. */
+  #flash-tag {
+    position: fixed;
+    top: 6vh; left: 6vw;
+    color: rgba(255,255,255,0.92);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.95), 0 0 18px rgba(0,0,0,0.7);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+  #flash.show ~ #flash-tag { opacity: 1; }
 </style>
 </head>
 <body>
@@ -114,6 +133,7 @@
     <img id="landing-base"    src="M016.jpg"           alt="">
     <img id="landing-pillars" src="pillars-hubble.jpg" alt="">
   </div>
+  <div id="flash-tag"></div>
   <div id="caption"></div>
   <audio id="audio" src="soundtrack.mp3" preload="auto"></audio>
   <div id="start">Click to start the master montage</div>
@@ -132,7 +152,7 @@
     { at:   5900, hold: 2600, text: 'He was obsessed with discovering new comets.' },
     { at:   8800, hold: 3100, text: 'Frustrated by objects in the night sky that didn’t seem to move,' },
     { at:  12200, hold: 1800, text: 'he began cataloging them' },
-    { at:  14300, hold: 4200, text: 'as “Not-a-Comet’s” — to be ignored in his continuing searches.' },
+    { at:  14300, hold: 4200, text: 'as “Not-a-Comet” — to be ignored in his continuing searches.' },
   ];
 
   // Captions during the flash montage. The catalog reveal punctuated by three
@@ -140,7 +160,7 @@
   const FLASH_CAPTIONS = [
     { at:    200, hold: 2300, text: 'What he accomplished instead…' },
     { at:   2700, hold: 6400, text: 'was a catalog of 110 of the most beautiful' },
-    { at:   9400, hold: 7300, text: '“Not-a-Comet’s” in the night sky.' },
+    { at:   9400, hold: 7300, text: '“Not-a-Comet” in the night sky.' },
   ];
 
   const FLASH_M1_HOLD_MS    = 1200;   // M1 special hold — let it land
@@ -158,6 +178,7 @@
   const portrait = document.getElementById('portrait');
   const flash    = document.getElementById('flash');
   const flashImg = document.getElementById('flash-img');
+  const flashTag = document.getElementById('flash-tag');
   const landing  = document.getElementById('landing');
   const caption  = document.getElementById('caption');
   const audio    = document.getElementById('audio');
@@ -236,13 +257,16 @@
     await sleep(PORTRAIT_ZOOM + PORTRAIT_TAIL);
     caption.classList.remove('show'); // clear any lingering portrait caption before flash starts
 
-    // Scene 2: flash montage, accelerating + caption track.
+    // Scene 2: flash montage, accelerating + caption track + per-image M-tag.
     showOnly('flash');
     runCaptions(FLASH_CAPTIONS);
     for (let i = 0; i < N; i++) {
-      flashImg.src = `M${pad(sequence[i])}.jpg`;
+      const num = sequence[i];
+      flashImg.src = `M${pad(num)}.jpg`;
+      flashTag.textContent = `Messier ${num}`;
       await sleep(intervalAt(i));
     }
+    flashTag.textContent = '';        // clear tag before landing scene
     caption.classList.remove('show'); // clear before landing scene
 
     // Scene 3: land on M16, push into the Pillars region, then cross-fade
