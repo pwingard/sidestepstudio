@@ -109,6 +109,25 @@
   }
   #start.hide { display: none; }
 
+  /* Closing credits — small italic block beneath the "See the Show!" title. */
+  #credits {
+    position: fixed;
+    bottom: 2.5vh;
+    left: 0; right: 0;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.78);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    letter-spacing: 0.03em;
+    opacity: 0;
+    transition: opacity 1500ms ease-in;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
+    pointer-events: none;
+  }
+  #credits.show { opacity: 1; }
+
   /* Catalog-number tag on each flash image. */
   #flash-tag {
     position: fixed;
@@ -135,6 +154,11 @@
   </div>
   <div id="flash-tag"></div>
   <div id="caption"></div>
+  <div id="credits">
+    Music: J.S. Bach, Cello Suite No. 1, BWV 1007 (PD)<br>
+    Imagery: NASA · Hubble · Wikimedia Commons<br>
+    Put together by Sidestep Studio
+  </div>
   <audio id="audio" src="soundtrack.mp3" preload="auto"></audio>
   <div id="start">Click to start the master montage</div>
 
@@ -183,6 +207,7 @@
   const flashTag = document.getElementById('flash-tag');
   const landing  = document.getElementById('landing');
   const caption  = document.getElementById('caption');
+  const credits  = document.getElementById('credits');
   const audio    = document.getElementById('audio');
   const start    = document.getElementById('start');
 
@@ -281,8 +306,11 @@
     // Cross-fade to the Hubble Pillars close-up near the end of the M16 zoom.
     setTimeout(() => landing.classList.add('show-pillars'), 5200);
 
-    // Fade the soundtrack out after the Pillars have a moment to land.
-    stopAudio(11000);
+    // Closing credits fade in a moment after "See the Show!" has landed.
+    setTimeout(() => credits.classList.add('show'), 9500);
+
+    // Fade the soundtrack out after the credits have time to register.
+    stopAudio(13000);
   }
 
   // Schedule a sequence of captions. Each fades in at `at`, stays for `hold`
