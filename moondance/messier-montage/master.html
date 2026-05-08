@@ -230,10 +230,31 @@
   const start    = document.getElementById('start');
 
   // ===== AUDIO =====
-  const AUDIO_PEAK_VOL  = 0.55;  // peak volume (0–1)
+  // iOS makes audio.volume read-only, so we route through Web Audio API and
+  // ramp a GainNode instead. Falls back to volume ramp on browsers without it.
+  const AUDIO_PEAK_VOL  = 0.55;  // peak gain (0–1)
   const AUDIO_FADE_IN   = 1500;  // ramp up over this many ms
   const AUDIO_FADE_OUT  = 2500;  // ramp down at end of show
-  const AUDIO_FADE_STEP = 50;    // ramp tick (ms)
+  const AUDIO_FADE_STEP = 50;    // fallback-only ramp tick (ms)
+  let audioCtx = null;
+  let audioGain = null;
+
+  function initAudioGraph() {
+    if (audioCtx) return;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audioCtx = new Ctx();
+      const source = audioCtx.createMediaElementSource(audio);
+      audioGain = audioCtx.createGain();
+      audioGain.gain.value = 0;
+      source.connect(audioGain);
+      audioGain.connect(audioCtx.destination);
+    } catch (e) {
+      audioCtx = null;
+      audioGain = null;
+    }
+  }
 
   // Flash sequence: M1..M110 in order, skipping M16 (saved for landing).
   const sequence = [];
@@ -267,6 +288,14 @@
   }
 
   function fadeAudioTo(target, durationMs) {
+    if (audioGain && audioCtx) {
+      const t = audioCtx.currentTime;
+      audioGain.gain.cancelScheduledValues(t);
+      audioGain.gain.setValueAtTime(audioGain.gain.value, t);
+      audioGain.gain.linearRampToValueAtTime(target, t + durationMs / 1000);
+      return;
+    }
+    // Fallback for browsers without Web Audio API.
     if (!audio.src || audio.error) return;
     const startVol = audio.volume;
     const ticks = Math.max(1, Math.floor(durationMs / AUDIO_FADE_STEP));
@@ -280,9 +309,16 @@
   }
 
   function startAudio() {
-    audio.volume = 0;
+    // Initialize and resume Web Audio context inside the user-gesture
+    // (iOS requires both for autoplay + gain control to work).
+    initAudioGraph();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    // When routed through the gain node, leave element volume at 1; the
+    // GainNode controls the actual loudness. On the fallback path, start
+    // silent and ramp via volume.
+    audio.volume = (audioGain ? 1 : 0);
     const promise = audio.play();
-    if (promise && promise.catch) promise.catch(() => {});  // ignore "no source" / autoplay
+    if (promise && promise.catch) promise.catch(() => {});
     fadeAudioTo(AUDIO_PEAK_VOL, AUDIO_FADE_IN);
   }
 
