@@ -185,7 +185,7 @@
   // ===== TIMING (all ms) =====
   const PORTRAIT_HOLD       = 700;    // beat after fade-in before zoom kicks off
   const PORTRAIT_ZOOM       = 36000;  // duration of eye push-in (CSS-matched)
-  const PORTRAIT_TAIL       = 3000;   // hold on the eye while final captions read
+  const PORTRAIT_TAIL       = 4500;   // hold on the eye while final captions read
 
   // Captions during the portrait zoom. Each fades in at `at` ms (relative to
   // when the zoom kicks off), holds for `hold` ms, then fades out.
@@ -202,15 +202,15 @@
     { at:  25200, hold: 2500, text: 'To help avoid them in the future' },
     { at:  28700, hold: 2500, text: 'he created and organised his list.' },
     { at:  32200, hold: 2500, text: 'Messier’s List was essentially' },
-    { at:  35700, hold: 2700, text: 'a list of<br>“Not Comets”.' },
+    { at:  35700, hold: 4200, text: 'a list of<br>“Not Comets”.' },
   ];
 
   // Captions during the flash montage. The catalog reveal punctuated by three
   // beats; timing matched roughly to the requested image-count cues.
   const FLASH_CAPTIONS = [
-    { at:    200, hold: 2300, text: 'What he accomplished instead…' },
-    { at:   2700, hold: 4500, text: 'was a catalog of 110 of the most beautiful' },
-    { at:   7400, hold: 2200, text: '“Not-a-Comet” objects found in the night sky.' },
+    { at:    200, hold: 3800, text: 'What he accomplished instead…' },
+    { at:   4200, hold: 4500, text: 'was a catalog of 110 of the most beautiful' },
+    { at:   8900, hold: 2200, text: '“Not-a-Comet” objects found in the night sky.' },
   ];
 
   const FLASH_M1_HOLD_MS    = 1200;   // M1 special hold — let it land
