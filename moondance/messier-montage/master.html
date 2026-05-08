@@ -41,7 +41,7 @@
   /* Scene 1 — portrait, slow push into Messier's right eye (viewer's left). */
   #portrait img {
     transform-origin: 37% 31%;
-    transition: transform 18500ms ease-in-out;  /* extended for full setup */
+    transition: transform 24000ms ease-in-out;  /* zoom continues partway into the caption track */
   }
   #portrait.zooming img {
     transform: scale(5.2);
@@ -182,24 +182,25 @@
 <script>
   // ===== TIMING (all ms) =====
   const PORTRAIT_HOLD       = 700;    // beat after fade-in before zoom kicks off
-  const PORTRAIT_ZOOM       = 18500;  // duration of eye push-in (matches CSS)
-  const PORTRAIT_TAIL       = 600;    // hold on the eye after zoom
+  const PORTRAIT_ZOOM       = 24000;  // duration of eye push-in (CSS-matched)
+  const PORTRAIT_TAIL       = 5500;   // hold on the eye while final captions read
 
   // Captions during the portrait zoom. Each fades in at `at` ms (relative to
-  // when the zoom kicks off), holds for `hold` ms, then fades out.
+  // when the zoom kicks off), holds for `hold` ms, then fades out. Holds are
+  // generous (~+1s vs prior pass) so each beat has room to breathe.
   const PORTRAIT_CAPTIONS = [
-    { at:    700, hold: 2200, text: 'Charles Messier<br>(1730–1817)' },
-    { at:   3100, hold: 1700, text: 'was an 18th-century French astronomer.' },
-    { at:   5000, hold: 1900, text: 'Messier was obsessed with discovering<br>new comets.' },
-    { at:   7100, hold: 1100, text: 'I imagine that in frustration' },
-    { at:   8400, hold:  800, text: 'on recurring finds' },
-    { at:   9400, hold:  800, text: 'of fuzzy objects' },
-    { at:  10400, hold: 1100, text: 'that did not move' },
-    { at:  11700, hold: 1700, text: 'he began cataloging their positions.' },
-    { at:  13600, hold: 1300, text: 'Messier’s List was essentially' },
-    { at:  15100, hold: 1300, text: 'a list of “Not Comets”' },
-    { at:  16600, hold:  800, text: 'and he thought' },
-    { at:  17500, hold:  900, text: 'forever ignored.' },
+    { at:    700, hold: 3200, text: 'Charles Messier<br>(1730–1817)' },
+    { at:   4000, hold: 2700, text: 'was an 18th-century French astronomer.' },
+    { at:   6800, hold: 2900, text: 'Messier was obsessed with discovering<br>new comets.' },
+    { at:   9800, hold: 2100, text: 'I imagine that in frustration' },
+    { at:  12000, hold: 1800, text: 'on recurring finds' },
+    { at:  13900, hold: 1800, text: 'of fuzzy objects' },
+    { at:  15800, hold: 2100, text: 'that did not move' },
+    { at:  18000, hold: 2700, text: 'he began cataloging their positions.' },
+    { at:  20800, hold: 2300, text: 'Messier’s List was essentially' },
+    { at:  23200, hold: 2300, text: 'a list of “Not Comets”' },
+    { at:  25600, hold: 1800, text: 'and he thought' },
+    { at:  27500, hold: 1900, text: 'forever ignored.' },
   ];
 
   // Captions during the flash montage. The catalog reveal punctuated by three
