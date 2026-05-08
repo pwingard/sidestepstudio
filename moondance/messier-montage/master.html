@@ -42,13 +42,32 @@
     transform: scale(5.2);
   }
 
-  /* Scene 3 — M16 landing, slow push into the Pillars (dead-center, slightly low). */
+  /* Scene 3 — M16 landing, slow push into the Pillars (dead-center, slightly
+     low), then cross-fade to the Hubble close-up. Stack images via absolute
+     positioning so they can overlap during the dissolve. */
+  #landing { /* override flex centering to allow absolute children */ }
   #landing img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+  }
+  #landing-base {
     transform-origin: 50% 55%;
     transition: transform 6500ms ease-in-out;
   }
-  #landing.zooming img {
+  #landing.zooming #landing-base {
     transform: scale(3.4);
+  }
+  #landing-pillars {
+    opacity: 0;
+    transform: scale(1);
+    transform-origin: 50% 50%;
+    transition: opacity 1700ms ease-in-out, transform 5500ms ease-out;
+  }
+  #landing.show-pillars #landing-pillars {
+    opacity: 1;
+    transform: scale(1.08);  /* gentle continued push-in on the Hubble shot */
   }
 
   /* Voiceover-style caption overlay. */
@@ -91,7 +110,10 @@
 <body>
   <div id="portrait" class="scene"><img src="messier-portrait.jpg" alt=""></div>
   <div id="flash"    class="scene"><img id="flash-img" src="" alt=""></div>
-  <div id="landing"  class="scene"><img src="M016.jpg" alt=""></div>
+  <div id="landing"  class="scene">
+    <img id="landing-base"    src="M016.jpg"           alt="">
+    <img id="landing-pillars" src="pillars-hubble.jpg" alt="">
+  </div>
   <div id="caption"></div>
   <audio id="audio" src="soundtrack.mp3" preload="auto"></audio>
   <div id="start">Click to start the master montage</div>
@@ -162,6 +184,7 @@
     const im = new Image(); im.src = `M${pad(i)}.jpg`;
   }
   (new Image()).src = 'messier-portrait.jpg';
+  (new Image()).src = 'pillars-hubble.jpg';
 
   function intervalAt(i) {
     // M1 gets a long hold to land; the rest follow an exponential decay
@@ -222,14 +245,18 @@
     }
     caption.classList.remove('show'); // clear before landing scene
 
-    // Scene 3: land on M16, push into the Pillars, run caption track.
+    // Scene 3: land on M16, push into the Pillars region, then cross-fade
+    // to the Hubble close-up of the Pillars themselves. Run caption track.
     showOnly('landing');
     await sleep(LANDING_PRE);
     landing.classList.add('zooming');
     runCaptions(LANDING_CAPTIONS);
 
-    // Fade the soundtrack out at the end of the Pillars zoom.
-    stopAudio(6500);
+    // Cross-fade to the Hubble Pillars close-up near the end of the M16 zoom.
+    setTimeout(() => landing.classList.add('show-pillars'), 5200);
+
+    // Fade the soundtrack out after the Pillars have a moment to land.
+    stopAudio(11000);
   }
 
   // Schedule a sequence of captions. Each fades in at `at`, stays for `hold`
