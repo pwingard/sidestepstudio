@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<!--
+  Self-playing-video template — Sidestep Studio
+  =============================================
+
+  Three-scene structure:
+    1. PORTRAIT  — slow push-in on a single image, with a caption track
+    2. FLASH     — rapid montage of N images, with a caption track
+    3. LANDING   — slow push-in on a single image, optional cross-fade to a
+                   close-up image, with a final title caption + credits
+    (then) BLACKOUT — fade everything to black after audio fades out
+
+  TO MAKE A NEW VIDEO:
+    1. Copy this folder to sidestepstudio/videos/<your-name>/
+    2. Drop your images into the folder.
+    3. Drop a soundtrack.mp3 into the folder.
+    4. Edit the *_CAPTIONS arrays below.
+    5. Edit the *_ZOOM duration / transform-origin to taste.
+    6. Open in Safari → Add to Home Screen → record from there.
+
+  KEY GOTCHAS:
+    - audio.volume is read-only on iOS. The Web Audio GainNode below works.
+    - After updating a deployed video, DELETE and RE-ADD the Home Screen icon
+      to bust the standalone-mode cache.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Video">
+<title>Video — Sidestep Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #000;
+    overflow: hidden;
+    cursor: none;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+
+  .scene {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #000;
+    opacity: 0;
+    transition: opacity 700ms ease;
+    pointer-events: none;
+  }
+  .scene.show { opacity: 1; }
+  .scene img {
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* Scene 1 — single-image push-in. Tweak transform-origin to anchor the
+     zoom on the visual point of interest (e.g., an eye, a feature). */
+  #portrait img {
+    transform-origin: 50% 50%;            /* x% y% in image coords */
+    transition: transform 30000ms ease-in-out;  /* slower = longer scene */
+  }
+  #portrait.zooming img {
+    transform: scale(4);                  /* final zoom factor */
+  }
+
+  /* Scene 3 — landing image push-in, with optional cross-fade to a close-up.
+     Stack two <img> elements via absolute positioning so they overlap during
+     the dissolve. */
+  #landing img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+  }
+  #landing-base {
+    transform-origin: 50% 50%;
+    transition: transform 6500ms ease-in-out, opacity 1700ms ease-in-out;
+  }
+  #landing.zooming #landing-base {
+    transform: scale(3);
+  }
+  #landing.show-pillars #landing-base {
+    opacity: 0;                           /* base fades out behind close-up */
+  }
+  #landing-pillars {
+    opacity: 0;
+    transform: scale(1);
+    transform-origin: 50% 50%;
+    transition: opacity 1700ms ease-in-out, transform 5500ms ease-out;
+  }
+  #landing.show-pillars #landing-pillars {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+
+  /* Caption overlay. Voiceover-style line that fades in/out on cue. */
+  #caption {
+    position: fixed;
+    bottom: 9vh;
+    left: 4vw; right: 4vw;
+    text-align: center;
+    color: #fff;
+    font-size: 1.65rem;
+    font-weight: 500;
+    line-height: 1.18;
+    letter-spacing: 0.01em;
+    opacity: 0;
+    transition: opacity 350ms ease;
+    text-shadow: 0 2px 14px rgba(0,0,0,0.95), 0 0 24px rgba(0,0,0,0.7);
+    pointer-events: none;
+  }
+  #caption.show { opacity: 1; }
+  #caption.title {
+    font-size: 3.4rem;
+    font-weight: 700;
+    font-style: italic;
+    letter-spacing: 0.04em;
+    bottom: 22vh;                         /* lift to clear the credits */
+  }
+
+  /* Closing credits — small italic block beneath the title. */
+  #credits {
+    position: fixed;
+    bottom: 2.5vh;
+    left: 0; right: 0;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.78);
+    font-style: italic;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    letter-spacing: 0.03em;
+    opacity: 0;
+    transition: opacity 1500ms ease-in;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
+    pointer-events: none;
+  }
+  #credits.show { opacity: 1; }
+
+  /* Per-image tag in the flash scene. */
+  #flash-tag {
+    position: fixed;
+    top: 6vh; left: 6vw;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.95), 0 0 18px rgba(0,0,0,0.7);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+  #flash.show ~ #flash-tag { opacity: 1; }
+
+  /* Final fade to black after the music has faded out. */
+  #blackout {
+    position: fixed; inset: 0;
+    background: #000;
+    opacity: 0;
+    transition: opacity 3000ms ease-in;
+    pointer-events: none;
+    z-index: 100;
+  }
+  #blackout.show { opacity: 1; }
+
+  /* User-gesture entry point. */
+  #start {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #888;
+    font-size: 1.3rem;
+    cursor: pointer;
+    z-index: 10;
+  }
+  #start.hide { display: none; }
+</style>
+</head>
+<body>
+  <!-- TODO: swap src to the wide opening image -->
+  <div id="portrait" class="scene"><img src="opening.jpg" alt=""></div>
+
+  <!-- Flash scene reuses one img element — JS swaps src per tick. -->
+  <div id="flash" class="scene"><img id="flash-img" src="" alt=""></div>
+
+  <!-- TODO: swap src to the landing wide-frame and the close-up. -->
+  <div id="landing" class="scene">
+    <img id="landing-base"    src="landing.jpg"        alt="">
+    <img id="landing-pillars" src="landing-closeup.jpg" alt="">
+  </div>
+
+  <div id="flash-tag"></div>
+  <div id="caption"></div>
+  <div id="credits">
+    <!-- TODO: edit credits -->
+    Music: <em>your soundtrack credit</em><br>
+    Imagery: <em>your image source credit</em><br>
+    Video put together by Sidestep Studio
+  </div>
+  <audio id="audio" src="soundtrack.mp3" preload="auto"></audio>
+  <div id="blackout"></div>
+  <div id="start">Click to start</div>
+
+<script>
+  // ===== SCENE TIMING =====
+  const PORTRAIT_HOLD = 700;     // beat after fade-in before zoom kicks off
+  const PORTRAIT_ZOOM = 30000;   // duration of the eye push-in (matches CSS)
+  const PORTRAIT_TAIL = 1500;    // brief hold on the eye after the last caption
+
+  const FLASH_M1_HOLD_MS = 1200; // first flash image held this long
+  const FLASH_SECOND_MS  = 380;  // second image starts at this hold
+  const FLASH_LAST_MS    = 35;   // final image lands at this brief hold
+
+  const LANDING_PRE = 600;       // beat before landing zoom starts
+
+  // ===== CAPTIONS =====
+  // Each caption: { at: ms-from-scene-start, hold: ms-visible, text: 'string' }
+  // hold:null means hold forever. text supports <br> for forced line breaks.
+
+  const PORTRAIT_CAPTIONS = [
+    // TODO: edit
+    { at:  700, hold: 2500, text: 'Opening line.' },
+    { at: 4200, hold: 2500, text: 'Second line.' },
+    { at: 7700, hold: 2500, text: 'Third line.' },
+  ];
+
+  const FLASH_CAPTIONS = [
+    // TODO: edit
+    { at:  200, hold: 3500, text: 'Flash caption that holds across many images.' },
+  ];
+
+  const LANDING_CAPTIONS = [
+    // TODO: edit
+    { at: 1000, hold: 4000, text: 'A reflective beat over the wide landing.' },
+    { at: 7500, hold: null, text: 'Title!', title: true },
+  ];
+
+  // ===== AUDIO (Web Audio API GainNode for iOS-compatible fades) =====
+  const AUDIO_PEAK_VOL  = 0.55;
+  const AUDIO_FADE_IN   = 1500;
+  const AUDIO_FADE_OUT  = 2500;
+  const AUDIO_FADE_STEP = 50;
+  let audioCtx = null;
+  let audioGain = null;
+
+  function initAudioGraph() {
+    if (audioCtx) return;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audioCtx = new Ctx();
+      const source = audioCtx.createMediaElementSource(audio);
+      audioGain = audioCtx.createGain();
+      audioGain.gain.value = 0;
+      source.connect(audioGain);
+      audioGain.connect(audioCtx.destination);
+    } catch (e) {
+      audioCtx = null; audioGain = null;
+    }
+  }
+
+  function fadeAudioTo(target, durationMs) {
+    if (audioGain && audioCtx) {
+      const t = audioCtx.currentTime;
+      audioGain.gain.cancelScheduledValues(t);
+      audioGain.gain.setValueAtTime(audioGain.gain.value, t);
+      audioGain.gain.linearRampToValueAtTime(target, t + durationMs / 1000);
+      return;
+    }
+    if (!audio.src || audio.error) return;
+    const startVol = audio.volume;
+    const ticks = Math.max(1, Math.floor(durationMs / AUDIO_FADE_STEP));
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      audio.volume = Math.max(0, Math.min(1,
+        startVol + (target - startVol) * (i / ticks)));
+      if (i >= ticks) clearInterval(interval);
+    }, AUDIO_FADE_STEP);
+  }
+
+  function startAudio() {
+    initAudioGraph();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    audio.volume = (audioGain ? 1 : 0);
+    const promise = audio.play();
+    if (promise && promise.catch) promise.catch(() => {});
+    fadeAudioTo(AUDIO_PEAK_VOL, AUDIO_FADE_IN);
+  }
+
+  function stopAudio(delayMs) {
+    setTimeout(() => fadeAudioTo(0, AUDIO_FADE_OUT), delayMs);
+  }
+
+  // ===== ELEMENTS =====
+  const portrait = document.getElementById('portrait');
+  const flash    = document.getElementById('flash');
+  const flashImg = document.getElementById('flash-img');
+  const flashTag = document.getElementById('flash-tag');
+  const landing  = document.getElementById('landing');
+  const caption  = document.getElementById('caption');
+  const credits  = document.getElementById('credits');
+  const blackout = document.getElementById('blackout');
+  const audio    = document.getElementById('audio');
+  const start    = document.getElementById('start');
+
+  // ===== FLASH SEQUENCE =====
+  // TODO: replace with your filename-generation logic. The Messier version
+  // generated M001.jpg…M110.jpg and skipped one for the landing.
+  const flashFiles = [];   // e.g. ['frame-001.jpg', 'frame-002.jpg', …]
+  const N = flashFiles.length;
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+  function pad(n)    { return String(n).padStart(3, '0'); }
+
+  // Preload everything so flashes are instant.
+  flashFiles.forEach(f => { const im = new Image(); im.src = f; });
+  ['opening.jpg', 'landing.jpg', 'landing-closeup.jpg'].forEach(f => {
+    const im = new Image(); im.src = f;
+  });
+
+  function intervalAt(i) {
+    // i=0 holds longest, decays exponentially to FLASH_LAST_MS at the end.
+    if (i === 0) return FLASH_M1_HOLD_MS;
+    if (N <= 2) return FLASH_LAST_MS;
+    const t = (i - 1) / (N - 2);
+    return FLASH_SECOND_MS * Math.pow(FLASH_LAST_MS / FLASH_SECOND_MS, t);
+  }
+
+  function showOnly(id) {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('show'));
+    document.getElementById(id).classList.add('show');
+  }
+
+  function runCaptions(track) {
+    track.forEach(c => {
+      setTimeout(() => {
+        caption.innerHTML = c.text;
+        caption.classList.toggle('title', !!c.title);
+        caption.classList.add('show');
+      }, c.at);
+      if (c.hold != null) {
+        setTimeout(() => caption.classList.remove('show'), c.at + c.hold);
+      }
+    });
+  }
+
+  async function play() {
+    start.classList.add('hide');
+    startAudio();
+
+    // Scene 1 — push into the opening image.
+    showOnly('portrait');
+    await sleep(PORTRAIT_HOLD);
+    portrait.classList.add('zooming');
+    runCaptions(PORTRAIT_CAPTIONS);
+    await sleep(PORTRAIT_ZOOM + PORTRAIT_TAIL);
+    caption.classList.remove('show');
+
+    // Scene 2 — flash montage with optional caption.
+    showOnly('flash');
+    runCaptions(FLASH_CAPTIONS);
+    for (let i = 0; i < N; i++) {
+      flashImg.src = flashFiles[i];
+      flashTag.textContent = '';   // populate if you want a per-frame label
+      await sleep(intervalAt(i));
+    }
+    flashTag.textContent = '';
+    caption.classList.remove('show');
+
+    // Scene 3 — push into landing, cross-fade to close-up, run caption track.
+    showOnly('landing');
+    await sleep(LANDING_PRE);
+    landing.classList.add('zooming');
+    runCaptions(LANDING_CAPTIONS);
+    setTimeout(() => landing.classList.add('show-pillars'), 5200);
+    setTimeout(() => credits.classList.add('show'), 9500);
+    stopAudio(13000);
+    setTimeout(() => blackout.classList.add('show'), 15500);
+  }
+
+  start.addEventListener('click', play);
+  document.addEventListener('keydown', play, { once: true });
+</script>
+</body>
+</html>
