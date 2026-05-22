@@ -1,7 +1,7 @@
 /* FOV Planner service worker — precache all assets, serve cache-first.
  * Bump CACHE_VERSION whenever any asset changes to force a refresh. */
 
-const CACHE_VERSION = "fov-v5";
+const CACHE_VERSION = "fov-v6";
 const ASSETS = [
   "./",
   "./index.html",

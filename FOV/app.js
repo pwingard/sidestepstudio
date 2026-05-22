@@ -380,8 +380,10 @@ function renderDiagram(scope, target, focalMM) {
     // --- real photo backdrop (replaces schematic + synthetic stars) ---
     const w = D(imgW), h = D(imgH);
     svg.appendChild(svgEl("image", {
+      id: "skyImage",
       href: img.dataUrl, x: cx - w / 2, y: cy - h / 2, width: w, height: h,
-      preserveAspectRatio: "xMidYMid meet", opacity: 0.96
+      preserveAspectRatio: "xMidYMid meet", opacity: 0.96,
+      style: "filter: brightness(" + (img.bright || 1) + ")"
     }));
   } else {
     // --- synthetic backdrop: seeded field stars + schematic blob ---
@@ -397,11 +399,17 @@ function renderDiagram(scope, target, focalMM) {
     svg.appendChild(drawTarget(target, cx, cy, D));
   }
 
+  // Overlays are dimmed by ~half when a photo is present, so they don't bury
+  // a faint backdrop; full strength over the schematic.
+  const circleOp = img ? 0.45 : 0.9;
+  const strokeOp = img ? 0.5 : 0.95;
+  const fillOp = img ? 0.03 : 0.06;
+
   // --- image circle (dashed grey) — moves with the optics (fx, fy) ---
   svg.appendChild(svgEl("circle", {
     cx: fx, cy: fy, r: D(circleDeg) / 2,
     fill: "none", stroke: "#7f8aa0", "stroke-width": 2.2,
-    "stroke-dasharray": "10 9", opacity: 0.9
+    "stroke-dasharray": "10 9", opacity: circleOp
   }));
 
   // --- camera rectangles: largest area first so smaller layer on top ---
@@ -411,8 +419,8 @@ function renderDiagram(scope, target, focalMM) {
     const w = D(fov.w), h = D(fov.h);
     svg.appendChild(svgEl("rect", {
       x: fx - w / 2, y: fy - h / 2, width: w, height: h,
-      rx: 4, fill: color, "fill-opacity": 0.06,
-      stroke: color, "stroke-width": 2.6, "stroke-opacity": 0.95
+      rx: 4, fill: color, "fill-opacity": fillOp,
+      stroke: color, "stroke-width": 2.6, "stroke-opacity": strokeOp
     }));
   });
 }
@@ -558,7 +566,8 @@ function renderImagePanel(target) {
       saveImage(target.name, {
         dataUrl, aspect,
         fovWDeg: prev ? prev.fovWDeg : target.wDeg,
-        source: "upload", offX: 0, offY: 0
+        source: "upload", offX: 0, offY: 0,
+        bright: prev && prev.bright ? prev.bright : 1
       });
       render();
     } catch (e) {
@@ -600,7 +609,8 @@ function renderImagePanel(target) {
         const dataUrl = await fetchSurveyImage(target, survey.hips, v);
         saveImage(target.name, {
           dataUrl, aspect: 1, fovWDeg: v,
-          source: "survey", survey: survey.name, offX: 0, offY: 0
+          source: "survey", survey: survey.name, offX: 0, offY: 0,
+          bright: 2.0   // survey cutouts are dim; start brightened
         });
         render();
       } catch (e) {
@@ -633,6 +643,33 @@ function renderImagePanel(target) {
   const label = rec.source === "survey" ? (rec.survey || "survey image") : "uploaded photo";
   wrap.appendChild(el("p", "img-hint",
     `Showing: ${label} · ${round2(rec.fovWDeg)}° × ${round2(rec.fovWDeg * rec.aspect)}° on sky.`));
+
+  // Brightness slider — live, persisted. Survey cutouts (esp. dark nebulae like
+  // the Shark) are dim under the overlays; this lifts them. Updates the image
+  // filter directly (no panel rebuild) so dragging the slider stays smooth.
+  const bField = el("label", "img-field");
+  bField.appendChild(el("span", null, "Image brightness"));
+  const bRow = el("div", "bright-row");
+  const slider = el("input");
+  slider.type = "range"; slider.min = "1"; slider.max = "4"; slider.step = "0.1";
+  slider.value = String(rec.bright || 1);
+  const bVal = el("span", "bright-val", (rec.bright || 1).toFixed(1) + "×");
+  slider.addEventListener("input", () => {
+    const v = parseFloat(slider.value);
+    const cur = targetImages.get(target.name);
+    if (cur) cur.bright = v;
+    const node = document.getElementById("skyImage");
+    if (node) node.style.filter = "brightness(" + v + ")";
+    bVal.textContent = v.toFixed(1) + "×";
+  });
+  slider.addEventListener("change", () => {
+    const cur = targetImages.get(target.name);
+    if (cur) saveImage(target.name, cur);     // persist on release
+  });
+  bRow.appendChild(slider);
+  bRow.appendChild(bVal);
+  bField.appendChild(bRow);
+  wrap.appendChild(bField);
 
   // Width editor (uploaded photos rescale freely; survey fields change by re-fetch).
   if (rec.source !== "survey") {

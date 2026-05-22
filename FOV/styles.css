@@ -242,6 +242,21 @@ select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .img-sublabel { font-size: 13px; color: var(--muted); }
 
+/* Brightness slider */
+.bright-row { display: flex; align-items: center; gap: 12px; }
+.bright-row input[type="range"] {
+  flex: 1;
+  height: 28px;
+  accent-color: var(--accent);
+}
+.bright-val {
+  min-width: 44px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 /* Framing nudge pad: 3x3 grid of arrow buttons */
 .img-pad {
   display: grid;

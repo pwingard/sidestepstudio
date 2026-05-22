@@ -101,6 +101,9 @@ the `SURVEYS` array to add more HiPS.
   **offline in IndexedDB**, so afterwards it works with no connection.
 - **Move frame** arrows slide your sensor/optics over the fixed sky to hunt the
   best composition; **◎** re-centres.
+- **Image brightness** slider lifts dim cutouts (DSS dark nebulae start
+  brightened); the frame/circle overlays are dimmed over any photo so they don't
+  bury a faint backdrop.
 
 ### Upload your own
 Tap **Upload your own photo**, then set **Image field width (°)** — how wide the
