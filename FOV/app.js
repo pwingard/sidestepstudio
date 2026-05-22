@@ -67,6 +67,82 @@ function camsForScope(scope) {
 let configIdx = 0;
 let targetIdx = 0;
 
+/* ---- User object images (optional, per target) ---------------------------
+ * Each target may have a user-supplied photo that replaces the schematic blob.
+ * Stored offline in IndexedDB so it survives relaunch with no network.
+ * In-memory mirror (targetName -> {dataUrl, fovWDeg, aspect}) is read
+ * synchronously by the renderer; IndexedDB is the durable backing store.
+ *   fovWDeg : how wide the image is on the sky, in degrees (user-set)
+ *   aspect  : image height / width (from the file's pixels), so height in
+ *             degrees = fovWDeg * aspect.
+ * ------------------------------------------------------------------------- */
+const targetImages = new Map();
+const IDB_NAME = "fovPlanner", IDB_STORE = "images", IMG_MAXPX = 1600;
+
+function idbOpen() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(IDB_NAME, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(IDB_STORE);
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+function idbReq(makeReq) {
+  return idbOpen().then((db) => new Promise((res, rej) => {
+    const tx = db.transaction(IDB_STORE, "readwrite");
+    const req = makeReq(tx.objectStore(IDB_STORE));
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  }));
+}
+async function loadAllImages() {
+  if (!("indexedDB" in window)) return;
+  try {
+    const db = await idbOpen();
+    await new Promise((res) => {
+      const tx = db.transaction(IDB_STORE, "readonly");
+      const store = tx.objectStore(IDB_STORE);
+      const keys = store.getAllKeys(), vals = store.getAll();
+      tx.oncomplete = () => {
+        keys.result.forEach((k, i) => targetImages.set(k, vals.result[i]));
+        res();
+      };
+    });
+  } catch (e) { console.warn("image store unavailable:", e); }
+}
+function saveImage(name, rec) {
+  targetImages.set(name, rec);
+  idbReq((s) => s.put(rec, name)).catch((e) => console.warn("save failed:", e));
+}
+function deleteImage(name) {
+  targetImages.delete(name);
+  idbReq((s) => s.delete(name)).catch((e) => console.warn("delete failed:", e));
+}
+
+// Read a picked file, downscale to <= IMG_MAXPX on the long edge, re-encode
+// as JPEG to keep storage small and rendering fast. Returns {dataUrl, aspect}.
+function processFile(file) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { naturalWidth: w, naturalHeight: h } = img;
+        const scale = Math.min(1, IMG_MAXPX / Math.max(w, h));
+        const cw = Math.round(w * scale), ch = Math.round(h * scale);
+        const c = document.createElement("canvas");
+        c.width = cw; c.height = ch;
+        c.getContext("2d").drawImage(img, 0, 0, cw, ch);
+        res({ dataUrl: c.toDataURL("image/jpeg", 0.85), aspect: h / w });
+      };
+      img.onerror = rej;
+      img.src = reader.result;
+    };
+    reader.onerror = rej;
+    reader.readAsDataURL(file);
+  });
+}
+
 /* ---- DOM ------------------------------------------------------------------ */
 const $ = (id) => document.getElementById(id);
 const SVGNS = "http://www.w3.org/2000/svg";
@@ -159,11 +235,17 @@ function renderDiagram(scope, target, focalMM) {
 
   const circleDeg = angularDeg(scope.imageCircle, focalMM);
 
-  // Auto-zoom: the larger of {image circle, target} fits with ~6% margin.
-  // We also make sure every enabled camera frame stays on-canvas.
+  // Optional user image for this target.
+  const img = targetImages.get(target.name);
+  const imgW = img ? img.fovWDeg : 0;
+  const imgH = img ? img.fovWDeg * img.aspect : 0;
+
+  // Auto-zoom: the larger of {image circle, target, user image} fits with ~6%
+  // margin. We also make sure every enabled camera frame stays on-canvas.
   let extentDeg = Math.max(
     circleDeg,
-    target.wDeg, target.hDeg
+    target.wDeg, target.hDeg,
+    imgW, imgH
   );
   cams.forEach((c) => { extentDeg = Math.max(extentDeg, c.fov.w, c.fov.h); });
   const halfSpanDeg = (extentDeg / 2) / 0.94;          // 6% margin
@@ -171,19 +253,26 @@ function renderDiagram(scope, target, focalMM) {
 
   const D = (deg) => deg * pxPerDeg;                   // full extent in px
 
-  // --- background field stars (seeded) ---
-  const rnd = mulberry32(STAR_SEED);
-  const starG = svgEl("g", {});
-  for (let s = 0; s < 14; s++) {
-    const x = rnd() * VB, y = rnd() * VB;
-    const r = 1.2 + rnd() * 2.3;
-    const op = 0.18 + rnd() * 0.35;
-    starG.appendChild(svgEl("circle", { cx: x, cy: y, r, fill: "#cdd6e3", opacity: op.toFixed(3) }));
+  if (img) {
+    // --- real photo backdrop (replaces schematic + synthetic stars) ---
+    const w = D(imgW), h = D(imgH);
+    svg.appendChild(svgEl("image", {
+      href: img.dataUrl, x: cx - w / 2, y: cy - h / 2, width: w, height: h,
+      preserveAspectRatio: "xMidYMid meet", opacity: 0.96
+    }));
+  } else {
+    // --- synthetic backdrop: seeded field stars + schematic blob ---
+    const rnd = mulberry32(STAR_SEED);
+    const starG = svgEl("g", {});
+    for (let s = 0; s < 14; s++) {
+      const x = rnd() * VB, y = rnd() * VB;
+      const r = 1.2 + rnd() * 2.3;
+      const op = 0.18 + rnd() * 0.35;
+      starG.appendChild(svgEl("circle", { cx: x, cy: y, r, fill: "#cdd6e3", opacity: op.toFixed(3) }));
+    }
+    svg.appendChild(starG);
+    svg.appendChild(drawTarget(target, cx, cy, D));
   }
-  svg.appendChild(starG);
-
-  // --- target schematic ---
-  svg.appendChild(drawTarget(target, cx, cy, D));
 
   // --- image circle (dashed grey) ---
   svg.appendChild(svgEl("circle", {
@@ -319,6 +408,97 @@ function renderVerdict(scope, target, focalMM) {
   }
 }
 
+/* ---- Image panel (add / size / remove a per-target photo) ----------------- */
+function renderImagePanel(target) {
+  const wrap = $("imagePanel");
+  wrap.innerHTML = "";
+
+  const head = document.createElement("div");
+  head.className = "img-head";
+  head.textContent = "Object image";
+  wrap.appendChild(head);
+
+  const rec = targetImages.get(target.name);
+
+  // Hidden file input shared by Add / Replace.
+  const file = document.createElement("input");
+  file.type = "file";
+  file.accept = "image/*";
+  file.style.display = "none";
+  file.addEventListener("change", async () => {
+    if (!file.files || !file.files[0]) return;
+    try {
+      const { dataUrl, aspect } = await processFile(file.files[0]);
+      const prev = targetImages.get(target.name);
+      // Keep an existing width when replacing; else default to target width.
+      const fovWDeg = prev ? prev.fovWDeg : target.wDeg;
+      saveImage(target.name, { dataUrl, aspect, fovWDeg });
+      render();
+    } catch (e) {
+      console.warn("could not load image:", e);
+      alert("Could not read that image.");
+    }
+    file.value = "";
+  });
+  wrap.appendChild(file);
+
+  if (!rec) {
+    const btn = document.createElement("button");
+    btn.className = "img-btn";
+    btn.textContent = "Add image for this target";
+    btn.addEventListener("click", () => file.click());
+    wrap.appendChild(btn);
+
+    const hint = document.createElement("p");
+    hint.className = "img-hint";
+    hint.textContent =
+      "Adds a real photo behind the frames instead of the schematic. " +
+      "Set how wide the photo is on the sky below; the app scales it to match.";
+    wrap.appendChild(hint);
+    return;
+  }
+
+  // Width control (degrees) — drives how the photo scales against the frames.
+  const ctrl = document.createElement("label");
+  ctrl.className = "img-field";
+  ctrl.innerHTML = `<span>Image field width (°)</span>`;
+  const num = document.createElement("input");
+  num.type = "number";
+  num.min = "0.01"; num.step = "0.01";
+  num.value = round2(rec.fovWDeg);
+  num.inputMode = "decimal";
+  num.addEventListener("change", () => {
+    const v = parseFloat(num.value);
+    if (!isFinite(v) || v <= 0) { num.value = round2(rec.fovWDeg); return; }
+    saveImage(target.name, Object.assign({}, rec, { fovWDeg: v }));
+    render();
+  });
+  ctrl.appendChild(num);
+  wrap.appendChild(ctrl);
+
+  const hint = document.createElement("p");
+  hint.className = "img-hint";
+  hint.textContent =
+    `Photo is ${round2(rec.fovWDeg)}° × ${round2(rec.fovWDeg * rec.aspect)}° ` +
+    `on the sky. Tip: if you know the capture scale, width(°) = ` +
+    `(arcsec/px × pixels_wide) / 3600.`;
+  wrap.appendChild(hint);
+
+  const btns = document.createElement("div");
+  btns.className = "img-btns";
+  const replace = document.createElement("button");
+  replace.className = "img-btn";
+  replace.textContent = "Replace";
+  replace.addEventListener("click", () => file.click());
+  const remove = document.createElement("button");
+  remove.className = "img-btn danger";
+  remove.textContent = "Remove";
+  remove.addEventListener("click", () => { deleteImage(target.name); render(); });
+  btns.appendChild(replace);
+  btns.appendChild(remove);
+  wrap.appendChild(btns);
+}
+
 /* ---- Master render -------------------------------------------------------- */
 function render() {
   const scope = SCOPES[configIdx];
@@ -327,10 +507,12 @@ function render() {
 
   renderLegend(scope, focalMM);
   renderDiagram(scope, target, focalMM);
+  renderImagePanel(target);
   renderCards(scope, target, focalMM);
   renderVerdict(scope, target, focalMM);
 }
 
 /* ---- Boot ----------------------------------------------------------------- */
 initSelectors();
-render();
+render();                          // paint immediately with schematics
+loadAllImages().then(render);      // then re-render once stored photos load

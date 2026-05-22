@@ -74,10 +74,24 @@ Save and reload (or reinstall on the phone).
 | `sw.js` | precache service worker (cache-first) |
 | `icons/` | 192px + 512px app icons |
 
+## Object images (optional)
+
+Each target can show a **real photo** behind the sensor frames instead of the
+schematic blob. Under the diagram, tap **"Add image for this target,"** pick a
+photo, then set **Image field width (°)** — how wide the photo is on the sky.
+The app scales the photo to match and overlays the frames + image circle on it.
+
+- If you know the capture scale: `width(°) = (arcsec/px × pixels_wide) / 3600`.
+- Photos are downscaled and stored **offline in IndexedDB**, keyed per target,
+  so they persist across relaunches with no network. **Remove** clears one.
+- No plate-solving — you supply the field width. (See note below.)
+
 ## Out of scope for v1 (future work)
 
 - Frame rotation / position-angle.
-- Real DSS survey imagery behind the frames (schematic only for now).
+- Automatic plate-solving of uploaded images (you enter the field width by
+  hand; blind solving needs a network service or heavy in-browser indexes and
+  would break the offline-first design).
 - Mosaic panel calculation.
 - Saved / favorite setups.
 - A larger target catalog — extend `data.js` as needed.
