@@ -67,6 +67,47 @@ function camsForScope(scope) {
 let configIdx = 0;
 let targetIdx = 0;
 
+/* ---- Custom targets resolved by name (CDS Sesame) ------------------------- */
+// Persisted in localStorage; appended after the seeded TARGETS in the dropdown.
+// Sesame returns coordinates + a type but not angular size, so a custom target
+// gets a user-editable approximate size (used by the fit verdict / schematic).
+const customTargets = [];
+const CT_KEY = "fovCustomTargets";
+
+function loadCustomTargets() {
+  try {
+    const j = localStorage.getItem(CT_KEY);
+    if (j) JSON.parse(j).forEach((t) => customTargets.push(t));
+  } catch (e) { console.warn("custom targets unavailable:", e); }
+}
+function saveCustomTargets() {
+  try { localStorage.setItem(CT_KEY, JSON.stringify(customTargets)); }
+  catch (e) { console.warn("could not save custom targets:", e); }
+}
+function allTargets() { return TARGETS.concat(customTargets); }
+
+// Resolve a name to {ra, dec, kind} via CDS Sesame (SIMBAD/NED/VizieR).
+function resolveByName(name) {
+  const u = "https://cds.unistra.fr/cgi-bin/nph-sesame/-oIF/SNV?" + encodeURIComponent(name);
+  return fetch(u).then((r) => {
+    if (!r.ok) throw new Error("resolver HTTP " + r.status);
+    return r.text();
+  }).then((txt) => {
+    const m = txt.match(/%J\s+([-+]?\d+\.?\d*)\s+([-+]?\d+\.?\d*)/);
+    if (!m) throw new Error("not found");
+    const ra = parseFloat(m[1]), dec = parseFloat(m[2]);
+    let kind = "neb";
+    const cm = txt.match(/%C\.0\s+(\S+)/);
+    if (cm) {
+      const t = cm[1];
+      if (/^G/.test(t)) kind = "galaxy";
+      else if (/PN/.test(t)) kind = "pn";
+      else if (/Dk|DNe/.test(t)) kind = "dark";
+    }
+    return { ra, dec, kind };
+  });
+}
+
 /* ---- User object images (optional, per target) ---------------------------
  * Each target may have a user-supplied photo that replaces the schematic blob.
  * Stored offline in IndexedDB so it survives relaunch with no network.
@@ -195,13 +236,59 @@ function initSelectors() {
   cfg.addEventListener("change", () => { configIdx = +cfg.value; render(); });
 
   const tgt = $("targetSelect");
-  TARGETS.forEach((t, i) => {
+  rebuildTargetSelect();
+  tgt.addEventListener("change", () => { targetIdx = +tgt.value; render(); });
+
+  // Find object by name (CDS Sesame).
+  const input = $("findInput"), btn = $("findBtn"), status = $("findStatus");
+  const doFind = () => {
+    const name = input.value.trim();
+    if (!name) return;
+    // If we already have this custom target, just select it.
+    const existing = customTargets.findIndex((t) => t.name.toLowerCase() === name.toLowerCase());
+    if (existing >= 0) {
+      targetIdx = TARGETS.length + existing;
+      $("targetSelect").value = targetIdx;
+      status.textContent = `Selected existing “${name}”.`;
+      render();
+      return;
+    }
+    btn.disabled = true; status.textContent = `Resolving “${name}”…`;
+    resolveByName(name).then(({ ra, dec, kind }) => {
+      customTargets.push({ name, ra, dec, wDeg: 1.0, hDeg: 1.0, kind, custom: true });
+      saveCustomTargets();
+      rebuildTargetSelect();
+      targetIdx = allTargets().length - 1;
+      $("targetSelect").value = targetIdx;
+      input.value = "";
+      status.textContent =
+        `Found “${name}” at RA ${ra.toFixed(3)}°, Dec ${dec.toFixed(3)}°. ` +
+        `Set its approx size below, then fetch a sky image.`;
+      render();
+    }).catch((e) => {
+      console.warn("resolve failed:", e);
+      status.textContent =
+        `Couldn't resolve “${name}” — check the name, or your connection ` +
+        `(name resolution needs network).`;
+    }).finally(() => { btn.disabled = false; });
+  };
+  btn.addEventListener("click", doFind);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") doFind(); });
+}
+
+// (Re)build the Target dropdown from seeded + custom targets, preserving the
+// current selection index.
+function rebuildTargetSelect() {
+  const tgt = $("targetSelect");
+  const keep = targetIdx;
+  tgt.innerHTML = "";
+  allTargets().forEach((t, i) => {
     const o = document.createElement("option");
     o.value = i;
-    o.textContent = t.name;
+    o.textContent = t.custom ? `★ ${t.name}` : t.name;
     tgt.appendChild(o);
   });
-  tgt.addEventListener("change", () => { targetIdx = +tgt.value; render(); });
+  if (keep < allTargets().length) { targetIdx = keep; tgt.value = keep; }
 }
 
 /* ---- Legend (camera toggles) ---------------------------------------------- */
@@ -593,13 +680,62 @@ function renderImagePanel(target) {
   wrap.appendChild(remove);
 }
 
+/* ---- Custom-target editor (size + delete; only for ★ resolved targets) ---- */
+function renderCustomPanel(target) {
+  const wrap = $("customPanel");
+  wrap.innerHTML = "";
+  if (!target.custom) { wrap.hidden = true; return; }
+  wrap.hidden = false;
+
+  wrap.appendChild(el("div", "img-head", "Custom object — approximate size"));
+
+  const sizeFn = (key, labelText) => {
+    const f = el("label", "img-field");
+    f.appendChild(el("span", null, labelText));
+    const num = el("input");
+    num.type = "number"; num.min = "0.01"; num.step = "0.01"; num.inputMode = "decimal";
+    num.value = round2(target[key]);
+    num.addEventListener("change", () => {
+      const v = parseFloat(num.value);
+      if (!isFinite(v) || v <= 0) { num.value = round2(target[key]); return; }
+      target[key] = v; saveCustomTargets(); render();
+    });
+    f.appendChild(num);
+    return f;
+  };
+  const row = el("div", "size-row");
+  row.appendChild(sizeFn("wDeg", "Width (°)"));
+  row.appendChild(sizeFn("hDeg", "Height (°)"));
+  wrap.appendChild(row);
+
+  wrap.appendChild(el("p", "img-hint",
+    "Sesame gives coordinates, not size — set a rough size for the fit verdict, " +
+    "or just fetch a sky image and judge framing visually."));
+
+  const del = el("button", "img-btn danger", "Delete this target");
+  del.addEventListener("click", () => {
+    const idx = customTargets.indexOf(target);
+    if (idx < 0) return;
+    deleteImage(target.name);          // drop any cached image too
+    customTargets.splice(idx, 1);
+    saveCustomTargets();
+    targetIdx = 0;                     // fall back to first seeded target
+    rebuildTargetSelect();
+    $("targetSelect").value = 0;
+    $("findStatus").textContent = "";
+    render();
+  });
+  wrap.appendChild(del);
+}
+
 /* ---- Master render -------------------------------------------------------- */
 function render() {
   const scope = SCOPES[configIdx];
-  const target = TARGETS[targetIdx];
+  const target = allTargets()[targetIdx] || allTargets()[0];
   const focalMM = scope.focalLength;
 
   renderLegend(scope, focalMM);
+  renderCustomPanel(target);
   renderDiagram(scope, target, focalMM);
   renderImagePanel(target);
   renderCards(scope, target, focalMM);
@@ -607,6 +743,7 @@ function render() {
 }
 
 /* ---- Boot ----------------------------------------------------------------- */
+loadCustomTargets();
 initSelectors();
 render();                          // paint immediately with schematics
 loadAllImages().then(render);      // then re-render once stored photos load

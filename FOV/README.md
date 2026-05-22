@@ -80,6 +80,15 @@ Each target can show a **real sky image** behind the sensor frames instead of
 the schematic blob — so you can see how your camera frames an object you don't
 own. Two ways, in the **Object image** panel under the diagram:
 
+### Find any object by name
+Not limited to the seeded list. In **Find object by name**, type an identifier
+(`M42`, `NGC 7000`, `Sh2-129`, `vdB 152`…) and tap **Find**. The app resolves it
+to coordinates via **CDS Sesame** (SIMBAD/NED/VizieR), adds it as a **★ custom
+target** (saved in `localStorage`), and selects it. Sesame returns coordinates
+but not size, so set an **approximate size** in the custom-target editor (for
+the fit verdict) — then fetch a sky image to judge framing visually. **Delete
+this target** removes it. Needs network for the name lookup.
+
 ### Fetch from a sky survey (recommended)
 For any target with `ra`/`dec` in `data.js`, pick a **Sky survey**, set a
 **Field width (°)**, and tap **Fetch sky image**. The app pulls a real cutout

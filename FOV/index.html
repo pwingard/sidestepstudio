@@ -34,7 +34,19 @@
         <span>Target</span>
         <select id="targetSelect"></select>
       </label>
+      <div class="field">
+        <span>Find object by name</span>
+        <div class="find-row">
+          <input id="findInput" type="search" autocapitalize="off" autocorrect="off"
+                 spellcheck="false" placeholder="e.g. M42, NGC 7000, Sh2-129" />
+          <button id="findBtn" type="button">Find</button>
+        </div>
+        <p id="findStatus" class="find-status"></p>
+      </div>
     </section>
+
+    <!-- Editor for a custom (resolved-by-name) target -->
+    <section id="customPanel" class="custom-panel" hidden></section>
 
     <!-- Camera legend / toggles -->
     <section id="legend" class="legend" aria-label="Cameras"></section>
