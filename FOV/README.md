@@ -76,22 +76,39 @@ Save and reload (or reinstall on the phone).
 
 ## Object images (optional)
 
-Each target can show a **real photo** behind the sensor frames instead of the
-schematic blob. Under the diagram, tap **"Add image for this target,"** pick a
-photo, then set **Image field width (°)** — how wide the photo is on the sky.
-The app scales the photo to match and overlays the frames + image circle on it.
+Each target can show a **real sky image** behind the sensor frames instead of
+the schematic blob — so you can see how your camera frames an object you don't
+own. Two ways, in the **Object image** panel under the diagram:
 
-- If you know the capture scale: `width(°) = (arcsec/px × pixels_wide) / 3600`.
-- Photos are downscaled and stored **offline in IndexedDB**, keyed per target,
-  so they persist across relaunches with no network. **Remove** clears one.
-- No plate-solving — you supply the field width. (See note below.)
+### Fetch from a sky survey (recommended)
+For any target with `ra`/`dec` in `data.js`, pick a **Sky survey**, set a
+**Field width (°)**, and tap **Fetch sky image**. The app pulls a real cutout
+from CDS **hips2fits** centred on the object at *exactly* that field — so the
+scale is known by construction, **no plate-solving needed**. Surveys offered:
+DSS2 colour, Mellinger (colour), H-alpha (Finkbeiner), 2MASS (near-IR). Edit
+the `SURVEYS` array to add more HiPS.
+
+- Requires **network at fetch time** (do it on wifi). The result is cached
+  **offline in IndexedDB**, so afterwards it works with no connection.
+- **Move frame** arrows slide your sensor/optics over the fixed sky to hunt the
+  best composition; **◎** re-centres.
+
+### Upload your own
+Tap **Upload your own photo**, then set **Image field width (°)** — how wide the
+photo is on the sky. The app scales it to match. If you know the capture scale:
+`width(°) = (arcsec/px × pixels_wide) / 3600`. Uploaded photos are downscaled
+and cached offline per target.
+
+`Remove image` clears either kind for the current target.
 
 ## Out of scope for v1 (future work)
 
 - Frame rotation / position-angle.
-- Automatic plate-solving of uploaded images (you enter the field width by
-  hand; blind solving needs a network service or heavy in-browser indexes and
-  would break the offline-first design).
+- Automatic plate-solving of *uploaded* images (for survey fetch the scale is
+  already known; for an arbitrary uploaded image you enter the field width by
+  hand, since blind solving needs a network service or heavy in-browser
+  indexes). Solve such images on the desktop (ASTAP / Siril) if needed.
+- Frame offset is a free 2-D nudge, not true RA/Dec repointing.
 - Mosaic panel calculation.
 - Saved / favorite setups.
 - A larger target catalog — extend `data.js` as needed.

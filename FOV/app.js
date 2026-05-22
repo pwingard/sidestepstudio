@@ -143,6 +143,36 @@ function processFile(file) {
   });
 }
 
+/* Fetch a real survey cutout via CDS hips2fits. We request a SQUARE image at a
+ * field width we choose, so the on-sky scale is known by construction (no
+ * plate-solving). Returns a data URL. Needs network at fetch time; the result
+ * is then cached in IndexedDB for offline use. */
+const HIPS_ENDPOINT = "https://alasky.cds.unistra.fr/hips-image-services/hips2fits";
+const SURVEY_PX = 1000;            // square cutout edge, in pixels
+function fetchSurveyImage(target, hips, fovDeg) {
+  const u = new URL(HIPS_ENDPOINT);
+  u.search = new URLSearchParams({
+    hips, width: SURVEY_PX, height: SURVEY_PX, fov: fovDeg,
+    projection: "TAN", coordsys: "icrs",
+    ra: target.ra, dec: target.dec, format: "jpg"
+  }).toString();
+  return fetch(u.toString()).then((r) => {
+    if (!r.ok) throw new Error("survey HTTP " + r.status);
+    return r.blob();
+  }).then((blob) => new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result);
+    fr.onerror = rej;
+    fr.readAsDataURL(blob);
+  }));
+}
+
+// Suggested fetch field width: 1.5x the object's long axis, so it sits with
+// margin and you can slide a sensor around it.
+function suggestedFov(target) {
+  return Math.max(0.1, Math.round(Math.max(target.wDeg, target.hDeg) * 1.5 * 100) / 100);
+}
+
 /* ---- DOM ------------------------------------------------------------------ */
 const $ = (id) => document.getElementById(id);
 const SVGNS = "http://www.w3.org/2000/svg";
@@ -235,23 +265,29 @@ function renderDiagram(scope, target, focalMM) {
 
   const circleDeg = angularDeg(scope.imageCircle, focalMM);
 
-  // Optional user image for this target.
+  // Optional user/survey image for this target.
   const img = targetImages.get(target.name);
   const imgW = img ? img.fovWDeg : 0;
   const imgH = img ? img.fovWDeg * img.aspect : 0;
 
-  // Auto-zoom: the larger of {image circle, target, user image} fits with ~6%
-  // margin. We also make sure every enabled camera frame stays on-canvas.
-  let extentDeg = Math.max(
-    circleDeg,
-    target.wDeg, target.hDeg,
-    imgW, imgH
-  );
-  cams.forEach((c) => { extentDeg = Math.max(extentDeg, c.fov.w, c.fov.h); });
-  const halfSpanDeg = (extentDeg / 2) / 0.94;          // 6% margin
+  // Framing offset (deg): the scope (image circle + sensor frames) slides over
+  // the fixed sky so you can hunt the best composition. +offX right, +offY up.
+  const offX = img && img.offX ? img.offX : 0;
+  const offY = img && img.offY ? img.offY : 0;
+
+  // Auto-zoom: fit the fixed sky {image, target} AND the offset optics
+  // {image circle, every enabled frame} with ~6% margin. Computed per-axis.
+  let halfX = Math.max(target.wDeg / 2, imgW / 2, Math.abs(offX) + circleDeg / 2);
+  let halfY = Math.max(target.hDeg / 2, imgH / 2, Math.abs(offY) + circleDeg / 2);
+  cams.forEach((c) => {
+    halfX = Math.max(halfX, Math.abs(offX) + c.fov.w / 2);
+    halfY = Math.max(halfY, Math.abs(offY) + c.fov.h / 2);
+  });
+  const halfSpanDeg = Math.max(halfX, halfY) / 0.94;   // 6% margin, square frame
   const pxPerDeg = (VB / 2) / halfSpanDeg;             // deg -> viewBox px
 
   const D = (deg) => deg * pxPerDeg;                   // full extent in px
+  const fx = cx + D(offX), fy = cy - D(offY);          // offset optics centre
 
   if (img) {
     // --- real photo backdrop (replaces schematic + synthetic stars) ---
@@ -274,9 +310,9 @@ function renderDiagram(scope, target, focalMM) {
     svg.appendChild(drawTarget(target, cx, cy, D));
   }
 
-  // --- image circle (dashed grey) ---
+  // --- image circle (dashed grey) — moves with the optics (fx, fy) ---
   svg.appendChild(svgEl("circle", {
-    cx, cy, r: D(circleDeg) / 2,
+    cx: fx, cy: fy, r: D(circleDeg) / 2,
     fill: "none", stroke: "#7f8aa0", "stroke-width": 2.2,
     "stroke-dasharray": "10 9", opacity: 0.9
   }));
@@ -287,7 +323,7 @@ function renderDiagram(scope, target, focalMM) {
   ordered.forEach(({ color, fov }) => {
     const w = D(fov.w), h = D(fov.h);
     svg.appendChild(svgEl("rect", {
-      x: cx - w / 2, y: cy - h / 2, width: w, height: h,
+      x: fx - w / 2, y: fy - h / 2, width: w, height: h,
       rx: 4, fill: color, "fill-opacity": 0.06,
       stroke: color, "stroke-width": 2.6, "stroke-opacity": 0.95
     }));
@@ -408,31 +444,35 @@ function renderVerdict(scope, target, focalMM) {
   }
 }
 
-/* ---- Image panel (add / size / remove a per-target photo) ----------------- */
+/* ---- Image panel: fetch a real survey image / upload one / frame it ------- */
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
 function renderImagePanel(target) {
   const wrap = $("imagePanel");
   wrap.innerHTML = "";
-
-  const head = document.createElement("div");
-  head.className = "img-head";
-  head.textContent = "Object image";
-  wrap.appendChild(head);
+  wrap.appendChild(el("div", "img-head", "Object image"));
 
   const rec = targetImages.get(target.name);
+  const hasCoords = typeof target.ra === "number" && typeof target.dec === "number";
 
-  // Hidden file input shared by Add / Replace.
-  const file = document.createElement("input");
-  file.type = "file";
-  file.accept = "image/*";
-  file.style.display = "none";
+  // Hidden file input shared by Upload / Replace.
+  const file = el("input");
+  file.type = "file"; file.accept = "image/*"; file.style.display = "none";
   file.addEventListener("change", async () => {
     if (!file.files || !file.files[0]) return;
     try {
       const { dataUrl, aspect } = await processFile(file.files[0]);
       const prev = targetImages.get(target.name);
-      // Keep an existing width when replacing; else default to target width.
-      const fovWDeg = prev ? prev.fovWDeg : target.wDeg;
-      saveImage(target.name, { dataUrl, aspect, fovWDeg });
+      saveImage(target.name, {
+        dataUrl, aspect,
+        fovWDeg: prev ? prev.fovWDeg : target.wDeg,
+        source: "upload", offX: 0, offY: 0
+      });
       render();
     } catch (e) {
       console.warn("could not load image:", e);
@@ -442,61 +482,115 @@ function renderImagePanel(target) {
   });
   wrap.appendChild(file);
 
-  if (!rec) {
-    const btn = document.createElement("button");
-    btn.className = "img-btn";
-    btn.textContent = "Add image for this target";
-    btn.addEventListener("click", () => file.click());
-    wrap.appendChild(btn);
+  // --- Fetch from a sky survey (needs coordinates) ---
+  if (hasCoords) {
+    const box = el("div", "img-fetch");
 
-    const hint = document.createElement("p");
-    hint.className = "img-hint";
-    hint.textContent =
-      "Adds a real photo behind the frames instead of the schematic. " +
-      "Set how wide the photo is on the sky below; the app scales it to match.";
-    wrap.appendChild(hint);
+    const surveyField = el("label", "img-field");
+    surveyField.appendChild(el("span", null, "Sky survey"));
+    const sel = el("select");
+    SURVEYS.forEach((s, i) => {
+      const o = el("option", null, s.name); o.value = i; sel.appendChild(o);
+    });
+    surveyField.appendChild(sel);
+    box.appendChild(surveyField);
+
+    const fovField = el("label", "img-field");
+    fovField.appendChild(el("span", null, "Field width (°)"));
+    const fov = el("input");
+    fov.type = "number"; fov.min = "0.05"; fov.step = "0.1"; fov.inputMode = "decimal";
+    fov.value = rec && rec.source === "survey" ? round2(rec.fovWDeg) : suggestedFov(target);
+    fovField.appendChild(fov);
+    box.appendChild(fovField);
+
+    const go = el("button", "img-btn primary", "Fetch sky image");
+    go.addEventListener("click", async () => {
+      const v = parseFloat(fov.value);
+      if (!isFinite(v) || v <= 0) { alert("Enter a field width in degrees."); return; }
+      const survey = SURVEYS[+sel.value];
+      go.disabled = true; go.textContent = "Fetching…";
+      try {
+        const dataUrl = await fetchSurveyImage(target, survey.hips, v);
+        saveImage(target.name, {
+          dataUrl, aspect: 1, fovWDeg: v,
+          source: "survey", survey: survey.name, offX: 0, offY: 0
+        });
+        render();
+      } catch (e) {
+        console.warn("survey fetch failed:", e);
+        alert("Couldn't fetch the survey image — you need a network connection " +
+              "for this step. (" + e.message + ")");
+        go.disabled = false; go.textContent = "Fetch sky image";
+      }
+    });
+    box.appendChild(go);
+    wrap.appendChild(box);
+  }
+
+  // --- Upload your own ---
+  const up = el("button", "img-btn", rec ? "Replace with your own photo" : "Upload your own photo");
+  up.addEventListener("click", () => file.click());
+  wrap.appendChild(up);
+
+  if (!rec) {
+    wrap.appendChild(el("p", "img-hint",
+      hasCoords
+        ? "Fetch a real survey image centred on this object at a field width you " +
+          "choose — the scale is known because you set it. Or upload your own."
+        : "No coordinates for this target, so survey fetch is off. Upload a photo " +
+          "and set its on-sky width, or add ra/dec in data.js to enable fetch."));
     return;
   }
 
-  // Width control (degrees) — drives how the photo scales against the frames.
-  const ctrl = document.createElement("label");
-  ctrl.className = "img-field";
-  ctrl.innerHTML = `<span>Image field width (°)</span>`;
-  const num = document.createElement("input");
-  num.type = "number";
-  num.min = "0.01"; num.step = "0.01";
-  num.value = round2(rec.fovWDeg);
-  num.inputMode = "decimal";
-  num.addEventListener("change", () => {
-    const v = parseFloat(num.value);
-    if (!isFinite(v) || v <= 0) { num.value = round2(rec.fovWDeg); return; }
-    saveImage(target.name, Object.assign({}, rec, { fovWDeg: v }));
+  // --- Current image controls ---
+  const label = rec.source === "survey" ? (rec.survey || "survey image") : "uploaded photo";
+  wrap.appendChild(el("p", "img-hint",
+    `Showing: ${label} · ${round2(rec.fovWDeg)}° × ${round2(rec.fovWDeg * rec.aspect)}° on sky.`));
+
+  // Width editor (uploaded photos rescale freely; survey fields change by re-fetch).
+  if (rec.source !== "survey") {
+    const wf = el("label", "img-field");
+    wf.appendChild(el("span", null, "Image field width (°)"));
+    const num = el("input");
+    num.type = "number"; num.min = "0.01"; num.step = "0.01"; num.inputMode = "decimal";
+    num.value = round2(rec.fovWDeg);
+    num.addEventListener("change", () => {
+      const v = parseFloat(num.value);
+      if (!isFinite(v) || v <= 0) { num.value = round2(rec.fovWDeg); return; }
+      saveImage(target.name, Object.assign({}, rec, { fovWDeg: v }));
+      render();
+    });
+    wf.appendChild(num);
+    wrap.appendChild(wf);
+  }
+
+  // Framing nudge — slide the sensor/optics over the fixed sky.
+  wrap.appendChild(el("span", "img-sublabel", "Move frame over the image"));
+  const step = rec.fovWDeg * 0.1;
+  const nudge = (dx, dy) => () => {
+    const cur = targetImages.get(target.name);
+    saveImage(target.name, Object.assign({}, cur, {
+      offX: (cur.offX || 0) + dx * step,
+      offY: (cur.offY || 0) + dy * step
+    }));
     render();
-  });
-  ctrl.appendChild(num);
-  wrap.appendChild(ctrl);
+  };
+  const pad = el("div", "img-pad");
+  const mk = (txt, fn, cls) => { const b = el("button", "nudge" + (cls ? " " + cls : ""), txt); b.addEventListener("click", fn); return b; };
+  pad.appendChild(el("span"));                              // grid spacer
+  pad.appendChild(mk("▲", nudge(0, 1)));
+  pad.appendChild(el("span"));
+  pad.appendChild(mk("◀", nudge(-1, 0)));
+  pad.appendChild(mk("◎", () => { const c = targetImages.get(target.name); saveImage(target.name, Object.assign({}, c, { offX: 0, offY: 0 })); render(); }, "center"));
+  pad.appendChild(mk("▶", nudge(1, 0)));
+  pad.appendChild(el("span"));
+  pad.appendChild(mk("▼", nudge(0, -1)));
+  pad.appendChild(el("span"));
+  wrap.appendChild(pad);
 
-  const hint = document.createElement("p");
-  hint.className = "img-hint";
-  hint.textContent =
-    `Photo is ${round2(rec.fovWDeg)}° × ${round2(rec.fovWDeg * rec.aspect)}° ` +
-    `on the sky. Tip: if you know the capture scale, width(°) = ` +
-    `(arcsec/px × pixels_wide) / 3600.`;
-  wrap.appendChild(hint);
-
-  const btns = document.createElement("div");
-  btns.className = "img-btns";
-  const replace = document.createElement("button");
-  replace.className = "img-btn";
-  replace.textContent = "Replace";
-  replace.addEventListener("click", () => file.click());
-  const remove = document.createElement("button");
-  remove.className = "img-btn danger";
-  remove.textContent = "Remove";
+  const remove = el("button", "img-btn danger", "Remove image");
   remove.addEventListener("click", () => { deleteImage(target.name); render(); });
-  btns.appendChild(replace);
-  btns.appendChild(remove);
-  wrap.appendChild(btns);
+  wrap.appendChild(remove);
 }
 
 /* ---- Master render -------------------------------------------------------- */

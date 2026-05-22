@@ -36,7 +36,7 @@
  *                   when its matching config is selected. Omit for normal
  *                   interchangeable cameras.
  *
- * TARGETS (deep-sky objects, schematic only)
+ * TARGETS (deep-sky objects)
  *   name          : free text shown in the Target dropdown
  *   wDeg, hDeg    : angular Width & Height of the object, in DEGREES
  *   kind          : controls the schematic blob's shape/colour. One of:
@@ -44,6 +44,14 @@
  *                     'neb'    bright/emission nebula (soft bluish ellipse)
  *                     'galaxy' galaxy       (pale ellipse + bright core)
  *                     'pn'     planetary nebula (small teal disc)
+ *   ra, dec       : OPTIONAL J2000/ICRS coordinates in DEGREES. If present, the
+ *                   app can fetch a real survey image centred here at a field
+ *                   width you choose ("Fetch sky image"), so you can frame an
+ *                   object you don't own. RA hours -> deg = hours * 15.
+ *
+ * SURVEYS (HiPS image surveys for the "Fetch sky image" feature)
+ *   name : label shown in the survey dropdown
+ *   hips : CDS HiPS identifier passed to hips2fits (the alasky service)
  * ============================================================================= */
 
 /* Telescope configurations — Askar V, the six native configs.
@@ -79,14 +87,24 @@ const CAMERAS = [
   { name: "Origin sensor (IMX178)", wMM: 7.43, hMM: 4.99, pixelMicron: 2.4, mp: 6.4, owned: true, note: "built-in, fixed", system: "origin" },
 ];
 
-/* Targets — angular size in degrees. kind drives only the schematic drawing. */
+/* Targets — angular size in degrees; ra/dec (deg, J2000) enable survey fetch. */
 const TARGETS = [
-  { name: "Shark Nebula (LDN 1235)", wDeg: 3.9,   hDeg: 2.7,   kind: "dark" },
-  { name: "Veil Nebula (full)",      wDeg: 3.0,   hDeg: 3.0,   kind: "neb" },
-  { name: "Andromeda (M31)",         wDeg: 3.17,  hDeg: 1.0,   kind: "galaxy" },
-  { name: "North America (NGC7000)", wDeg: 2.0,   hDeg: 1.7,   kind: "neb" },
-  { name: "Iris Nebula (NGC7023)",   wDeg: 0.3,   hDeg: 0.3,   kind: "neb" },
-  { name: "M81 / M82 pair",          wDeg: 0.7,   hDeg: 0.5,   kind: "galaxy" },
-  { name: "M51 Whirlpool",           wDeg: 0.18,  hDeg: 0.12,  kind: "galaxy" },
-  { name: "Ring Nebula (M57)",       wDeg: 0.038, hDeg: 0.038, kind: "pn" },
+  { name: "Shark Nebula (LDN 1235)", wDeg: 3.9,   hDeg: 2.7,   kind: "dark",   ra: 333.30, dec: 73.37 },
+  { name: "Veil Nebula (full)",      wDeg: 3.0,   hDeg: 3.0,   kind: "neb",    ra: 312.75, dec: 30.70 },
+  { name: "Andromeda (M31)",         wDeg: 3.17,  hDeg: 1.0,   kind: "galaxy", ra: 10.68,  dec: 41.27 },
+  { name: "North America (NGC7000)", wDeg: 2.0,   hDeg: 1.7,   kind: "neb",    ra: 314.70, dec: 44.33 },
+  { name: "Iris Nebula (NGC7023)",   wDeg: 0.3,   hDeg: 0.3,   kind: "neb",    ra: 315.40, dec: 68.17 },
+  { name: "M81 / M82 pair",          wDeg: 0.7,   hDeg: 0.5,   kind: "galaxy", ra: 148.97, dec: 69.40 },
+  { name: "M51 Whirlpool",           wDeg: 0.18,  hDeg: 0.12,  kind: "galaxy", ra: 202.47, dec: 47.20 },
+  { name: "Ring Nebula (M57)",       wDeg: 0.038, hDeg: 0.038, kind: "pn",     ra: 283.40, dec: 33.03 },
+];
+
+/* HiPS surveys offered by the "Fetch sky image" feature. DSS2 color is a safe
+ * default; Mellinger is true-colour and great for wide bright regions;
+ * Finkbeiner is all-sky H-alpha (emission nebulae pop); 2MASS is near-IR. */
+const SURVEYS = [
+  { name: "DSS2 color",        hips: "CDS/P/DSS2/color" },
+  { name: "Mellinger (color)", hips: "CDS/P/Mellinger/color" },
+  { name: "H-alpha (Finkbeiner)", hips: "CDS/P/Finkbeiner" },
+  { name: "2MASS (near-IR)",   hips: "CDS/P/2MASS/color" },
 ];
