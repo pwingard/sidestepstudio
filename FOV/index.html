@@ -26,50 +26,56 @@
   </header>
 
   <main>
-    <!-- Selectors -->
-    <section class="controls">
-      <label class="field">
-        <span>Configuration</span>
-        <select id="configSelect"></select>
-      </label>
-      <label class="field">
-        <span>Target</span>
-        <select id="targetSelect"></select>
-      </label>
-      <div class="field">
-        <span>Find object by name</span>
-        <div class="find-row">
-          <input id="findInput" type="search" autocapitalize="off" autocorrect="off"
-                 spellcheck="false" placeholder="e.g. M42, NGC 7000, Sh2-129" />
-          <button id="findBtn" type="button">Find</button>
+    <!-- Right column on wide screens: selection controls -->
+    <div class="pane pane-side">
+      <!-- Selectors -->
+      <section class="controls">
+        <label class="field">
+          <span>Configuration</span>
+          <select id="configSelect"></select>
+        </label>
+        <label class="field">
+          <span>Target</span>
+          <select id="targetSelect"></select>
+        </label>
+        <div class="field">
+          <span>Find object by name</span>
+          <div class="find-row">
+            <input id="findInput" type="search" autocapitalize="off" autocorrect="off"
+                   spellcheck="false" placeholder="e.g. M42, NGC 7000, Sh2-129" />
+            <button id="findBtn" type="button">Find</button>
+          </div>
+          <p id="findStatus" class="find-status"></p>
         </div>
-        <p id="findStatus" class="find-status"></p>
-      </div>
-    </section>
+      </section>
 
-    <!-- Editor for a custom (resolved-by-name) target -->
-    <section id="customPanel" class="custom-panel" hidden></section>
+      <!-- Editor for a custom (resolved-by-name) target -->
+      <section id="customPanel" class="custom-panel" hidden></section>
 
-    <!-- Camera legend / toggles -->
-    <section id="legend" class="legend" aria-label="Cameras"></section>
+      <!-- Camera legend / toggles -->
+      <section id="legend" class="legend" aria-label="Cameras"></section>
+    </div>
 
-    <!-- Diagram -->
-    <section class="diagram-wrap">
-      <svg id="diagram" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"
-           role="img" aria-label="Field of view diagram"></svg>
-      <p class="caption">dashed = image circle (full-frame coverage)</p>
-    </section>
+    <!-- Left column on wide screens: the diagram and its tools -->
+    <div class="pane pane-main">
+      <!-- Diagram -->
+      <section class="diagram-wrap">
+        <svg id="diagram" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"
+             role="img" aria-label="Field of view diagram"></svg>
+        <p class="caption">dashed = image circle (full-frame coverage)</p>
+      </section>
 
-    <!-- Optional per-target object image -->
-    <section id="imagePanel" class="image-panel"></section>
+      <!-- Optional per-target object image -->
+      <section id="imagePanel" class="image-panel"></section>
 
-    <!-- Metric cards -->
-    <section id="cards" class="cards"></section>
+      <!-- Metric cards -->
+      <section id="cards" class="cards"></section>
 
-    <!-- Verdict -->
-    <section class="verdict-wrap">
-      <p id="verdict" class="verdict"></p>
-    </section>
+      <!-- Verdict -->
+      <section class="verdict-wrap">
+        <p id="verdict" class="verdict"></p>
+      </section>
+    </div>
   </main>
 
   <script src="data.js"></script>

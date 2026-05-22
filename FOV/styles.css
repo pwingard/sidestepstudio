@@ -34,6 +34,33 @@ main {
   gap: 18px;
 }
 
+/* Phone: panes are transparent wrappers — children flow in DOM order. */
+.pane { display: contents; }
+
+/* iPad landscape / desktop: two columns. Left = diagram + image tools + cards
+ * + verdict; right (sticky) = config/target/find + custom editor + legend. */
+@media (min-width: 900px) {
+  main {
+    max-width: 1180px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+  .pane {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+  }
+  .pane-main { grid-column: 1; }
+  .pane-side {
+    grid-column: 2;
+    position: sticky;
+    top: 82px;
+  }
+}
+
 /* Title bar */
 .titlebar {
   padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
