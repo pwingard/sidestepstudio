@@ -19,6 +19,11 @@
  *                   Defaults to 43.3 (full-frame) if omitted. Drawn as the
  *                   dashed grey circle. Use a smaller value for scopes whose
  *                   correctors don't cover full frame.
+ *   system        : OPTIONAL. Tag a fixed scope+camera unit (e.g. a smart
+ *                   telescope) with a string. A config with a `system` only
+ *                   shows cameras carrying the SAME `system` string, and those
+ *                   cameras are hidden from all other configs. Omit for normal
+ *                   interchangeable scopes (the Askar configs).
  *
  * CAMERAS (sensor geometry)
  *   name          : free text shown in the legend
@@ -26,6 +31,10 @@
  *   pixelMicron   : physical pixel pitch in microns (drives arcsec/pixel)
  *   mp            : megapixels — DISPLAY ONLY, not used in any math
  *   owned         : true => "my gear", sorted/shown first and badged
+ *   system        : OPTIONAL. Match the `system` string on a fixed-unit scope
+ *                   (see SCOPES above). A camera with a `system` only appears
+ *                   when its matching config is selected. Omit for normal
+ *                   interchangeable cameras.
  *
  * TARGETS (deep-sky objects, schematic only)
  *   name          : free text shown in the Target dropdown
@@ -47,6 +56,12 @@ const SCOPES = [
   { name: "60mm + extender",  focalLength: 446, fRatio: 7.43, imageCircle: 43.3 },
   { name: "80mm + flattener", focalLength: 495, fRatio: 6.18, imageCircle: 43.3 },
   { name: "80mm + extender",  focalLength: 600, fRatio: 7.5,  imageCircle: 43.3 },
+
+  // Celestron Origin — fixed RASA 6" (152mm) f/2.2 smart telescope. Sealed
+  // unit: can't swap correctors or cameras, so it's tagged system:"origin"
+  // and only ever pairs with its built-in sensor below. imageCircle here is
+  // ~the sensor diagonal (no separate corrector circle to plan around).
+  { name: "Celestron Origin (RASA 6)", focalLength: 335, fRatio: 2.2, imageCircle: 8.9, system: "origin" },
 ];
 
 /* Cameras — sensor dimensions in mm, pixel pitch in microns.
@@ -57,6 +72,11 @@ const CAMERAS = [
   { name: "ASI6200MC/MM Pro", wMM: 36.00, hMM: 24.00, pixelMicron: 3.76, mp: 62, owned: true,  note: "full frame" },
   { name: "ASI2400MC Pro",    wMM: 36.00, hMM: 24.00, pixelMicron: 5.94, mp: 24, owned: false, note: "full frame, large pixels" },
   { name: "Canon 90D (mod)",  wMM: 22.30, hMM: 14.80, pixelMicron: 3.20, mp: 33, owned: false, note: "APS-C DSLR" },
+
+  // Built-in sensor of the Celestron Origin (Sony IMX178 colour CMOS).
+  // Only shown when the "Celestron Origin (RASA 6)" config is selected.
+  // 3096 x 2080 px @ 2.4µm => ~7.43 x 4.99 mm active area, ~6.4 MP.
+  { name: "Origin sensor (IMX178)", wMM: 7.43, hMM: 4.99, pixelMicron: 2.4, mp: 6.4, owned: true, note: "built-in, fixed", system: "origin" },
 ];
 
 /* Targets — angular size in degrees. kind drives only the schematic drawing. */

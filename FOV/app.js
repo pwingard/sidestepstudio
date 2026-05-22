@@ -56,6 +56,14 @@ const CAM_ORDER = CAMERAS
 const enabled = new Map(); // original index -> bool
 CAM_ORDER.forEach(({ i }) => enabled.set(i, true));
 
+// Cameras valid for a given config: a fixed-system scope (e.g. the Origin)
+// only shows cameras tagged with the same `system`; normal scopes hide any
+// system-tagged cameras. Keeps physically-impossible combos out of the UI.
+function camsForScope(scope) {
+  const sys = scope.system || null;
+  return CAM_ORDER.filter(({ cam }) => (cam.system || null) === sys);
+}
+
 let configIdx = 0;
 let targetIdx = 0;
 
@@ -91,10 +99,10 @@ function initSelectors() {
 }
 
 /* ---- Legend (camera toggles) ---------------------------------------------- */
-function renderLegend(focalMM) {
+function renderLegend(scope, focalMM) {
   const wrap = $("legend");
   wrap.innerHTML = "";
-  CAM_ORDER.forEach(({ cam, i }) => {
+  camsForScope(scope).forEach(({ cam, i }) => {
     const on = enabled.get(i);
     const color = camColor(i);
     const fov = camFov(cam, focalMM);
@@ -144,8 +152,8 @@ function renderDiagram(scope, target, focalMM) {
   const VB = 1000;            // viewBox is 1000 x 1000
   const cx = VB / 2, cy = VB / 2;
 
-  // Enabled camera FOVs (deg).
-  const cams = CAM_ORDER
+  // Enabled camera FOVs (deg), limited to cameras valid for this scope.
+  const cams = camsForScope(scope)
     .filter(({ i }) => enabled.get(i))
     .map(({ cam, i }) => ({ cam, i, color: camColor(i), fov: camFov(cam, focalMM) }));
 
@@ -263,7 +271,7 @@ function renderCards(scope, target, focalMM) {
     <div class="sub">Pixel-size dependent; differs per camera.</div>`;
   const list = document.createElement("div");
   list.className = "samp-list";
-  CAM_ORDER.forEach(({ cam }) => {
+  camsForScope(scope).forEach(({ cam }) => {
     const row = document.createElement("div");
     row.className = "samp-row";
     const aspp = arcsecPerPx(cam.pixelMicron, focalMM);
@@ -276,9 +284,9 @@ function renderCards(scope, target, focalMM) {
 }
 
 /* ---- Verdict -------------------------------------------------------------- */
-function renderVerdict(target, focalMM) {
+function renderVerdict(scope, target, focalMM) {
   const el = $("verdict");
-  const active = CAM_ORDER
+  const active = camsForScope(scope)
     .filter(({ i }) => enabled.get(i))
     .map(({ cam }) => ({ cam, fov: camFov(cam, focalMM) }));
 
@@ -317,10 +325,10 @@ function render() {
   const target = TARGETS[targetIdx];
   const focalMM = scope.focalLength;
 
-  renderLegend(focalMM);
+  renderLegend(scope, focalMM);
   renderDiagram(scope, target, focalMM);
   renderCards(scope, target, focalMM);
-  renderVerdict(target, focalMM);
+  renderVerdict(scope, target, focalMM);
 }
 
 /* ---- Boot ----------------------------------------------------------------- */
