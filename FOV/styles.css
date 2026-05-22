@@ -1,0 +1,178 @@
+/* FOV Planner — dark-first, system fonts, mobile-first single column. */
+
+:root {
+  --bg: #0b0e14;
+  --panel: #141a26;
+  --panel-2: #1c2433;
+  --line: #2a3343;
+  --text: #e6ebf2;
+  --muted: #9aa7ba;
+  --accent: #6db3f2;
+  --good: #57d18a;
+  --warn: #f2b84b;
+  --bad: #f2785c;
+  --radius: 12px;
+  font-size: 16px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px calc(32px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Title bar */
+.titlebar {
+  padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: rgba(11, 14, 20, 0.92);
+  backdrop-filter: blur(8px);
+  z-index: 5;
+}
+.titlebar h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > span {
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0 40px 0 14px;
+  height: 48px;            /* >= 44px tap target */
+  font-size: 16px;
+  line-height: 48px;
+  width: 100%;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%239aa7ba' stroke-width='1.6' stroke-linecap='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Camera legend / toggles */
+.legend { display: flex; flex-direction: column; gap: 8px; }
+.cam {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  min-height: 48px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.cam.off { opacity: 0.42; }
+.swatch {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  flex: 0 0 auto;
+  border: 2px solid currentColor;
+}
+.cam.off .swatch { background: transparent !important; }
+.cam-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.cam-name { font-size: 15px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cam-fov { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-weight: 700;
+}
+
+/* Diagram */
+.diagram-wrap {
+  background: #05070b;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px;
+}
+#diagram { width: 100%; height: auto; display: block; border-radius: 8px; }
+.caption {
+  margin: 6px 2px 2px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Metric cards */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.card .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+.card .v { font-size: 22px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.card .sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+/* Sampling card spans full width because it carries a per-camera list. */
+.card.sampling { grid-column: 1 / -1; }
+.samp-list { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.samp-row {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-size: 13px; font-variant-numeric: tabular-nums;
+}
+.samp-row .sname { color: var(--muted); }
+.samp-row .sval { font-weight: 600; }
+
+/* Verdict */
+.verdict {
+  margin: 0;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.verdict.good { border-left-color: var(--good); }
+.verdict.some { border-left-color: var(--warn); }
+.verdict.bad  { border-left-color: var(--bad); }

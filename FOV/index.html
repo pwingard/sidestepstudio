@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>FOV Planner</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#0b0e14" />
+
+  <!-- iOS standalone install -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FOV" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="titlebar">
+    <h1>FOV Planner</h1>
+  </header>
+
+  <main>
+    <!-- Selectors -->
+    <section class="controls">
+      <label class="field">
+        <span>Configuration</span>
+        <select id="configSelect"></select>
+      </label>
+      <label class="field">
+        <span>Target</span>
+        <select id="targetSelect"></select>
+      </label>
+    </section>
+
+    <!-- Camera legend / toggles -->
+    <section id="legend" class="legend" aria-label="Cameras"></section>
+
+    <!-- Diagram -->
+    <section class="diagram-wrap">
+      <svg id="diagram" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"
+           role="img" aria-label="Field of view diagram"></svg>
+      <p class="caption">dashed = image circle (full-frame coverage)</p>
+    </section>
+
+    <!-- Metric cards -->
+    <section id="cards" class="cards"></section>
+
+    <!-- Verdict -->
+    <section class="verdict-wrap">
+      <p id="verdict" class="verdict"></p>
+    </section>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // Register the service worker (HTTPS or localhost only).
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("sw.js").catch(function (err) {
+          console.warn("SW registration failed (needs HTTPS or localhost):", err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
