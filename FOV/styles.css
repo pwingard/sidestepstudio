@@ -51,6 +51,14 @@ main {
   font-weight: 600;
   letter-spacing: 0.5px;
 }
+.ver {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 
 /* Controls */
 .controls {

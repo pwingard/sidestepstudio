@@ -6,6 +6,7 @@
 
 "use strict";
 
+const APP_VERSION = "v7";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -780,6 +781,8 @@ function render() {
 }
 
 /* ---- Boot ----------------------------------------------------------------- */
+const verEl = $("ver");
+if (verEl) verEl.textContent = APP_VERSION;
 loadCustomTargets();
 initSelectors();
 render();                          // paint immediately with schematics

@@ -1,7 +1,10 @@
-/* FOV Planner service worker — precache all assets, serve cache-first.
- * Bump CACHE_VERSION whenever any asset changes to force a refresh. */
+/* FOV Planner service worker.
+ * Strategy: NETWORK-FIRST for the app's own files, so when you're online you
+ * always get the latest version immediately (no stale-cache dance). Falls back
+ * to the precache when offline. Cross-origin requests (survey images, Sesame)
+ * are left to the browser. Bump CACHE_VERSION when assets change. */
 
-const CACHE_VERSION = "fov-v6";
+const CACHE_VERSION = "fov-v7";
 const ASSETS = [
   "./",
   "./index.html",
@@ -32,19 +35,22 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
+
+  // Only handle our own origin; let survey/Sesame fetches pass straight through.
+  if (new URL(req.url).origin !== self.location.origin) return;
+
+  // Network-first: fresh when online, cache when offline.
   event.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req)
-        .then((resp) => {
-          // Cache same-origin successful responses for next time.
-          if (resp && resp.ok && new URL(req.url).origin === self.location.origin) {
-            const copy = resp.clone();
-            caches.open(CACHE_VERSION).then((c) => c.put(req, copy));
-          }
-          return resp;
-        })
-        .catch(() => cached); // offline & uncached -> undefined, lets browser error
-    })
+    fetch(req)
+      .then((resp) => {
+        if (resp && resp.ok) {
+          const copy = resp.clone();
+          caches.open(CACHE_VERSION).then((c) => c.put(req, copy));
+        }
+        return resp;
+      })
+      .catch(() =>
+        caches.match(req).then((cached) => cached || caches.match("./index.html"))
+      )
   );
 });
