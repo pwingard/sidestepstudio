@@ -1,4 +1,4 @@
-# FOV Planner
+# Barnard's Loop — FOV Planner
 
 An offline-capable, installable PWA that draws — to scale — how different camera
 sensors frame a deep-sky target through a given telescope/corrector config. It

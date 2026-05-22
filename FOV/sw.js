@@ -4,7 +4,7 @@
  * to the precache when offline. Cross-origin requests (survey images, Sesame)
  * are left to the browser. Bump CACHE_VERSION when assets change. */
 
-const CACHE_VERSION = "fov-v7";
+const CACHE_VERSION = "fov-v8";
 const ASSETS = [
   "./",
   "./index.html",
