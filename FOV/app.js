@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v10";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v11";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -600,11 +600,14 @@ function renderImagePanel(target) {
     box.appendChild(surveyField);
 
     const fovField = el("label", "img-field");
-    fovField.appendChild(el("span", null, "Field width (°)"));
+    fovField.appendChild(el("span", null, "Image field width (°)"));
     const fov = el("input");
     fov.type = "number"; fov.min = "0.05"; fov.step = "0.1"; fov.inputMode = "decimal";
     fov.value = rec && rec.source === "survey" ? round2(rec.fovWDeg) : suggestedFov(target);
     fovField.appendChild(fov);
+    fovField.appendChild(el("p", "img-hint",
+      "How wide the fetched picture is on the sky — THIS sizes the image. " +
+      "Use a value bigger than your object to leave room to frame."));
     box.appendChild(fovField);
 
     const go = el("button", "img-btn primary", "Fetch sky image");
@@ -732,7 +735,7 @@ function renderCustomPanel(target) {
   if (!target.custom) { wrap.hidden = true; return; }
   wrap.hidden = false;
 
-  wrap.appendChild(el("div", "img-head", "Custom object — approximate size"));
+  wrap.appendChild(el("div", "img-head", "Custom object — approximate size (verdict only)"));
 
   const sizeFn = (key, labelText) => {
     const f = el("label", "img-field");
@@ -754,8 +757,9 @@ function renderCustomPanel(target) {
   wrap.appendChild(row);
 
   wrap.appendChild(el("p", "img-hint",
-    "Sesame gives coordinates, not size — set a rough size for the fit verdict, " +
-    "or just fetch a sky image and judge framing visually."));
+    "Sesame gives coordinates, not size. This only affects the fit verdict and " +
+    "the schematic — it does NOT size the fetched picture (use “Image field " +
+    "width” in the Object image panel for that)."));
 
   const del = el("button", "img-btn danger", "Delete this target");
   del.addEventListener("click", () => {
