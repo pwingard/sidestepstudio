@@ -99,8 +99,8 @@ the `SURVEYS` array to add more HiPS.
 
 - Requires **network at fetch time** (do it on wifi). The result is cached
   **offline in IndexedDB**, so afterwards it works with no connection.
-- **Move frame** arrows slide your sensor/optics over the fixed sky to hunt the
-  best composition; **◎** re-centres.
+- **Drag** on the image (touch / mouse / pencil) to slide your sensor/optics
+  over the fixed sky, or use the **Move frame** arrows; **◎** re-centres.
 - **Image brightness** slider lifts dim cutouts (DSS dark nebulae start
   brightened); the frame/circle overlays are dimmed over any photo so they don't
   bury a faint backdrop.

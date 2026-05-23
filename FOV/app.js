@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v9";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v10";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -67,6 +67,7 @@ function camsForScope(scope) {
 
 let configIdx = 0;
 let targetIdx = 0;
+let lastPxPerDeg = 1;   // deg->viewBox scale from the last diagram render (for drag)
 
 /* ---- Custom targets resolved by name (CDS Sesame) ------------------------- */
 // Persisted in localStorage; appended after the seeded TARGETS in the dropdown.
@@ -373,9 +374,15 @@ function renderDiagram(scope, target, focalMM) {
   });
   const halfSpanDeg = Math.max(halfX, halfY) / 0.94;   // 6% margin, square frame
   const pxPerDeg = (VB / 2) / halfSpanDeg;             // deg -> viewBox px
+  lastPxPerDeg = pxPerDeg;                             // cache for drag-to-pan
 
   const D = (deg) => deg * pxPerDeg;                   // full extent in px
   const fx = cx + D(offX), fy = cy - D(offY);          // offset optics centre
+
+  // Only intercept touch (disable page scroll over the diagram) when there's
+  // an image to pan; otherwise let the page scroll normally.
+  svg.style.touchAction = img ? "none" : "auto";
+  svg.style.cursor = img ? "grab" : "default";
 
   if (img) {
     // --- real photo backdrop (replaces schematic + synthetic stars) ---
@@ -690,7 +697,7 @@ function renderImagePanel(target) {
   }
 
   // Framing nudge — slide the sensor/optics over the fixed sky.
-  wrap.appendChild(el("span", "img-sublabel", "Move frame over the image"));
+  wrap.appendChild(el("span", "img-sublabel", "Drag on the image to move the frame, or nudge:"));
   const step = rec.fovWDeg * 0.1;
   const nudge = (dx, dy) => () => {
     const cur = targetImages.get(target.name);
@@ -766,6 +773,50 @@ function renderCustomPanel(target) {
   wrap.appendChild(del);
 }
 
+/* ---- Drag-to-pan the frame on the diagram (touch / mouse / pencil) --------
+ * Pointer Events give one code path for all input types. Dragging sets the
+ * same offX/offY the nudge pad uses, so the frame follows your finger over a
+ * fixed sky image. Active only when the current target has an image. */
+function setupDiagramDrag() {
+  const svg = $("diagram");
+  let dragging = false, pid = null, sx = 0, sy = 0, sOffX = 0, sOffY = 0;
+  let rec = null, target = null;
+
+  svg.addEventListener("pointerdown", (e) => {
+    target = allTargets()[targetIdx];
+    rec = targetImages.get(target.name);
+    if (!rec) return;                       // nothing to pan without an image
+    dragging = true; pid = e.pointerId;
+    sx = e.clientX; sy = e.clientY;
+    sOffX = rec.offX || 0; sOffY = rec.offY || 0;
+    try { svg.setPointerCapture(pid); } catch (_) {}
+    svg.style.cursor = "grabbing";
+    e.preventDefault();
+  });
+
+  svg.addEventListener("pointermove", (e) => {
+    if (!dragging || e.pointerId !== pid) return;
+    const rect = svg.getBoundingClientRect();
+    const scale = 1000 / rect.width;        // viewBox units per CSS pixel
+    const dDegX = ((e.clientX - sx) * scale) / lastPxPerDeg;
+    const dDegY = ((e.clientY - sy) * scale) / lastPxPerDeg;
+    rec.offX = sOffX + dDegX;               // frame follows finger
+    rec.offY = sOffY - dDegY;               // screen-down => frame down
+    const scope = SCOPES[configIdx];
+    renderDiagram(scope, target, scope.focalLength);   // redraw diagram only
+  });
+
+  const end = (e) => {
+    if (!dragging || e.pointerId !== pid) return;
+    dragging = false;
+    try { svg.releasePointerCapture(pid); } catch (_) {}
+    svg.style.cursor = "grab";
+    if (rec) saveImage(target.name, rec);   // persist final offset to IndexedDB
+  };
+  svg.addEventListener("pointerup", end);
+  svg.addEventListener("pointercancel", end);
+}
+
 /* ---- Master render -------------------------------------------------------- */
 function render() {
   const scope = SCOPES[configIdx];
@@ -785,5 +836,6 @@ const verEl = $("ver");
 if (verEl) verEl.textContent = APP_VERSION;
 loadCustomTargets();
 initSelectors();
+setupDiagramDrag();
 render();                          // paint immediately with schematics
 loadAllImages().then(render);      // then re-render once stored photos load
