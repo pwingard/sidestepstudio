@@ -30,10 +30,13 @@
     <div class="pane pane-side">
       <!-- Selectors -->
       <section class="controls">
-        <label class="field">
-          <span>Camera</span>
-          <select id="cameraSelect"></select>
-        </label>
+        <div class="field">
+          <span>Camera — pick, then Add to compare</span>
+          <div class="cam-add-row">
+            <select id="cameraSelect"></select>
+            <button id="addCamBtn" type="button">Add</button>
+          </div>
+        </div>
         <div class="field" id="customCamFields" hidden>
           <span>Custom sensor (mm)</span>
           <div class="size-row">

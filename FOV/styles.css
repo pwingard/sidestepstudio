@@ -142,6 +142,23 @@ select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 }
 .field > input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
+/* Camera picker + Add button */
+.cam-add-row { display: flex; gap: 8px; }
+.cam-add-row select { flex: 1; min-width: 0; }
+.cam-add-row button {
+  flex: 0 0 auto;
+  min-width: 72px;
+  height: 48px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cam-add-row button[disabled] { opacity: 0.55; cursor: default; }
+
 /* Find object by name */
 .find-row { display: flex; gap: 8px; }
 .find-row input {
@@ -245,6 +262,23 @@ select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   padding: 2px 7px;
   font-weight: 700;
 }
+
+/* Remove (×) button on an active-camera chip */
+.cam-remove {
+  flex: 0 0 auto;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.cam-remove:hover, .cam-remove:active { color: var(--bad); border-color: var(--bad); }
+/* Active-camera chips aren't clickable toggles anymore */
+.cam-info .cam { cursor: default; }
 
 /* Diagram */
 .diagram-wrap {
@@ -400,3 +434,8 @@ select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .verdict.good { border-left-color: var(--good); }
 .verdict.some { border-left-color: var(--warn); }
 .verdict.bad  { border-left-color: var(--bad); }
+.verdict-head { margin: 0; }
+.verdict-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.verdict-row { display: flex; align-items: center; gap: 10px; }
+.verdict-row .swatch { width: 16px; height: 16px; border-radius: 5px; }
+.verdict-txt { font-size: 13px; color: var(--muted); line-height: 1.4; }
