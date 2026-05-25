@@ -31,14 +31,15 @@
       <!-- Selectors -->
       <section class="controls">
         <div class="field">
-          <span>Camera — pick, then Add to compare</span>
+          <span>Camera</span>
           <input id="cameraSearch" type="search" class="cam-search" autocapitalize="off"
                  autocorrect="off" spellcheck="false"
-                 placeholder="Search… (ZWO, 2600, IMX571, full frame)" />
+                 placeholder="Search… (ZWO, 2600, IMX571, Seestar, full frame)" />
           <div class="cam-add-row">
             <select id="cameraSelect"></select>
             <button id="addCamBtn" type="button">Add</button>
           </div>
+          <p class="img-hint">Pick a camera or smart scope, then tap Add to compare.</p>
         </div>
         <div class="field" id="customCamFields" hidden>
           <span>Custom sensor (mm)</span>
@@ -54,7 +55,7 @@
           </div>
         </div>
         <label class="field">
-          <span>Focal length (mm) — for next camera added</span>
+          <span>Focal length (mm)</span>
           <input id="focalInput" type="number" min="50" max="4000" step="1" value="335"
                  inputmode="numeric" list="focalPresets" />
           <datalist id="focalPresets">
@@ -74,22 +75,17 @@
             <option value="1000"></option>
             <option value="1200"></option>
           </datalist>
-        </label>
-        <label class="field">
-          <span>Smart scope (adds a locked scope + camera)</span>
-          <select id="rigPreset"></select>
-        </label>
-        <label class="field">
-          <span>Target</span>
-          <select id="targetSelect"></select>
+          <p class="img-hint">Applied to the next camera you add.</p>
         </label>
         <div class="field">
-          <span>Find object by name</span>
+          <span>Target</span>
           <div class="find-row">
-            <input id="findInput" type="search" autocapitalize="off" autocorrect="off"
-                   spellcheck="false" placeholder="e.g. M42, NGC 7000, Sh2-129" />
+            <input id="targetInput" type="search" list="targetList" autocapitalize="off"
+                   autocorrect="off" spellcheck="false"
+                   placeholder="Pick a target, or type any object name…" />
             <button id="findBtn" type="button">Find</button>
           </div>
+          <datalist id="targetList"></datalist>
           <p id="findStatus" class="find-status"></p>
         </div>
       </section>
@@ -136,7 +132,10 @@
       </section>
 
       <!-- Optional per-target object image -->
-      <section id="imagePanel" class="image-panel"></section>
+      <details class="advanced image-disclosure">
+        <summary>Add a real sky photo (optional)</summary>
+        <section id="imagePanel" class="image-panel"></section>
+      </details>
 
       <!-- Metric cards -->
       <section id="cards" class="cards"></section>

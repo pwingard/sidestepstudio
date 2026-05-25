@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v19";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v20";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -369,6 +369,21 @@ function buildCameraSelect(query) {
     mine.forEach((idx) => { opt(gMine, "model:" + idx, modelLabel(CAMERA_DB.models[idx]) + " — mine"); matches++; });
   }
 
+  // Smart scopes (sealed scope+camera units). Value "smart:<index>"; label
+  // names the unit, its fixed focal length, and sensor. Skip units whose
+  // sensor isn't in CAMERA_DB. Matches the search query on the unit name.
+  const smart = SMART_SCOPES
+    .map((s, i) => ({ s, i }))
+    .filter(({ s }) => CAMERA_DB.sensors[s.sensor] &&
+      (!q || s.name.toLowerCase().includes(q)));
+  if (smart.length) {
+    const gSmart = grp("Smart scopes");
+    smart.forEach(({ s, i }) => {
+      opt(gSmart, "smart:" + i, `${s.name} — ${s.focalMM}mm (${s.sensor})`);
+      matches++;
+    });
+  }
+
   // Generic sensor formats (match against label + key).
   const fmts = [
     ["FULLFRAME_35MM", "Full Frame (36 x 24)"],
@@ -417,13 +432,27 @@ function applyCameraSelection(value) {
   $("customCamFields").hidden = !isCustom;
 }
 
-// Resolve a <select> value into a { key, cam } pair to add to the compare list.
-// "custom" reads the current custom W/H inputs. Returns null if unresolvable.
+// Resolve a <select> value into an add-able descriptor for the compare list:
+//   { key, cam, focalMM?, locked? }
+// Normal cameras leave focalMM undefined (so the add inherits the default
+// #focalInput value) and locked falsy. Smart scopes return a FIXED focalMM and
+// locked:true (sealed scope+camera). "custom" reads the current custom W/H
+// inputs. Returns null if unresolvable.
 function camFromSelectValue(value) {
   if (value === "custom") {
     return {
       key: `custom:${customCam.wMM}x${customCam.hMM}`,
       cam: Object.assign({}, customCam),   // snapshot so later edits don't mutate it
+    };
+  }
+  if (value.startsWith("smart:")) {
+    const s = SMART_SCOPES[+value.slice(6)];
+    if (!s) return null;
+    return {
+      key: "smart:" + s.name,
+      cam: camFromSensorKey(s.name, s.sensor),
+      focalMM: s.focalMM,
+      locked: true,
     };
   }
   if (value.startsWith("model:")) {
@@ -475,7 +504,7 @@ function initSelectors() {
   };
   addBtn.addEventListener("click", () => {
     const picked = camFromSelectValue(cam.value);
-    if (picked) addCam(picked.key, picked.cam);
+    if (picked) addCam(picked.key, picked.cam, picked.focalMM, picked.locked);
     refreshAddState();
     render();
   });
@@ -503,28 +532,6 @@ function initSelectors() {
   focal.addEventListener("change", applyFocal);
   focal.addEventListener("input", applyFocal);
 
-  // Smart scopes — sealed all-in-one scope+camera units. Selecting one ADDS a
-  // locked compare entry carrying that unit's sensor (joined from CAMERA_DB)
-  // AND its fixed focal length. Specs are web-verified (see SMART_SCOPES).
-  const rig = $("rigPreset");
-  const ropt = (value, text) => { const o = document.createElement("option"); o.value = value; o.textContent = text; rig.appendChild(o); return o; };
-  ropt("", "Choose a smart scope…");
-  SMART_SCOPES.forEach((s, i) => {
-    if (!CAMERA_DB.sensors[s.sensor]) return;   // skip if its sensor is unknown
-    ropt("smart:" + i, `${s.name} — ${s.focalMM}mm (${s.sensor})`);
-  });
-  rig.addEventListener("change", () => {
-    const v = rig.value;
-    rig.value = "";                         // reset to placeholder (one-tap action)
-    if (!v || !v.startsWith("smart:")) return;
-    const s = SMART_SCOPES[+v.slice(6)];
-    if (!s) return;
-    const cam = camFromSensorKey(s.name, s.sensor);
-    if (cam) addCam("smart:" + s.name, cam, s.focalMM, true);
-    refreshAddState();
-    render();
-  });
-
   // Advanced: image circle + aperture.
   const circ = $("circleInput");
   circ.value = String(imageCircleMM);
@@ -539,32 +546,39 @@ function initSelectors() {
     render();
   });
 
-  const tgt = $("targetSelect");
+  // Target combobox: ONE control that both picks a known target and resolves
+  // any object name. Typing/selecting an exact known-name match selects it;
+  // pressing Enter (or Find) on an unknown name runs the Sesame resolver and
+  // creates a custom target. The datalist offers all current target names.
+  const input = $("targetInput"), btn = $("findBtn"), status = $("findStatus");
   rebuildTargetSelect();
-  tgt.addEventListener("change", () => { targetIdx = +tgt.value; render(); });
+  input.value = allTargets()[targetIdx] ? allTargets()[targetIdx].name : "";
 
-  // Find object by name (CDS Sesame).
-  const input = $("findInput"), btn = $("findBtn"), status = $("findStatus");
-  const doFind = () => {
-    const name = input.value.trim();
-    if (!name) return;
-    // If we already have this custom target, just select it.
-    const existing = customTargets.findIndex((t) => t.name.toLowerCase() === name.toLowerCase());
-    if (existing >= 0) {
-      targetIdx = TARGETS.length + existing;
-      $("targetSelect").value = targetIdx;
-      status.textContent = `Selected existing “${name}”.`;
-      render();
-      return;
-    }
+  // Find the index of a target whose name matches `name` (case-insensitive).
+  // The datalist marks custom targets with a leading "★ ", so strip that first
+  // when the value came from picking a datalist option.
+  const indexOfName = (name) => {
+    const n = name.replace(/^★\s*/, "").toLowerCase();
+    return allTargets().findIndex((t) => t.name.toLowerCase() === n);
+  };
+
+  // Pick a known target by index: select + reflect its name in the box.
+  const selectTarget = (idx) => {
+    targetIdx = idx;
+    input.value = allTargets()[idx].name;
+    status.textContent = "";
+    render();
+  };
+
+  // Resolve an unknown name via CDS Sesame, create a custom target, select it.
+  const resolveAndAdd = (name) => {
     btn.disabled = true; status.textContent = `Resolving “${name}”…`;
     resolveByName(name).then(({ ra, dec, kind }) => {
       customTargets.push({ name, ra, dec, wDeg: 1.0, hDeg: 1.0, kind, custom: true });
       saveCustomTargets();
       rebuildTargetSelect();
       targetIdx = allTargets().length - 1;
-      $("targetSelect").value = targetIdx;
-      input.value = "";
+      input.value = name;
       status.textContent =
         `Found “${name}” at RA ${ra.toFixed(3)}°, Dec ${dec.toFixed(3)}°. ` +
         `Set its approx size below, then fetch a sky image.`;
@@ -576,23 +590,38 @@ function initSelectors() {
         `(name resolution needs network).`;
     }).finally(() => { btn.disabled = false; });
   };
-  btn.addEventListener("click", doFind);
-  input.addEventListener("keydown", (e) => { if (e.key === "Enter") doFind(); });
+
+  // Commit the current text: exact known-name match -> select it; otherwise
+  // resolve it by name (the old Find behaviour).
+  const commit = () => {
+    const name = input.value.trim();
+    if (!name) return;
+    const known = indexOfName(name);
+    if (known >= 0) { selectTarget(known); return; }
+    resolveAndAdd(name);
+  };
+
+  // Picking from the datalist fires "change" with an exact name -> select it
+  // without a network round-trip. (Typing free text only commits on Enter/Find.)
+  input.addEventListener("change", () => {
+    const known = indexOfName(input.value.trim());
+    if (known >= 0) selectTarget(known);
+  });
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); commit(); } });
+  btn.addEventListener("click", commit);
 }
 
-// (Re)build the Target dropdown from seeded + custom targets, preserving the
-// current selection index.
+// (Re)build the Target datalist from seeded + custom targets. The selected
+// index is kept in `targetIdx`; the combobox shows the selected target's name.
 function rebuildTargetSelect() {
-  const tgt = $("targetSelect");
-  const keep = targetIdx;
-  tgt.innerHTML = "";
-  allTargets().forEach((t, i) => {
+  const list = $("targetList");
+  if (!list) return;
+  list.innerHTML = "";
+  allTargets().forEach((t) => {
     const o = document.createElement("option");
-    o.value = i;
-    o.textContent = t.custom ? `★ ${t.name}` : t.name;
-    tgt.appendChild(o);
+    o.value = t.custom ? `★ ${t.name}` : t.name;
+    list.appendChild(o);
   });
-  if (keep < allTargets().length) { targetIdx = keep; tgt.value = keep; }
 }
 
 /* ---- Active-cameras list (compare chips, each removable) ------------------ */
@@ -1144,7 +1173,8 @@ function renderCustomPanel(target) {
     saveCustomTargets();
     targetIdx = 0;                     // fall back to first seeded target
     rebuildTargetSelect();
-    $("targetSelect").value = 0;
+    const tin = $("targetInput");
+    if (tin) tin.value = allTargets()[0] ? allTargets()[0].name : "";
     $("findStatus").textContent = "";
     render();
   });

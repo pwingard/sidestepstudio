@@ -226,6 +226,15 @@ select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .advanced[open] > summary::before { content: "▾ "; }
 .adv-body { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 12px; }
 
+/* "Add a real sky photo" disclosure wraps the image panel. The panel keeps its
+   own card chrome, so drop the doubled border/padding the .image-panel adds. */
+.image-disclosure { padding: 4px 14px; }
+.image-disclosure .image-panel {
+  border: none;
+  background: transparent;
+  padding: 4px 0 12px;
+}
+
 /* Camera legend / toggles */
 .legend { display: flex; flex-direction: column; gap: 8px; }
 .cam {
