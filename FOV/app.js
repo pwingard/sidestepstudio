@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v15";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v16";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -48,6 +48,24 @@ const STAR_SEED = 1235; // constant => stable star field
 const CAM_COLORS = ["#6db3f2", "#57d18a", "#f2b84b", "#c887f0", "#f2785c"];
 function camColor(i) { return CAM_COLORS[i % CAM_COLORS.length]; }
 
+/* ---- Smart scopes: sealed all-in-one scope + camera units ----------------
+ * Each carries a FIXED focal length and a sensor key that joins into
+ * CAMERA_DB.sensors. Selecting one in the Smart-scope dropdown adds a LOCKED
+ * compare entry (camFromSensorKey + this focalMM). Specs below are web-verified
+ * (focal length + sensor model); units whose sensor isn't in CAMERA_DB are
+ * skipped at build time. These are NOT the same as the Askar focal-length
+ * shortcuts in the #focalInput datalist.
+ * ------------------------------------------------------------------------- */
+const SMART_SCOPES = [
+  { name: "Celestron Origin",        focalMM: 335, sensor: "IMX678" }, // RASA 6", f/2.2
+  { name: "ZWO Seestar S50",         focalMM: 250, sensor: "IMX462" }, // 50mm f/5
+  { name: "ZWO Seestar S30",         focalMM: 150, sensor: "IMX662" }, // 30mm f/5
+  { name: "Vaonis Vespera",          focalMM: 200, sensor: "IMX462" }, // 50mm f/4
+  { name: "Vaonis Vespera II",       focalMM: 250, sensor: "IMX585" }, // 50mm f/5
+  { name: "DwarfLab Dwarf 3",        focalMM: 150, sensor: "IMX678" }, // 35mm tele f/4.3
+  { name: "Unistellar eVscope eQuinox", focalMM: 450, sensor: "IMX224" }, // 114mm f/4
+];
+
 /* ---- Camera model -> internal cam object ---------------------------------
  * The renderer/cards/verdict expect a cam shaped like:
  *   { name, wMM, hMM, pixelMicron|null, mp|null, format }
@@ -70,11 +88,15 @@ function camFromSensorKey(name, sensorKey) {
 
 /* ---- State ---------------------------------------------------------------- */
 // Active compare list. Each entry is one camera being overlaid/judged:
-//   { key, cam }
+//   { key, cam, focalMM, locked }
 // where `cam` is a cam object (see camFromSensorKey) and `key` is a stable
 // dedupe id derived from the <select> value (e.g. "model:42", "sensor:IMX571",
 // or "custom:36x24"). The frame colour is the entry's index in this list,
 // via camColor(i) — so removing one re-flows colours but stays consistent.
+//   focalMM : this camera's OWN focal length. Normal adds inherit the top
+//             #focalInput value at add-time and stay user-editable per chip.
+//   locked  : true for a smart-scope add (sealed scope+camera). Its focal
+//             length is fixed and shown read-only with a lock indicator.
 const activeList = [];
 const MAX_CAMS = CAM_COLORS.length;   // cap = palette size (5)
 
@@ -82,25 +104,39 @@ const MAX_CAMS = CAM_COLORS.length;   // cap = palette size (5)
 let customCam = { name: "Custom sensor", wMM: 36, hMM: 24, pixelMicron: null, mp: null, format: "Custom" };
 let isCustom = false;
 
-let focalMM = 335;           // user-typed focal length (mm)
+let focalMM = 335;           // DEFAULT focal length for the next camera added (mm)
 let imageCircleMM = 43.3;    // advanced: dashed coverage circle diameter (mm)
 let apertureMM = null;       // advanced: optional, enables f-ratio when set
 
 let targetIdx = 0;
 let lastPxPerDeg = 1;   // deg->viewBox scale from the last diagram render (for drag)
 
-// The active cameras paired with their overlay colour, for the render code.
+// ---- Zoom (applied as a CSS transform on the <svg>, on top of the auto-fit
+// viewBox). zoom=1 == auto-fit. panX/panY are in CSS pixels of the stage and
+// shift the scaled diagram so we can zoom toward a focal point. ----
+let zoom = 1, panX = 0, panY = 0;
+const ZOOM_MIN = 1, ZOOM_MAX = 12;
+
+// The active cameras paired with their overlay colour + own focal length, for
+// the render code. Each item: { cam, color, focalMM }.
 function activeCams() {
-  return activeList.map((e, i) => ({ cam: e.cam, color: camColor(i) }));
+  return activeList.map((e, i) => ({ cam: e.cam, color: camColor(i), focalMM: e.focalMM }));
 }
 
 // Add a camera (cam object + dedupe key) to the compare list. No duplicates,
 // capped at MAX_CAMS. Returns true if it was added.
-function addCam(key, cam) {
+//   fMM   : the focal length this camera is shot at. Defaults to the current
+//           top-level `focalMM` (the "default for next added").
+//   locked: true for sealed smart-scope units (focal length not editable).
+function addCam(key, cam, fMM, locked) {
   if (!cam) return false;
   if (activeList.length >= MAX_CAMS) return false;
   if (activeList.some((e) => e.key === key)) return false;
-  activeList.push({ key, cam });
+  activeList.push({
+    key, cam,
+    focalMM: (isFinite(fMM) && fMM > 0) ? fMM : focalMM,
+    locked: !!locked,
+  });
   return true;
 }
 function removeCamAt(i) {
@@ -454,46 +490,38 @@ function initSelectors() {
   cw.addEventListener("change", syncCustom);
   ch.addEventListener("change", syncCustom);
 
-  // Focal length input.
+  // Default focal length input — this is the focal length the NEXT added
+  // camera will inherit (not a global override of existing chips).
   const focal = $("focalInput");
   focal.value = String(focalMM);
   const applyFocal = () => {
     const v = parseFloat(focal.value);
+    // Only the default + the image-circle guide depend on this; per-camera
+    // chips keep their own focal length, so a redraw refreshes the guide.
     if (isFinite(v) && v >= 50 && v <= 4000) { focalMM = v; render(); }
   };
   focal.addEventListener("change", applyFocal);
   focal.addEventListener("input", applyFocal);
 
-  // Quick rig presets (set focal length; Origin also picks its camera).
+  // Smart scopes — sealed all-in-one scope+camera units. Selecting one ADDS a
+  // locked compare entry carrying that unit's sensor (joined from CAMERA_DB)
+  // AND its fixed focal length. Specs are web-verified (see SMART_SCOPES).
   const rig = $("rigPreset");
   const ropt = (value, text) => { const o = document.createElement("option"); o.value = value; o.textContent = text; rig.appendChild(o); return o; };
-  ropt("", "Choose a rig…");
-  SCOPES.filter((s) => !s.system).forEach((s, i) => {
-    const origIdx = SCOPES.indexOf(s);
-    ropt("scope:" + origIdx, `${s.name} — ${s.focalLength}mm`);
+  ropt("", "Choose a smart scope…");
+  SMART_SCOPES.forEach((s, i) => {
+    if (!CAMERA_DB.sensors[s.sensor]) return;   // skip if its sensor is unknown
+    ropt("smart:" + i, `${s.name} — ${s.focalMM}mm (${s.sensor})`);
   });
-  // Celestron Origin: sealed combo -> sets 335mm AND selects the IMX678 camera.
-  ropt("origin", "Celestron Origin — 335mm (IMX678)");
   rig.addEventListener("change", () => {
     const v = rig.value;
-    if (!v) return;
-    if (v === "origin") {
-      focalMM = 335;
-      focal.value = "335";
-      // Select an IMX678 model in the dropdown and add it to the compare list.
-      const idx = CAMERA_DB.models.findIndex((m) => m.sensor === "IMX678");
-      if (idx >= 0) {
-        cam.value = "model:" + idx;
-        applyCameraSelection(cam.value);
-        const picked = camFromSelectValue(cam.value);
-        if (picked) addCam(picked.key, picked.cam);
-      }
-    } else if (v.startsWith("scope:")) {
-      const s = SCOPES[+v.slice(6)];
-      focalMM = s.focalLength;
-      focal.value = String(s.focalLength);
-    }
-    rig.value = ""; // reset to placeholder so it stays a one-tap action
+    rig.value = "";                         // reset to placeholder (one-tap action)
+    if (!v || !v.startsWith("smart:")) return;
+    const s = SMART_SCOPES[+v.slice(6)];
+    if (!s) return;
+    const cam = camFromSensorKey(s.name, s.sensor);
+    if (cam) addCam("smart:" + s.name, cam, s.focalMM, true);
+    refreshAddState();
     render();
   });
 
@@ -587,7 +615,7 @@ function renderCamInfo(scope, focalMM) {
   activeList.forEach((entry, i) => {
     const cam = entry.cam;
     const color = camColor(i);
-    const fov = camFov(cam, focalMM);
+    const fov = camFov(cam, entry.focalMM);
 
     const row = document.createElement("div");
     row.className = "cam";
@@ -615,6 +643,31 @@ function renderCamInfo(scope, focalMM) {
     main.appendChild(name);
     main.appendChild(fovEl);
 
+    // Per-camera focal length: editable for normal cameras, read-only (with a
+    // lock indicator) for sealed smart-scope entries.
+    const fl = document.createElement("div");
+    fl.className = "cam-focal";
+    fl.appendChild(el("span", null, "Focal length"));
+    if (entry.locked) {
+      fl.appendChild(el("span", "locked-val", `${entry.focalMM} mm`));
+      fl.appendChild(el("span", "lock", "🔒 fixed"));
+    } else {
+      const fInput = document.createElement("input");
+      fInput.type = "number";
+      fInput.min = "50"; fInput.max = "4000"; fInput.step = "1";
+      fInput.inputMode = "numeric";
+      fInput.value = String(entry.focalMM);
+      fInput.setAttribute("aria-label", `Focal length for ${cam.name} (mm)`);
+      const applyEntryFocal = () => {
+        const v = parseFloat(fInput.value);
+        if (isFinite(v) && v >= 50 && v <= 4000) { entry.focalMM = v; render(); }
+      };
+      fInput.addEventListener("change", applyEntryFocal);
+      fl.appendChild(fInput);
+      fl.appendChild(el("span", null, "mm"));
+    }
+    main.appendChild(fl);
+
     const rm = document.createElement("button");
     rm.type = "button";
     rm.className = "cam-remove";
@@ -637,10 +690,10 @@ function renderDiagram(scope, target, focalMM) {
   const VB = 1000;            // viewBox is 1000 x 1000
   const cx = VB / 2, cy = VB / 2;
 
-  // The single selected camera's FOV (deg), as a one-element list so the
-  // existing draw loop is unchanged.
-  const cams = activeCams().map(({ cam, color }) => ({ cam, color, fov: camFov(cam, focalMM) }));
+  // Every active camera's FOV (deg), each at ITS OWN focal length.
+  const cams = activeCams().map(({ cam, color, focalMM: f }) => ({ cam, color, fov: camFov(cam, f) }));
 
+  // Image circle is a coverage guide drawn at the top-level default focal length.
   const circleDeg = angularDeg(scope.imageCircle, focalMM);
 
   // Optional user/survey image for this target.
@@ -668,9 +721,9 @@ function renderDiagram(scope, target, focalMM) {
   const D = (deg) => deg * pxPerDeg;                   // full extent in px
   const fx = cx + D(offX), fy = cy - D(offY);          // offset optics centre
 
-  // Only intercept touch (disable page scroll over the diagram) when there's
-  // an image to pan; otherwise let the page scroll normally.
-  svg.style.touchAction = img ? "none" : "auto";
+  // Always intercept touch over the diagram so pinch-to-zoom works (and frame
+  // pan when an image is present). The cursor still hints draggability.
+  svg.style.touchAction = "none";
   svg.style.cursor = img ? "grab" : "default";
 
   if (img) {
@@ -776,27 +829,28 @@ function renderCards(scope, target, focalMM) {
     return el;
   };
 
-  cards.appendChild(card("Focal length", `${focalMM} mm`));
+  cards.appendChild(card("Default focal length", `${focalMM} mm`, "for the next camera added"));
   if (scope.fRatio) cards.appendChild(card("f-ratio", `f/${round2(scope.fRatio)}`));
   cards.appendChild(card("Target size", `${round2(target.wDeg)}° × ${round2(target.hDeg)}°`,
     target.kind));
 
   // Sampling: arcsec/pixel per active camera — only for cameras with a real
   // pixel size (generic formats carry null, so they're skipped to avoid NaN).
+  // Each camera samples at ITS OWN focal length.
   const sampled = activeList.filter((e) => typeof e.cam.pixelMicron === "number");
   if (sampled.length) {
     const samp = document.createElement("div");
     samp.className = "card sampling";
     samp.innerHTML = `<div class="k">Sampling — arcsec / pixel</div>
-      <div class="sub">Pixel-size dependent; differs per camera.</div>`;
+      <div class="sub">Pixel-size dependent; computed at each camera's own focal length.</div>`;
     const list = document.createElement("div");
     list.className = "samp-list";
     sampled.forEach((e) => {
       const cam = e.cam;
       const row = document.createElement("div");
       row.className = "samp-row";
-      const aspp = arcsecPerPx(cam.pixelMicron, focalMM);
-      row.innerHTML = `<span class="sname">${cam.name} · ${cam.pixelMicron}µm</span>` +
+      const aspp = arcsecPerPx(cam.pixelMicron, e.focalMM);
+      row.innerHTML = `<span class="sname">${cam.name} · ${cam.pixelMicron}µm · ${e.focalMM}mm</span>` +
                       `<span class="sval">${round2(aspp)}″/px</span>`;
       list.appendChild(row);
     });
@@ -810,15 +864,17 @@ function renderVerdict(scope, target, focalMM) {
   const node = $("verdict");
   node.innerHTML = "";
 
-  const cams = activeCams().map(({ cam }) => ({ cam, fov: camFov(cam, focalMM) }));
+  const cams = activeCams().map(({ cam, focalMM: f }) => ({ cam, fov: camFov(cam, f), focalMM: f }));
   if (cams.length === 0) {
     node.className = "verdict";
     node.textContent = "No cameras selected — pick one above and tap Add.";
     return;
   }
 
-  const fl = `${focalMM}mm`;
   const fitting = cams.filter(({ fov }) => fits(fov, target));
+  // Whether every camera is at the same focal length (lets the headline name one).
+  const sameFocal = cams.every((c) => c.focalMM === cams[0].focalMM);
+  const fl = sameFocal ? `${cams[0].focalMM}mm` : "their focal lengths";
 
   // Headline (tri-state across the compare set).
   let headline;
@@ -830,7 +886,7 @@ function renderVerdict(scope, target, focalMM) {
       `Smallest fitting sensor (${smallest.cam.name}) is the efficient pick.`;
   } else if (fitting.length === cams.length) {
     node.className = "verdict good";
-    headline = `${cams[0].cam.name} frames ${target.name} at ${fl}.`;
+    headline = `${cams[0].cam.name} frames ${target.name} at ${cams[0].focalMM}mm.`;
   } else if (fitting.length === 0) {
     node.className = "verdict bad";
     headline = `${target.name} overflows ${cams.length > 1 ? "every selected sensor" : "the sensor"} at ${fl}. ` +
@@ -843,7 +899,7 @@ function renderVerdict(scope, target, focalMM) {
 
   // Per-camera breakdown: fill % when it fits, overflow axis when it doesn't.
   const list = el("div", "verdict-list");
-  cams.forEach(({ cam, fov }, i) => {
+  cams.forEach(({ cam, fov, focalMM: f }, i) => {
     const row = el("div", "verdict-row");
     const sw = el("span", "swatch");
     sw.style.color = camColor(i);
@@ -852,11 +908,11 @@ function renderVerdict(scope, target, focalMM) {
     if (fits(fov, target)) {
       const fillW = Math.round((target.wDeg / fov.w) * 100);
       const fillH = Math.round((target.hDeg / fov.h) * 100);
-      txt.textContent = `${cam.name}: fits — fills ~${fillW}% × ${fillH}% of frame.`;
+      txt.textContent = `${cam.name} @ ${f}mm: fits — fills ~${fillW}% × ${fillH}% of frame.`;
     } else {
       const axis = target.wDeg > fov.w && target.hDeg > fov.h ? "both axes"
         : target.wDeg > fov.w ? "width" : "height";
-      txt.textContent = `${cam.name}: overflows on ${axis} (field ${round2(fov.w)}° × ${round2(fov.h)}°).`;
+      txt.textContent = `${cam.name} @ ${f}mm: overflows on ${axis} (field ${round2(fov.w)}° × ${round2(fov.h)}°).`;
     }
     row.appendChild(sw);
     row.appendChild(txt);
@@ -1095,6 +1151,114 @@ function renderCustomPanel(target) {
   wrap.appendChild(del);
 }
 
+/* ---- Zoom (CSS transform layered over the auto-fit viewBox) ---------------
+ * The SVG keeps its auto-fit viewBox (zoom=1 == fit). We apply a CSS transform
+ * `translate(panX,panY) scale(zoom)` with transform-origin at the top-left, so
+ * everything inside — survey/uploaded image backdrop, frames, circle — scales
+ * together. panX/panY are in CSS pixels of the stage. Drag-pan/nudge stays in
+ * deg-space (it edits the image offset) and is divided by `zoom` so a finger
+ * drag tracks the cursor at any zoom level. */
+function applyZoom() {
+  const svg = $("diagram");
+  if (!svg) return;
+  svg.style.transformOrigin = "0 0";
+  svg.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+}
+
+// Clamp zoom and keep the stage point (sx, sy) — in CSS px relative to the
+// SVG's untransformed top-left — fixed on screen while scaling.
+function zoomAtPoint(newZoom, sx, sy) {
+  newZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, newZoom));
+  if (newZoom === zoom) return;
+  // World point under (sx,sy): (sx - panX)/zoom. Keep it under the cursor.
+  const wx = (sx - panX) / zoom, wy = (sy - panY) / zoom;
+  zoom = newZoom;
+  panX = sx - wx * zoom;
+  panY = sy - wy * zoom;
+  clampPan();
+  applyZoom();
+}
+
+// Don't let the scaled diagram drift entirely off its stage.
+function clampPan() {
+  const svg = $("diagram");
+  if (!svg) return;
+  const w = svg.clientWidth || svg.getBoundingClientRect().width;
+  const h = svg.clientHeight || svg.getBoundingClientRect().height;
+  if (!w || !h) return;
+  const maxX = 0, minX = w - w * zoom;     // scaled width = w*zoom
+  const maxY = 0, minY = h - h * zoom;
+  panX = Math.min(maxX, Math.max(minX, panX));
+  panY = Math.min(maxY, Math.max(minY, panY));
+}
+
+function resetZoom() {
+  zoom = 1; panX = 0; panY = 0;
+  applyZoom();
+}
+
+// Pointer position relative to the SVG's untransformed box, in CSS px. Because
+// the transform-origin is the top-left corner, that corner doesn't move under
+// translate/scale, so the element's current bounding-rect left/top still marks
+// the untransformed origin and this stays correct at any zoom.
+function pointerStagePos(svg, clientX, clientY) {
+  const r = svg.getBoundingClientRect();
+  return { x: clientX - r.left, y: clientY - r.top };
+}
+
+/* Wire wheel + pinch + on-screen buttons to the zoom. Pinch and pan-drag both
+ * use Pointer Events and coexist with setupDiagramDrag (that handler bails when
+ * two pointers are down, see `zoomPointers`). */
+const zoomPointers = new Map();   // pointerId -> {x,y} (shared with drag guard)
+
+function setupZoom() {
+  const svg = $("diagram");
+  if (!svg) return;
+
+  // Desktop wheel-zoom, centred on the cursor.
+  svg.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const { x, y } = pointerStagePos(svg, e.clientX, e.clientY);
+    const factor = Math.exp(-e.deltaY * 0.0015);   // smooth, direction-correct
+    zoomAtPoint(zoom * factor, x, y);
+  }, { passive: false });
+
+  // Pinch: track pointers; with two down, scale by the change in their spread,
+  // centred on their midpoint.
+  let pinchStartDist = 0, pinchStartZoom = 1;
+  svg.addEventListener("pointerdown", (e) => {
+    zoomPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (zoomPointers.size === 2) {
+      const [a, b] = [...zoomPointers.values()];
+      pinchStartDist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+      pinchStartZoom = zoom;
+    }
+  });
+  svg.addEventListener("pointermove", (e) => {
+    if (!zoomPointers.has(e.pointerId)) return;
+    zoomPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (zoomPointers.size === 2) {
+      const [a, b] = [...zoomPointers.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+      const mid = pointerStagePos(svg, (a.x + b.x) / 2, (a.y + b.y) / 2);
+      zoomAtPoint(pinchStartZoom * (dist / pinchStartDist), mid.x, mid.y);
+    }
+  });
+  const drop = (e) => { zoomPointers.delete(e.pointerId); };
+  svg.addEventListener("pointerup", drop);
+  svg.addEventListener("pointercancel", drop);
+
+  // On-screen buttons: zoom toward the centre of the diagram.
+  const stepZoom = (mult) => {
+    const r = svg.getBoundingClientRect();
+    zoomAtPoint(zoom * mult, r.width / 2, r.height / 2);
+  };
+  const inBtn = $("zoomInBtn"), outBtn = $("zoomOutBtn"), fitBtn = $("zoomFitBtn");
+  if (inBtn) inBtn.addEventListener("click", () => stepZoom(1.4));
+  if (outBtn) outBtn.addEventListener("click", () => stepZoom(1 / 1.4));
+  if (fitBtn) fitBtn.addEventListener("click", resetZoom);
+}
+
 /* ---- Drag-to-pan the frame on the diagram (touch / mouse / pencil) --------
  * Pointer Events give one code path for all input types. Dragging sets the
  * same offX/offY the nudge pad uses, so the frame follows your finger over a
@@ -1105,6 +1269,8 @@ function setupDiagramDrag() {
   let rec = null, target = null;
 
   svg.addEventListener("pointerdown", (e) => {
+    // Two fingers down = a pinch-zoom gesture; let setupZoom own it.
+    if (zoomPointers.size >= 2) { dragging = false; return; }
     target = allTargets()[targetIdx];
     rec = targetImages.get(target.name);
     if (!rec) return;                       // nothing to pan without an image
@@ -1118,6 +1284,9 @@ function setupDiagramDrag() {
 
   svg.addEventListener("pointermove", (e) => {
     if (!dragging || e.pointerId !== pid) return;
+    if (zoomPointers.size >= 2) { dragging = false; return; }  // pinch took over
+    // rect.width is the on-screen (zoom-scaled) width, so 1000/rect.width
+    // already folds in the zoom factor — the frame tracks the finger 1:1.
     const rect = svg.getBoundingClientRect();
     const scale = 1000 / rect.width;        // viewBox units per CSS pixel
     const dDegX = ((e.clientX - sx) * scale) / lastPxPerDeg;
@@ -1157,5 +1326,7 @@ if (verEl) verEl.textContent = APP_VERSION;
 loadCustomTargets();
 initSelectors();
 setupDiagramDrag();
+setupZoom();
+applyZoom();                       // establish the (identity) transform
 render();                          // paint immediately with schematics
 loadAllImages().then(render);      // then re-render once stored photos load

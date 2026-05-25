@@ -54,7 +54,7 @@
           </div>
         </div>
         <label class="field">
-          <span>Focal length (mm)</span>
+          <span>Focal length (mm) — for next camera added</span>
           <input id="focalInput" type="number" min="50" max="4000" step="1" value="335"
                  inputmode="numeric" list="focalPresets" />
           <datalist id="focalPresets">
@@ -76,7 +76,7 @@
           </datalist>
         </label>
         <label class="field">
-          <span>Quick rig (sets focal length)</span>
+          <span>Smart scope (adds a locked scope + camera)</span>
           <select id="rigPreset"></select>
         </label>
         <label class="field">
@@ -123,9 +123,16 @@
     <div class="pane pane-main">
       <!-- Diagram -->
       <section class="diagram-wrap">
-        <svg id="diagram" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"
-             role="img" aria-label="Field of view diagram"></svg>
-        <p class="caption">dashed = image circle (full-frame coverage)</p>
+        <div class="diagram-stage">
+          <svg id="diagram" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"
+               role="img" aria-label="Field of view diagram"></svg>
+          <div class="zoom-controls" role="group" aria-label="Zoom">
+            <button id="zoomInBtn" type="button" aria-label="Zoom in">+</button>
+            <button id="zoomOutBtn" type="button" aria-label="Zoom out">−</button>
+            <button id="zoomFitBtn" type="button" aria-label="Reset zoom to fit">Fit</button>
+          </div>
+        </div>
+        <p class="caption">dashed = image circle (full-frame coverage) · pinch / scroll / +− to zoom</p>
       </section>
 
       <!-- Optional per-target object image -->
