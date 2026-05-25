@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v14";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v15";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -300,7 +300,21 @@ function modelLabel(m) {
   return `${m.model} (${fmt})`;
 }
 
-function buildCameraSelect() {
+// Case-insensitive match of a model against a search query, testing brand,
+// model name, sensor format, and the bare sensor key (so "IMX571", "2600",
+// "full frame", or "qhy" all work).
+function camMatchesQuery(m, q) {
+  if (!q) return true;
+  const s = CAMERA_DB.sensors[m.sensor];
+  const fmt = s && s.format ? s.format : "";
+  return (m.brand + " " + m.model + " " + fmt + " " + m.sensor).toLowerCase().includes(q);
+}
+
+// Build the camera <select>, optionally filtered by a search query. Empty
+// groups are skipped; the Custom entry is always present. Native select is
+// rebuilt (rather than hiding <option>s, which iOS ignores).
+function buildCameraSelect(query) {
+  const q = (query || "").trim().toLowerCase();
   const sel = $("cameraSelect");
   sel.innerHTML = "";
   const grp = (label) => { const g = document.createElement("optgroup"); g.label = label; sel.appendChild(g); return g; };
@@ -308,24 +322,30 @@ function buildCameraSelect() {
     const o = document.createElement("option");
     o.value = value; o.textContent = text; parent.appendChild(o); return o;
   };
+  let matches = 0;
 
-  // My gear (pinned).
-  const gMine = grp("My gear");
-  MY_GEAR.forEach(({ brand, model }) => {
-    const idx = modelIndex(brand, model);
-    if (idx >= 0) opt(gMine, "model:" + idx, modelLabel(CAMERA_DB.models[idx]) + " — mine");
-  });
+  // My gear (pinned) — only entries matching the query.
+  const mine = MY_GEAR
+    .map(({ brand, model }) => modelIndex(brand, model))
+    .filter((idx) => idx >= 0 && camMatchesQuery(CAMERA_DB.models[idx], q));
+  if (mine.length) {
+    const gMine = grp("My gear");
+    mine.forEach((idx) => { opt(gMine, "model:" + idx, modelLabel(CAMERA_DB.models[idx]) + " — mine"); matches++; });
+  }
 
-  // Generic sensor formats.
-  const gFmt = grp("Sensor formats");
-  [
+  // Generic sensor formats (match against label + key).
+  const fmts = [
     ["FULLFRAME_35MM", "Full Frame (36 x 24)"],
     ["APS-C", "APS-C (23.6 x 15.7)"],
     ["MICRO_FOURTHIRDS", "Micro 4/3 (17.3 x 13)"],
     ["IMX183", "1\" (13.2 x 8.8)"],
-  ].forEach(([key, label]) => { if (CAMERA_DB.sensors[key]) opt(gFmt, "sensor:" + key, label); });
+  ].filter(([key, label]) => CAMERA_DB.sensors[key] && (!q || (label + " " + key).toLowerCase().includes(q)));
+  if (fmts.length) {
+    const gFmt = grp("Sensor formats");
+    fmts.forEach(([key, label]) => { opt(gFmt, "sensor:" + key, label); matches++; });
+  }
 
-  // One optgroup per brand, every model.
+  // One optgroup per brand; skip brands with no matches.
   const byBrand = new Map();
   CAMERA_DB.models.forEach((m, i) => {
     if (!byBrand.has(m.brand)) byBrand.set(m.brand, []);
@@ -334,14 +354,21 @@ function buildCameraSelect() {
   const brands = BRAND_ORDER.filter((b) => byBrand.has(b))
     .concat([...byBrand.keys()].filter((b) => !BRAND_ORDER.includes(b)));
   brands.forEach((b) => {
+    const hits = byBrand.get(b)
+      .filter((i) => camMatchesQuery(CAMERA_DB.models[i], q))
+      .sort((a, c) => CAMERA_DB.models[a].model.localeCompare(CAMERA_DB.models[c].model));
+    if (!hits.length) return;
     const g = grp(b);
-    byBrand.get(b)
-      .slice()
-      .sort((a, c) => CAMERA_DB.models[a].model.localeCompare(CAMERA_DB.models[c].model))
-      .forEach((i) => opt(g, "model:" + i, modelLabel(CAMERA_DB.models[i])));
+    hits.forEach((i) => { opt(g, "model:" + i, modelLabel(CAMERA_DB.models[i])); matches++; });
   });
 
-  // Custom entry last.
+  // No matches: a disabled hint so the box isn't just "Custom".
+  if (q && matches === 0) {
+    const o = opt(sel, "", "No cameras match “" + query.trim() + "”");
+    o.disabled = true;
+  }
+
+  // Custom entry always available, last.
   const gCustom = grp("Custom");
   opt(gCustom, "custom", "Custom (enter W x H)…");
 
@@ -387,6 +414,18 @@ function initSelectors() {
   applyCameraSelection(cam.value);                 // toggle custom fields only
   // Selecting a camera no longer adds it — the explicit Add button does.
   cam.addEventListener("change", () => { applyCameraSelection(cam.value); });
+
+  // Search box filters the dropdown (rebuilds it with matches only). Keeps the
+  // current pick if it survives the filter, else selects the first match.
+  const search = $("cameraSearch");
+  search.addEventListener("input", () => {
+    const prev = cam.value;
+    buildCameraSelect(search.value);
+    const stillThere = [...cam.options].some((o) => o.value === prev && !o.disabled);
+    cam.value = stillThere ? prev
+              : (([...cam.options].find((o) => o.value && o.value !== "custom" && !o.disabled) || cam.options[0]).value);
+    applyCameraSelection(cam.value);
+  });
 
   // Seed the compare list with one camera by default (ASI533).
   const seed = camFromSelectValue(cam.value);
