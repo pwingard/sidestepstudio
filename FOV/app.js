@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v17";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v18";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -1179,12 +1179,18 @@ function zoomAtPoint(newZoom, sx, sy) {
   applyZoom();
 }
 
+// The UNTRANSFORMED reference box. The <svg> itself is CSS-transformed, so its
+// own getBoundingClientRect moves with the zoom/pan — useless as a stable
+// origin. Its parent `.diagram-stage` is NOT transformed and keeps the
+// untransformed layout size/position, so we measure everything against it.
+function stageBox(svg) { return (svg.parentElement || svg).getBoundingClientRect(); }
+
 // Don't let the scaled diagram drift entirely off its stage.
 function clampPan() {
   const svg = $("diagram");
   if (!svg) return;
-  const w = svg.clientWidth || svg.getBoundingClientRect().width;
-  const h = svg.clientHeight || svg.getBoundingClientRect().height;
+  const r = stageBox(svg);
+  const w = r.width, h = r.height;
   if (!w || !h) return;
   const maxX = 0, minX = w - w * zoom;     // scaled width = w*zoom
   const maxY = 0, minY = h - h * zoom;
@@ -1202,7 +1208,7 @@ function resetZoom() {
 // translate/scale, so the element's current bounding-rect left/top still marks
 // the untransformed origin and this stays correct at any zoom.
 function pointerStagePos(svg, clientX, clientY) {
-  const r = svg.getBoundingClientRect();
+  const r = stageBox(svg);   // untransformed wrapper, stable under zoom/pan
   return { x: clientX - r.left, y: clientY - r.top };
 }
 
@@ -1250,7 +1256,7 @@ function setupZoom() {
 
   // On-screen buttons: zoom toward the centre of the diagram.
   const stepZoom = (mult) => {
-    const r = svg.getBoundingClientRect();
+    const r = stageBox(svg);
     zoomAtPoint(zoom * mult, r.width / 2, r.height / 2);
   };
   const inBtn = $("zoomInBtn"), outBtn = $("zoomOutBtn"), fitBtn = $("zoomFitBtn");
