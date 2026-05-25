@@ -311,7 +311,10 @@ select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   padding: 8px;
 }
 .diagram-stage { position: relative; }
-#diagram { width: 100%; height: auto; display: block; border-radius: 8px; touch-action: none; }
+/* transform-origin MUST be top-left: the zoom pan math (zoomAtPoint) assumes the
+   element scales from (0,0). Without this, CSS defaults to center (50% 50%) and
+   zooming drifts toward the bottom-right. */
+#diagram { width: 100%; height: auto; display: block; border-radius: 8px; touch-action: none; transform-origin: 0 0; }
 
 /* On-screen zoom buttons, stacked top-right over the diagram */
 .zoom-controls {
