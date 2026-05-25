@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v20";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v21";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -559,7 +559,9 @@ function initSelectors() {
   // when the value came from picking a datalist option.
   const indexOfName = (name) => {
     const n = name.replace(/^★\s*/, "").toLowerCase();
-    return allTargets().findIndex((t) => t.name.toLowerCase() === n);
+    return allTargets().findIndex((t) =>
+      t.name.toLowerCase() === n ||
+      (t.aliases || []).some((a) => a.toLowerCase() === n));
   };
 
   // Pick a known target by index: select + reflect its name in the box.
@@ -621,6 +623,13 @@ function rebuildTargetSelect() {
     const o = document.createElement("option");
     o.value = t.custom ? `★ ${t.name}` : t.name;
     list.appendChild(o);
+    // Alias entries (common names + alternate catalog numbers) so the box finds
+    // the object however it's typed; picking one resolves back to this target.
+    (t.aliases || []).forEach((a) => {
+      const ao = document.createElement("option");
+      ao.value = a;
+      list.appendChild(ao);
+    });
   });
 }
 

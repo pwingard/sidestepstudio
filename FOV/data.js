@@ -87,16 +87,30 @@ const CAMERAS = [
   { name: "Origin sensor (IMX178)", wMM: 7.43, hMM: 4.99, pixelMicron: 2.4, mp: 6.4, owned: true, note: "built-in, fixed", system: "origin" },
 ];
 
-/* Targets — angular size in degrees; ra/dec (deg, J2000) enable survey fetch. */
+/* Targets — angular size in degrees; ra/dec (deg, J2000) enable survey fetch.
+ * `aliases` are extra search terms (common names + alternate catalog numbers) so
+ * the Target box finds the object however you type it (e.g. "Caldwell 4", "NGC 224"). */
 const TARGETS = [
-  { name: "Shark Nebula (LDN 1235)", wDeg: 3.9,   hDeg: 2.7,   kind: "dark",   ra: 333.30, dec: 73.37 },
-  { name: "Veil Nebula (full)",      wDeg: 3.0,   hDeg: 3.0,   kind: "neb",    ra: 312.75, dec: 30.70 },
-  { name: "Andromeda (M31)",         wDeg: 3.17,  hDeg: 1.0,   kind: "galaxy", ra: 10.68,  dec: 41.27 },
-  { name: "North America (NGC7000)", wDeg: 2.0,   hDeg: 1.7,   kind: "neb",    ra: 314.70, dec: 44.33 },
-  { name: "Iris Nebula (NGC7023)",   wDeg: 0.3,   hDeg: 0.3,   kind: "neb",    ra: 315.40, dec: 68.17 },
-  { name: "M81 / M82 pair",          wDeg: 0.7,   hDeg: 0.5,   kind: "galaxy", ra: 148.97, dec: 69.40 },
-  { name: "M51 Whirlpool",           wDeg: 0.18,  hDeg: 0.12,  kind: "galaxy", ra: 202.47, dec: 47.20 },
-  { name: "Ring Nebula (M57)",       wDeg: 0.038, hDeg: 0.038, kind: "pn",     ra: 283.40, dec: 33.03 },
+  { name: "Shark Nebula (LDN 1235)", wDeg: 3.9,   hDeg: 2.7,   kind: "dark",   ra: 333.30, dec: 73.37,
+    aliases: ["LDN 1235", "vdB 149", "vdB 150", "Shark Nebula"] },
+  { name: "Veil Nebula (full)",      wDeg: 3.0,   hDeg: 3.0,   kind: "neb",    ra: 312.75, dec: 30.70,
+    aliases: ["Cygnus Loop", "NGC 6960", "NGC 6992", "NGC 6995", "Caldwell 33", "Caldwell 34",
+              "Sh2-103", "Sharpless 103", "Western Veil", "Eastern Veil", "Witch's Broom"] },
+  { name: "Andromeda (M31)",         wDeg: 3.17,  hDeg: 1.0,   kind: "galaxy", ra: 10.68,  dec: 41.27,
+    aliases: ["M31", "Messier 31", "NGC 224", "Andromeda Galaxy"] },
+  { name: "North America (NGC7000)", wDeg: 2.0,   hDeg: 1.7,   kind: "neb",    ra: 314.70, dec: 44.33,
+    aliases: ["NGC 7000", "Caldwell 20", "Sh2-117", "Sharpless 117", "North America Nebula"] },
+  { name: "Iris Nebula (NGC7023)",   wDeg: 0.3,   hDeg: 0.3,   kind: "neb",    ra: 315.40, dec: 68.17,
+    aliases: ["NGC 7023", "Caldwell 4", "LBN 487", "vdB 139", "Iris Nebula"] },
+  { name: "M81 / M82 pair",          wDeg: 0.7,   hDeg: 0.5,   kind: "galaxy", ra: 148.97, dec: 69.40,
+    aliases: ["M81", "M82", "Messier 81", "Messier 82", "NGC 3031", "NGC 3034",
+              "Bode's Galaxy", "Cigar Galaxy"] },
+  { name: "M51 Whirlpool",           wDeg: 0.18,  hDeg: 0.12,  kind: "galaxy", ra: 202.47, dec: 47.20,
+    aliases: ["M51", "Messier 51", "NGC 5194", "NGC 5195", "Whirlpool Galaxy"] },
+  { name: "Ring Nebula (M57)",       wDeg: 0.038, hDeg: 0.038, kind: "pn",     ra: 283.40, dec: 33.03,
+    aliases: ["M57", "Messier 57", "NGC 6720", "Ring Nebula"] },
+  { name: "Seahorse (Barnard 150)",  wDeg: 1.5,   hDeg: 1.0,   kind: "dark",   ra: 312.60, dec: 60.30,
+    aliases: ["Barnard 150", "B150", "LDN 1082", "Seahorse Nebula", "Dark Seahorse"] },
 ];
 
 /* HiPS surveys offered by the "Fetch sky image" feature. DSS2 color is a safe
