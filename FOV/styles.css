@@ -100,6 +100,10 @@ main {
   gap: 12px;
   margin-top: 14px;
 }
+/* The author display rules below beat the UA `[hidden]{display:none}` (equal
+   specificity, author wins), so the hidden attribute would be ignored on
+   .field / .custom-panel etc. Restore it globally. */
+[hidden] { display: none !important; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field > span {
   font-size: 13px;
@@ -124,6 +128,19 @@ select {
   background-position: right 14px center;
 }
 select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Number/text inputs that sit directly in a .field (focal length, etc.) */
+.field > input {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  height: 48px;
+  padding: 0 14px;
+  font-size: 16px;
+  width: 100%;
+}
+.field > input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /* Find object by name */
 .find-row { display: flex; gap: 8px; }
@@ -166,6 +183,31 @@ select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 }
 .size-row { display: flex; gap: 10px; }
 .size-row .img-field { flex: 1; }
+
+/* Selected-camera readout */
+.cam-info { display: flex; flex-direction: column; gap: 8px; }
+.cam-info .cam { cursor: default; }
+
+/* Advanced (optics) disclosure */
+.advanced {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 4px 14px;
+}
+.advanced > summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 10px 0;
+  list-style: none;
+}
+.advanced > summary::-webkit-details-marker { display: none; }
+.advanced > summary::before { content: "▸ "; }
+.advanced[open] > summary::before { content: "▾ "; }
+.adv-body { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 12px; }
 
 /* Camera legend / toggles */
 .legend { display: flex; flex-direction: column; gap: 8px; }

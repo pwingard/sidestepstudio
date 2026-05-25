@@ -1,12 +1,12 @@
 /* =============================================================================
  * app.js — math, rendering, and event wiring for the FOV Planner.
- * Reads SCOPES / CAMERAS / TARGETS from data.js.
- * No framework, no build step.
+ * Reads SCOPES / TARGETS / SURVEYS from data.js and the camera/sensor table
+ * (CAMERA_DB) from cameras.js. No framework, no build step.
  * ============================================================================= */
 
 "use strict";
 
-const APP_VERSION = "v12";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v13";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -44,30 +44,57 @@ function mulberry32(seed) {
 }
 const STAR_SEED = 1235; // constant => stable star field
 
-/* ---- Palette: a distinct colour per camera (by index) --------------------- */
-const CAM_COLORS = ["#6db3f2", "#57d18a", "#f2b84b", "#c887f0", "#f2785c"];
-function camColor(i) { return CAM_COLORS[i % CAM_COLORS.length]; }
+/* ---- Palette: one colour for the (single) active camera frame ------------- */
+const CAM_COLOR = "#6db3f2";
 
-/* ---- State ---------------------------------------------------------------- */
-// Camera ordering: owned first, then original order (stable).
-const CAM_ORDER = CAMERAS
-  .map((c, i) => ({ cam: c, i }))
-  .sort((a, b) => (b.cam.owned === true) - (a.cam.owned === true));
-
-const enabled = new Map(); // original index -> bool
-CAM_ORDER.forEach(({ i }) => enabled.set(i, true));
-
-// Cameras valid for a given config: a fixed-system scope (e.g. the Origin)
-// only shows cameras tagged with the same `system`; normal scopes hide any
-// system-tagged cameras. Keeps physically-impossible combos out of the UI.
-function camsForScope(scope) {
-  const sys = scope.system || null;
-  return CAM_ORDER.filter(({ cam }) => (cam.system || null) === sys);
+/* ---- Camera model -> internal cam object ---------------------------------
+ * The renderer/cards/verdict expect a cam shaped like:
+ *   { name, wMM, hMM, pixelMicron|null, mp|null, format }
+ * We build these on the fly from CAMERA_DB (sensors joined to models) or from
+ * the Custom width/height inputs. pixelMicron may be null for generic formats
+ * (Full Frame, APS-C, …) — the sampling card is hidden in that case.
+ * ------------------------------------------------------------------------- */
+function camFromSensorKey(name, sensorKey) {
+  const s = CAMERA_DB.sensors[sensorKey];
+  if (!s) return null;
+  return {
+    name,
+    wMM: s.width_mm,
+    hMM: s.height_mm,
+    pixelMicron: (typeof s.pixel_um === "number") ? s.pixel_um : null,
+    mp: (typeof s.megapixels === "number") ? s.megapixels : null,
+    format: s.format || sensorKey,
+  };
 }
 
-let configIdx = 0;
+/* ---- State ---------------------------------------------------------------- */
+// The currently selected camera, as a cam object (see camFromSensorKey).
+let activeCam = null;
+// When the camera <select> value is "custom", we synthesise from custom W/H.
+let customCam = { name: "Custom sensor", wMM: 36, hMM: 24, pixelMicron: null, mp: null, format: "Custom" };
+let isCustom = false;
+
+let focalMM = 335;           // user-typed focal length (mm)
+let imageCircleMM = 43.3;    // advanced: dashed coverage circle diameter (mm)
+let apertureMM = null;       // advanced: optional, enables f-ratio when set
+
 let targetIdx = 0;
 let lastPxPerDeg = 1;   // deg->viewBox scale from the last diagram render (for drag)
+
+// Single active camera as a one-element list, so render code can iterate if it
+// likes — but most paths just use `activeCam` directly.
+function activeCams() { return activeCam ? [{ cam: activeCam, color: CAM_COLOR }] : []; }
+
+// Synthetic scope-shaped object so renderDiagram/renderCards/renderVerdict need
+// minimal change from the old per-config code.
+function currentScope() {
+  return {
+    name: "scope",
+    focalLength: focalMM,
+    imageCircle: imageCircleMM,
+    fRatio: (apertureMM && apertureMM > 0) ? (focalMM / apertureMM) : null,
+  };
+}
 
 /* ---- Custom targets resolved by name (CDS Sesame) ------------------------- */
 // Persisted in localStorage; appended after the seeded TARGETS in the dropdown.
@@ -226,16 +253,174 @@ function svgEl(tag, attrs) {
   return el;
 }
 
+/* ---- Build the Camera dropdown ------------------------------------------- *
+ * Option values encode how to resolve the camera:
+ *   "model:<index into CAMERA_DB.models>"  -> join sensor, label MODEL (FORMAT)
+ *   "sensor:<KEY>"                          -> a generic sensor format directly
+ *   "custom"                                -> reveal custom W/H inputs
+ * Groups: My gear, Sensor formats, then one optgroup per brand.
+ * ------------------------------------------------------------------------- */
+const BRAND_ORDER = ["ZWO", "QHY", "Player One", "Altair Astro", "SVBony", "ToupTek", "Atik"];
+
+// Pin a few owned rigs to "My gear" by brand+model match.
+const MY_GEAR = [
+  { brand: "ZWO", model: "ASI533MC Pro" },
+  { brand: "ZWO", model: "ASI2600MC Pro" },
+  { brand: "ZWO", model: "ASI6200MC Pro" },
+];
+
+function modelIndex(brand, model) {
+  return CAMERA_DB.models.findIndex((m) => m.brand === brand && m.model === model);
+}
+function modelLabel(m) {
+  const s = CAMERA_DB.sensors[m.sensor];
+  const fmt = s && s.format ? s.format : m.sensor;
+  return `${m.model} (${fmt})`;
+}
+
+function buildCameraSelect() {
+  const sel = $("cameraSelect");
+  sel.innerHTML = "";
+  const grp = (label) => { const g = document.createElement("optgroup"); g.label = label; sel.appendChild(g); return g; };
+  const opt = (parent, value, text) => {
+    const o = document.createElement("option");
+    o.value = value; o.textContent = text; parent.appendChild(o); return o;
+  };
+
+  // My gear (pinned).
+  const gMine = grp("My gear");
+  MY_GEAR.forEach(({ brand, model }) => {
+    const idx = modelIndex(brand, model);
+    if (idx >= 0) opt(gMine, "model:" + idx, modelLabel(CAMERA_DB.models[idx]) + " — mine");
+  });
+
+  // Generic sensor formats.
+  const gFmt = grp("Sensor formats");
+  [
+    ["FULLFRAME_35MM", "Full Frame (36 x 24)"],
+    ["APS-C", "APS-C (23.6 x 15.7)"],
+    ["MICRO_FOURTHIRDS", "Micro 4/3 (17.3 x 13)"],
+    ["IMX183", "1\" (13.2 x 8.8)"],
+  ].forEach(([key, label]) => { if (CAMERA_DB.sensors[key]) opt(gFmt, "sensor:" + key, label); });
+
+  // One optgroup per brand, every model.
+  const byBrand = new Map();
+  CAMERA_DB.models.forEach((m, i) => {
+    if (!byBrand.has(m.brand)) byBrand.set(m.brand, []);
+    byBrand.get(m.brand).push(i);
+  });
+  const brands = BRAND_ORDER.filter((b) => byBrand.has(b))
+    .concat([...byBrand.keys()].filter((b) => !BRAND_ORDER.includes(b)));
+  brands.forEach((b) => {
+    const g = grp(b);
+    byBrand.get(b)
+      .slice()
+      .sort((a, c) => CAMERA_DB.models[a].model.localeCompare(CAMERA_DB.models[c].model))
+      .forEach((i) => opt(g, "model:" + i, modelLabel(CAMERA_DB.models[i])));
+  });
+
+  // Custom entry last.
+  const gCustom = grp("Custom");
+  opt(gCustom, "custom", "Custom (enter W x H)…");
+
+  return sel;
+}
+
+// Resolve the current <select> value into activeCam / isCustom.
+function applyCameraSelection(value) {
+  if (value === "custom") {
+    isCustom = true;
+    activeCam = customCam;
+    $("customCamFields").hidden = false;
+    return;
+  }
+  isCustom = false;
+  $("customCamFields").hidden = true;
+  if (value.startsWith("model:")) {
+    const m = CAMERA_DB.models[+value.slice(6)];
+    activeCam = camFromSensorKey(`${m.brand} ${m.model}`, m.sensor);
+  } else if (value.startsWith("sensor:")) {
+    const key = value.slice(7);
+    const s = CAMERA_DB.sensors[key];
+    activeCam = camFromSensorKey(s && s.format ? s.format : key, key);
+  }
+  if (!activeCam) { // safety fallback
+    activeCam = camFromSensorKey("Full Frame", "FULLFRAME_35MM");
+  }
+}
+
 /* ---- Populate dropdowns --------------------------------------------------- */
 function initSelectors() {
-  const cfg = $("configSelect");
-  SCOPES.forEach((s, i) => {
-    const o = document.createElement("option");
-    o.value = i;
-    o.textContent = `${s.name} — ${s.focalLength}mm f/${s.fRatio}`;
-    cfg.appendChild(o);
+  // Camera dropdown.
+  const cam = buildCameraSelect();
+  // Default to first My-gear entry (ASI533) if present, else first option.
+  const firstMine = $("cameraSelect").querySelector("optgroup[label='My gear'] option");
+  cam.value = firstMine ? firstMine.value : cam.options[0].value;
+  applyCameraSelection(cam.value);
+  cam.addEventListener("change", () => { applyCameraSelection(cam.value); render(); });
+
+  // Custom sensor W/H.
+  const cw = $("customW"), ch = $("customH");
+  const syncCustom = () => {
+    const w = parseFloat(cw.value), h = parseFloat(ch.value);
+    if (isFinite(w) && w > 0) customCam.wMM = w;
+    if (isFinite(h) && h > 0) customCam.hMM = h;
+    if (isCustom) { activeCam = customCam; render(); }
+  };
+  cw.addEventListener("change", syncCustom);
+  ch.addEventListener("change", syncCustom);
+
+  // Focal length input.
+  const focal = $("focalInput");
+  focal.value = String(focalMM);
+  const applyFocal = () => {
+    const v = parseFloat(focal.value);
+    if (isFinite(v) && v >= 50 && v <= 4000) { focalMM = v; render(); }
+  };
+  focal.addEventListener("change", applyFocal);
+  focal.addEventListener("input", applyFocal);
+
+  // Quick rig presets (set focal length; Origin also picks its camera).
+  const rig = $("rigPreset");
+  const ropt = (value, text) => { const o = document.createElement("option"); o.value = value; o.textContent = text; rig.appendChild(o); return o; };
+  ropt("", "Choose a rig…");
+  SCOPES.filter((s) => !s.system).forEach((s, i) => {
+    const origIdx = SCOPES.indexOf(s);
+    ropt("scope:" + origIdx, `${s.name} — ${s.focalLength}mm`);
   });
-  cfg.addEventListener("change", () => { configIdx = +cfg.value; render(); });
+  // Celestron Origin: sealed combo -> sets 335mm AND selects the IMX678 camera.
+  ropt("origin", "Celestron Origin — 335mm (IMX678)");
+  rig.addEventListener("change", () => {
+    const v = rig.value;
+    if (!v) return;
+    if (v === "origin") {
+      focalMM = 335;
+      focal.value = "335";
+      // Select an IMX678 model in the camera dropdown.
+      const idx = CAMERA_DB.models.findIndex((m) => m.sensor === "IMX678");
+      if (idx >= 0) { cam.value = "model:" + idx; applyCameraSelection(cam.value); }
+    } else if (v.startsWith("scope:")) {
+      const s = SCOPES[+v.slice(6)];
+      focalMM = s.focalLength;
+      focal.value = String(s.focalLength);
+    }
+    rig.value = ""; // reset to placeholder so it stays a one-tap action
+    render();
+  });
+
+  // Advanced: image circle + aperture.
+  const circ = $("circleInput");
+  circ.value = String(imageCircleMM);
+  circ.addEventListener("change", () => {
+    const v = parseFloat(circ.value);
+    if (isFinite(v) && v > 0) { imageCircleMM = v; render(); }
+  });
+  const ap = $("apertureInput");
+  ap.addEventListener("change", () => {
+    const v = parseFloat(ap.value);
+    apertureMM = (isFinite(v) && v > 0) ? v : null;
+    render();
+  });
 
   const tgt = $("targetSelect");
   rebuildTargetSelect();
@@ -293,50 +478,42 @@ function rebuildTargetSelect() {
   if (keep < allTargets().length) { targetIdx = keep; tgt.value = keep; }
 }
 
-/* ---- Legend (camera toggles) ---------------------------------------------- */
-function renderLegend(scope, focalMM) {
-  const wrap = $("legend");
+/* ---- Selected-camera readout ---------------------------------------------- */
+function renderCamInfo(scope, focalMM) {
+  const wrap = $("camInfo");
   wrap.innerHTML = "";
-  camsForScope(scope).forEach(({ cam, i }) => {
-    const on = enabled.get(i);
-    const color = camColor(i);
-    const fov = camFov(cam, focalMM);
+  if (!activeCam) return;
+  const fov = camFov(activeCam, focalMM);
 
-    const row = document.createElement("div");
-    row.className = "cam" + (on ? "" : " off");
-    row.setAttribute("role", "button");
-    row.setAttribute("aria-pressed", String(on));
+  const row = document.createElement("div");
+  row.className = "cam";
 
-    const sw = document.createElement("span");
-    sw.className = "swatch";
-    sw.style.color = color;
-    sw.style.background = on ? color : "transparent";
+  const sw = document.createElement("span");
+  sw.className = "swatch";
+  sw.style.color = CAM_COLOR;
+  sw.style.background = CAM_COLOR;
 
-    const main = document.createElement("div");
-    main.className = "cam-main";
-    const name = document.createElement("div");
-    name.className = "cam-name";
-    name.textContent = cam.name;
-    if (cam.owned) {
-      const b = document.createElement("span");
-      b.className = "badge";
-      b.textContent = "mine";
-      name.appendChild(b);
-    }
-    const fovEl = document.createElement("div");
-    fovEl.className = "cam-fov";
-    fovEl.textContent = `${round2(fov.w)}° × ${round2(fov.h)}°`;
-    main.appendChild(name);
-    main.appendChild(fovEl);
+  const main = document.createElement("div");
+  main.className = "cam-main";
+  const name = document.createElement("div");
+  name.className = "cam-name";
+  name.textContent = activeCam.name;
+  if (activeCam.format) {
+    const b = document.createElement("span");
+    b.className = "badge";
+    b.textContent = activeCam.format;
+    name.appendChild(b);
+  }
+  const dims = `${round2(activeCam.wMM)} × ${round2(activeCam.hMM)} mm`;
+  const fovEl = document.createElement("div");
+  fovEl.className = "cam-fov";
+  fovEl.textContent = `${dims} · ${round2(fov.w)}° × ${round2(fov.h)}° on sky`;
+  main.appendChild(name);
+  main.appendChild(fovEl);
 
-    row.appendChild(sw);
-    row.appendChild(main);
-    row.addEventListener("click", () => {
-      enabled.set(i, !enabled.get(i));
-      render();
-    });
-    wrap.appendChild(row);
-  });
+  row.appendChild(sw);
+  row.appendChild(main);
+  wrap.appendChild(row);
 }
 
 /* ---- Diagram -------------------------------------------------------------- */
@@ -347,10 +524,9 @@ function renderDiagram(scope, target, focalMM) {
   const VB = 1000;            // viewBox is 1000 x 1000
   const cx = VB / 2, cy = VB / 2;
 
-  // Enabled camera FOVs (deg), limited to cameras valid for this scope.
-  const cams = camsForScope(scope)
-    .filter(({ i }) => enabled.get(i))
-    .map(({ cam, i }) => ({ cam, i, color: camColor(i), fov: camFov(cam, focalMM) }));
+  // The single selected camera's FOV (deg), as a one-element list so the
+  // existing draw loop is unchanged.
+  const cams = activeCams().map(({ cam, color }) => ({ cam, color, fov: camFov(cam, focalMM) }));
 
   const circleDeg = angularDeg(scope.imageCircle, focalMM);
 
@@ -488,62 +664,46 @@ function renderCards(scope, target, focalMM) {
   };
 
   cards.appendChild(card("Focal length", `${focalMM} mm`));
-  cards.appendChild(card("f-ratio", `f/${scope.fRatio}`));
+  if (scope.fRatio) cards.appendChild(card("f-ratio", `f/${round2(scope.fRatio)}`));
   cards.appendChild(card("Target size", `${round2(target.wDeg)}° × ${round2(target.hDeg)}°`,
     target.kind));
 
-  // Sampling: per-camera (pixel-dependent), full-width card.
-  const samp = document.createElement("div");
-  samp.className = "card sampling";
-  samp.innerHTML = `<div class="k">Sampling — arcsec / pixel</div>
-    <div class="sub">Pixel-size dependent; differs per camera.</div>`;
-  const list = document.createElement("div");
-  list.className = "samp-list";
-  camsForScope(scope).forEach(({ cam }) => {
-    const row = document.createElement("div");
-    row.className = "samp-row";
-    const aspp = arcsecPerPx(cam.pixelMicron, focalMM);
-    row.innerHTML = `<span class="sname">${cam.name} · ${cam.pixelMicron}µm</span>` +
-                    `<span class="sval">${round2(aspp)}″/px</span>`;
-    list.appendChild(row);
-  });
-  samp.appendChild(list);
-  cards.appendChild(samp);
+  // Sampling: arcsec/pixel for the selected camera — only when we have a real
+  // pixel size (generic formats carry null, so we skip the card to avoid NaN).
+  if (activeCam && typeof activeCam.pixelMicron === "number") {
+    const aspp = arcsecPerPx(activeCam.pixelMicron, focalMM);
+    cards.appendChild(card("Sampling", `${round2(aspp)}″/px`,
+      `${activeCam.name} · ${activeCam.pixelMicron}µm pixels`));
+  }
 }
 
 /* ---- Verdict -------------------------------------------------------------- */
 function renderVerdict(scope, target, focalMM) {
   const el = $("verdict");
-  const active = camsForScope(scope)
-    .filter(({ i }) => enabled.get(i))
-    .map(({ cam }) => ({ cam, fov: camFov(cam, focalMM) }));
-
-  if (active.length === 0) {
+  if (!activeCam) {
     el.className = "verdict";
-    el.textContent = "No cameras selected — tap a swatch above to add one.";
+    el.textContent = "No camera selected — pick one above.";
     return;
   }
-
-  const fitting = active.filter(({ fov }) => fits(fov, target));
+  const fov = camFov(activeCam, focalMM);
   const fl = `${focalMM}mm`;
+  const fillW = Math.round((target.wDeg / fov.w) * 100);
+  const fillH = Math.round((target.hDeg / fov.h) * 100);
 
-  if (fitting.length === active.length) {
-    // Smallest fitting sensor (by area) is the efficient pick.
-    const smallest = fitting.slice()
-      .sort((a, b) => (a.cam.wMM * a.cam.hMM) - (b.cam.wMM * b.cam.hMM))[0];
+  if (fits(fov, target)) {
     el.className = "verdict good";
     el.textContent =
-      `All selected cameras frame ${target.name} at ${fl}. ` +
-      `Smallest fitting sensor (${smallest.cam.name}) is the efficient pick.`;
-  } else if (fitting.length === 0) {
-    el.className = "verdict bad";
-    el.textContent =
-      `${target.name} overflows every selected sensor at ${fl}. ` +
-      `Use a shorter config or shoot a mosaic.`;
+      `${activeCam.name} frames ${target.name} at ${fl} ` +
+      `(${round2(fov.w)}° × ${round2(fov.h)}° field). ` +
+      `Target fills about ${fillW}% × ${fillH}% of the frame.`;
   } else {
-    el.className = "verdict some";
-    const names = fitting.map((f) => f.cam.name).join(", ");
-    el.textContent = `Fits in: ${names}. Smaller sensors crop the target.`;
+    el.className = "verdict bad";
+    const axis = target.wDeg > fov.w && target.hDeg > fov.h ? "both axes"
+      : target.wDeg > fov.w ? "width" : "height";
+    el.textContent =
+      `${target.name} overflows the ${activeCam.name} on ${axis} at ${fl} ` +
+      `(field ${round2(fov.w)}° × ${round2(fov.h)}°). ` +
+      `Shorten the focal length, use a bigger sensor, or shoot a mosaic.`;
   }
 }
 
@@ -806,8 +966,7 @@ function setupDiagramDrag() {
     const dDegY = ((e.clientY - sy) * scale) / lastPxPerDeg;
     rec.offX = sOffX + dDegX;               // frame follows finger
     rec.offY = sOffY - dDegY;               // screen-down => frame down
-    const scope = SCOPES[configIdx];
-    renderDiagram(scope, target, scope.focalLength);   // redraw diagram only
+    renderDiagram(currentScope(), target, focalMM);   // redraw diagram only
   });
 
   const end = (e) => {
@@ -823,11 +982,10 @@ function setupDiagramDrag() {
 
 /* ---- Master render -------------------------------------------------------- */
 function render() {
-  const scope = SCOPES[configIdx];
+  const scope = currentScope();
   const target = allTargets()[targetIdx] || allTargets()[0];
-  const focalMM = scope.focalLength;
 
-  renderLegend(scope, focalMM);
+  renderCamInfo(scope, focalMM);
   renderCustomPanel(target);
   renderDiagram(scope, target, focalMM);
   renderImagePanel(target);
