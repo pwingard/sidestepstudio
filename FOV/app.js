@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v18";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v19";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -1271,18 +1271,25 @@ function setupZoom() {
  * fixed sky image. Active only when the current target has an image. */
 function setupDiagramDrag() {
   const svg = $("diagram");
-  let dragging = false, pid = null, sx = 0, sy = 0, sOffX = 0, sOffY = 0;
-  let rec = null, target = null;
+  let dragging = false, pid = null, sx = 0, sy = 0;
+  let mode = null;                          // "zoom" (pan the view) | "image" (nudge frame)
+  let sPanX = 0, sPanY = 0;                 // zoom-pan start
+  let rec = null, target = null, sOffX = 0, sOffY = 0;
 
   svg.addEventListener("pointerdown", (e) => {
     // Two fingers down = a pinch-zoom gesture; let setupZoom own it.
     if (zoomPointers.size >= 2) { dragging = false; return; }
-    target = allTargets()[targetIdx];
-    rec = targetImages.get(target.name);
-    if (!rec) return;                       // nothing to pan without an image
-    dragging = true; pid = e.pointerId;
-    sx = e.clientX; sy = e.clientY;
-    sOffX = rec.offX || 0; sOffY = rec.offY || 0;
+    sx = e.clientX; sy = e.clientY; pid = e.pointerId;
+    if (zoom > 1) {
+      // Zoomed in: one-finger drag pans the zoomed view.
+      mode = "zoom"; dragging = true; sPanX = panX; sPanY = panY;
+    } else {
+      // At fit: drag nudges the frame over the photo (only if there is one).
+      target = allTargets()[targetIdx];
+      rec = targetImages.get(target.name);
+      if (!rec) return;
+      mode = "image"; dragging = true; sOffX = rec.offX || 0; sOffY = rec.offY || 0;
+    }
     try { svg.setPointerCapture(pid); } catch (_) {}
     svg.style.cursor = "grabbing";
     e.preventDefault();
@@ -1291,9 +1298,16 @@ function setupDiagramDrag() {
   svg.addEventListener("pointermove", (e) => {
     if (!dragging || e.pointerId !== pid) return;
     if (zoomPointers.size >= 2) { dragging = false; return; }  // pinch took over
-    // rect.width is the on-screen (zoom-scaled) width, so 1000/rect.width
-    // already folds in the zoom factor — the frame tracks the finger 1:1.
-    const rect = svg.getBoundingClientRect();
+    if (mode === "zoom") {
+      // Pan is in CSS px (same space as the transform), 1:1 with the finger.
+      panX = sPanX + (e.clientX - sx);
+      panY = sPanY + (e.clientY - sy);
+      clampPan();
+      applyZoom();
+      return;
+    }
+    // image-nudge: deg per CSS px (zoom==1 here, so stage box == on-screen size).
+    const rect = stageBox(svg);
     const scale = 1000 / rect.width;        // viewBox units per CSS pixel
     const dDegX = ((e.clientX - sx) * scale) / lastPxPerDeg;
     const dDegY = ((e.clientY - sy) * scale) / lastPxPerDeg;
@@ -1307,7 +1321,8 @@ function setupDiagramDrag() {
     dragging = false;
     try { svg.releasePointerCapture(pid); } catch (_) {}
     svg.style.cursor = "grab";
-    if (rec) saveImage(target.name, rec);   // persist final offset to IndexedDB
+    if (mode === "image" && rec) saveImage(target.name, rec);  // persist offset
+    mode = null;
   };
   svg.addEventListener("pointerup", end);
   svg.addEventListener("pointercancel", end);
