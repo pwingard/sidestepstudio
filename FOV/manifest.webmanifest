@@ -1,6 +1,6 @@
 {
-  "name": "Barnard's Loop — FOV Planner",
-  "short_name": "Barnard's",
+  "name": "Barnard's Loop FOV Planner",
+  "short_name": "Loop FOV",
   "description": "To-scale deep-sky framing for telescope + camera combos. Offline.",
   "start_url": "./index.html",
   "scope": "./",
