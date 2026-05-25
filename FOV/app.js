@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v21";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v22";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */

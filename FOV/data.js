@@ -111,6 +111,11 @@ const TARGETS = [
     aliases: ["M57", "Messier 57", "NGC 6720", "Ring Nebula"] },
   { name: "Seahorse (Barnard 150)",  wDeg: 1.5,   hDeg: 1.0,   kind: "dark",   ra: 312.60, dec: 60.30,
     aliases: ["Barnard 150", "B150", "LDN 1082", "Seahorse Nebula", "Dark Seahorse"] },
+  { name: "Flying Bat (Sh2-129)",    wDeg: 2.5,   hDeg: 2.0,   kind: "neb",    ra: 317.42, dec: 59.97,
+    aliases: ["Sh2-129", "Sharpless 129", "Flying Bat", "Flying Bat Nebula",
+              "Ou4", "Squid Nebula", "vdB 140"] },
+  { name: "LBN 446",                 wDeg: 0.2,   hDeg: 0.2,   kind: "neb",    ra: 319.25, dec: 58.58,
+    aliases: ["LBN 446"] },
 ];
 
 /* HiPS surveys offered by the "Fetch sky image" feature. DSS2 color is a safe
