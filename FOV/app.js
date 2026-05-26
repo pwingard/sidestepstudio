@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v25";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v26";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -688,6 +688,29 @@ function initSelectors() {
       (t.aliases || []).some((a) => a.toLowerCase() === n));
   };
 
+  // Best target for free text: exact name/alias first, else a SUBSTRING match on
+  // name or any alias (so "seahorse" finds "Seahorse (Barnard 150)"). Scored so a
+  // name that starts with the text beats a mid-string or alias hit. -1 if none.
+  const findTarget = (text) => {
+    const n = text.replace(/^★\s*/, "").trim().toLowerCase();
+    if (!n) return -1;
+    const ts = allTargets();
+    const exact = indexOfName(n);
+    if (exact >= 0) return exact;
+    let best = -1, bestScore = 0;
+    ts.forEach((t, idx) => {
+      const nm = t.name.toLowerCase();
+      const al = (t.aliases || []).map((a) => a.toLowerCase());
+      let s = 0;
+      if (nm.startsWith(n)) s = 4;
+      else if (al.some((a) => a.startsWith(n))) s = 3;
+      else if (nm.includes(n)) s = 2;
+      else if (al.some((a) => a.includes(n))) s = 1;
+      if (s > bestScore) { bestScore = s; best = idx; }
+    });
+    return best;
+  };
+
   // Pick a known target by index: select + reflect its name in the box.
   const selectTarget = (idx) => {
     targetIdx = idx;
@@ -722,9 +745,9 @@ function initSelectors() {
   const commit = () => {
     const name = input.value.trim();
     if (!name) return;
-    const known = indexOfName(name);
+    const known = findTarget(name);            // exact or substring (local) match
     if (known >= 0) { selectTarget(known); return; }
-    resolveAndAdd(name);
+    resolveAndAdd(name);                        // nothing local -> resolve by name
   };
 
   // Picking from the datalist fires "change" with an exact name -> select it
