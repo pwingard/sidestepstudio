@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v28";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v29";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -1202,6 +1202,11 @@ function renderImagePanel(target) {
     SURVEYS.forEach((s, i) => {
       const o = el("option", null, s.name); o.value = i; sel.appendChild(o);
     });
+    // Reflect whichever survey is currently displayed (not always the default).
+    if (rec && rec.source === "survey" && rec.survey) {
+      const si = SURVEYS.findIndex((s) => s.name === rec.survey);
+      if (si >= 0) sel.value = si;
+    }
     surveyField.appendChild(sel);
     box.appendChild(surveyField);
 

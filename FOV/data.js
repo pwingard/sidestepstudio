@@ -126,4 +126,8 @@ const SURVEYS = [
   { name: "Mellinger (color)", hips: "CDS/P/Mellinger/color" },
   { name: "H-alpha (Finkbeiner)", hips: "CDS/P/Finkbeiner" },
   { name: "2MASS (near-IR)",   hips: "CDS/P/2MASS/color" },
+  // Infrared dust maps — the dust that forms DARK nebulae GLOWS here, so a dark
+  // nebula (e.g. the Seahorse) shows as bright structure instead of a silhouette.
+  { name: "WISE 12µm dust (WSSA)", hips: "CDS/P/WISE/WSSA" },
+  { name: "WISE W3 (12µm)",        hips: "CDS/P/WISE/W3" },
 ];
