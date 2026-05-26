@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v26";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v27";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -914,11 +914,21 @@ function renderDiagram(scope, target, focalMM) {
   if (img) {
     // --- real photo backdrop (replaces schematic + synthetic stars) ---
     const w = D(imgW), h = D(imgH);
+    // The "brightness" control is a GAMMA stretch (exponent < 1 lifts faint
+    // nebulosity, unlike a linear brightness() multiply which barely moves dim
+    // detail). img.bright 1..4 -> exponent 1..0.25.
+    const exp = 1 / Math.max(1, (img.bright || 1));
+    const defs = svgEl("defs", {});
+    const filt = svgEl("filter", { id: "imgStretch", "color-interpolation-filters": "sRGB" });
+    const ct = svgEl("feComponentTransfer", {});
+    ["feFuncR", "feFuncG", "feFuncB"].forEach((fn) =>
+      ct.appendChild(svgEl(fn, { type: "gamma", exponent: exp, amplitude: 1, offset: 0 })));
+    filt.appendChild(ct); defs.appendChild(filt); svg.appendChild(defs);
     svg.appendChild(svgEl("image", {
       id: "skyImage",
       href: img.dataUrl, x: cx - w / 2, y: cy - h / 2, width: w, height: h,
       preserveAspectRatio: "xMidYMid meet", opacity: 0.96,
-      style: "filter: brightness(" + (img.bright || 1) + ")"
+      filter: "url(#imgStretch)"
     }));
   } else {
     // --- synthetic backdrop: seeded field stars + schematic blob ---
@@ -1258,8 +1268,10 @@ function renderImagePanel(target) {
     const v = parseFloat(slider.value);
     const cur = targetImages.get(target.name);
     if (cur) cur.bright = v;
-    const node = document.getElementById("skyImage");
-    if (node) node.style.filter = "brightness(" + v + ")";
+    // Live-update the gamma exponent on the stretch filter (no full re-render).
+    const exp = 1 / Math.max(1, v);
+    document.querySelectorAll("#imgStretch feComponentTransfer > *")
+      .forEach((f) => f.setAttribute("exponent", exp));
     bVal.textContent = v.toFixed(1) + "×";
   });
   slider.addEventListener("change", () => {
