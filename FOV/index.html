@@ -131,6 +131,27 @@
         <p class="caption">dashed = image circle (full-frame coverage) · pinch / scroll / +− to zoom · drag to move when zoomed</p>
       </section>
 
+      <!-- Targeting: frame-center sky coordinates + position angle -->
+      <section id="targeting" class="targeting" aria-label="Targeting" hidden>
+        <div class="img-head">Targeting</div>
+        <div class="targ-readout">
+          <span class="targ-center" id="targCenter">RA —  Dec —</span>
+          <span class="targ-pa" id="targPA">PA 0°</span>
+        </div>
+        <label class="img-field">
+          <span>Position angle (° E of N)</span>
+          <div class="pa-row">
+            <input id="paRange" type="range" min="0" max="359" step="1" value="0"
+                   aria-label="Position angle (degrees)" />
+            <input id="paNum" type="number" min="0" max="359" step="1" value="0"
+                   inputmode="numeric" aria-label="Position angle (degrees)" />
+            <button id="paReset" type="button" class="pa-reset" aria-label="Reset position angle to 0">Reset</button>
+          </div>
+        </label>
+        <p class="img-hint">Point the scope at the center coords, then rotate the camera to this
+          position angle. Drag the frame over a loaded image to recompose.</p>
+      </section>
+
       <!-- Optional per-target object image -->
       <details class="advanced image-disclosure">
         <summary>Add a real sky photo (optional)</summary>

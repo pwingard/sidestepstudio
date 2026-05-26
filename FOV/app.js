@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v23";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v24";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -32,6 +32,48 @@ function fits(fov, target) {
 }
 
 const round2 = (n) => (Math.round(n * 100) / 100).toFixed(2);
+
+/* ---- Targeting: frame-centre sky coordinates + position angle ------------
+ * The frame centre on the sky is the target coords offset by (offX,offY) deg
+ * on the tangent plane. We deproject with a proper inverse-gnomonic (TAN), not
+ * the small-angle approximation, so it stays correct at wide fields / high dec.
+ * East is LEFT on the diagram (−x), so east(+) corresponds to −offX.
+ * ------------------------------------------------------------------------- */
+function centerRaDec(ra0Deg, dec0Deg, offX, offY) {
+  const r = Math.PI / 180, d = 180 / Math.PI;
+  const a0 = ra0Deg * r, d0 = dec0Deg * r;
+  const xi  = (-offX) * r;   // east is LEFT (−x), so east(+) = −offX
+  const eta = ( offY) * r;   // north is up
+  const rho = Math.hypot(xi, eta);
+  if (rho === 0) return { raDeg: ((ra0Deg % 360) + 360) % 360, decDeg: dec0Deg };
+  const c = Math.atan(rho);
+  const dec = Math.asin(Math.cos(c) * Math.sin(d0) + (eta * Math.sin(c) * Math.cos(d0)) / rho);
+  const ra  = a0 + Math.atan2(xi * Math.sin(c), rho * Math.cos(d0) * Math.cos(c) - eta * Math.sin(d0) * Math.sin(c));
+  let raDeg = ((ra * d) % 360 + 360) % 360;
+  return { raDeg, decDeg: dec * d };
+}
+
+// RA degrees -> "hh:mm:ss" (whole-second rounding, with carry into hours).
+function fmtRA(raDeg) {
+  let totalSec = Math.round((((raDeg % 360) + 360) % 360) / 15 * 3600);
+  totalSec = ((totalSec % 86400) + 86400) % 86400;   // wrap if rounding pushed to 24h
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const p2 = (n) => String(n).padStart(2, "0");
+  return `${p2(h)}:${p2(m)}:${p2(s)}`;
+}
+
+// Dec degrees -> "±dd:mm:ss" (whole-second rounding).
+function fmtDec(decDeg) {
+  const sign = decDeg < 0 ? "-" : "+";
+  let totalSec = Math.round(Math.abs(decDeg) * 3600);
+  const dd = Math.floor(totalSec / 3600);
+  const mm = Math.floor((totalSec % 3600) / 60);
+  const ss = totalSec % 60;
+  const p2 = (n) => String(n).padStart(2, "0");
+  return `${sign}${p2(dd)}:${p2(mm)}:${p2(ss)}`;
+}
 
 /* ---- Seeded PRNG (mulberry32) so field stars don't jitter on redraw ------- */
 function mulberry32(seed) {
@@ -110,6 +152,7 @@ let apertureMM = null;       // advanced: optional, enables f-ratio when set
 
 let targetIdx = 0;
 let lastPxPerDeg = 1;   // deg->viewBox scale from the last diagram render (for drag)
+let posAngle = 0;       // frame position angle (deg, E of N); rotates the sensor rects
 
 // ---- Zoom (applied as a CSS transform on the <svg>, on top of the auto-fit
 // viewBox). zoom=1 == auto-fit. panX/panY are in CSS pixels of the stage and
@@ -546,6 +589,22 @@ function initSelectors() {
     render();
   });
 
+  // Position angle: range slider + number input mirror each other; Reset -> 0.
+  // Each change re-renders the diagram (rotating the sensor rects) and the
+  // readout. Wrap into 0–359 so the two inputs always agree.
+  const paRange = $("paRange"), paNum = $("paNum"), paReset = $("paReset");
+  const setPA = (v) => {
+    if (!isFinite(v)) return;
+    posAngle = ((Math.round(v) % 360) + 360) % 360;
+    if (paRange) paRange.value = String(posAngle);
+    if (paNum) paNum.value = String(posAngle);
+    render();
+  };
+  if (paRange) paRange.addEventListener("input", () => setPA(parseFloat(paRange.value)));
+  if (paNum) paNum.addEventListener("change", () => setPA(parseFloat(paNum.value)));
+  if (paNum) paNum.addEventListener("input", () => setPA(parseFloat(paNum.value)));
+  if (paReset) paReset.addEventListener("click", () => setPA(0));
+
   // Target combobox: ONE control that both picks a known target and resolves
   // any object name. Typing/selecting an exact known-name match selects it;
   // pressing Enter (or Find) on an unknown name runs the Sesame resolver and
@@ -801,16 +860,46 @@ function renderDiagram(scope, target, focalMM) {
   }));
 
   // --- camera rectangles: largest area first so smaller layer on top ---
+  // Wrapped in a group rotated about the frame centre (fx,fy) by the position
+  // angle. PA is measured from North (up) through East (left) = CCW on screen;
+  // SVG `rotate(angle)` is CW for +angle, so we apply rotate(-posAngle).
   const ordered = cams.slice().sort((a, b) =>
     (b.fov.w * b.fov.h) - (a.fov.w * a.fov.h));
+  const rotG = svgEl("g", { transform: `rotate(${-posAngle} ${fx} ${fy})` });
   ordered.forEach(({ color, fov }) => {
     const w = D(fov.w), h = D(fov.h);
-    svg.appendChild(svgEl("rect", {
+    rotG.appendChild(svgEl("rect", {
       x: fx - w / 2, y: fy - h / 2, width: w, height: h,
       rx: 4, fill: color, "fill-opacity": fillOp,
       stroke: color, "stroke-width": 2.6, "stroke-opacity": strokeOp
     }));
   });
+  svg.appendChild(rotG);
+
+  // --- crosshair marking the frame centre (the point the coords refer to) ---
+  const chOp = img ? 0.6 : 0.85;
+  const ch = 14;   // arm half-length, viewBox px
+  const cross = svgEl("g", { stroke: "#e6ebf2", "stroke-width": 1.6, "stroke-opacity": chOp });
+  cross.appendChild(svgEl("line", { x1: fx - ch, y1: fy, x2: fx + ch, y2: fy }));
+  cross.appendChild(svgEl("line", { x1: fx, y1: fy - ch, x2: fx, y2: fy + ch }));
+  svg.appendChild(cross);
+
+  // Update the Targeting readout from this frame's offset + position angle.
+  renderTargeting(target, offX, offY);
+}
+
+/* ---- Targeting readout: frame-centre RA/Dec + position angle -------------- */
+function renderTargeting(target, offX, offY) {
+  const wrap = $("targeting");
+  if (!wrap) return;
+  const hasCoords = typeof target.ra === "number" && typeof target.dec === "number";
+  if (!hasCoords) { wrap.hidden = true; return; }
+  wrap.hidden = false;
+  const { raDeg, decDeg } = centerRaDec(target.ra, target.dec, offX || 0, offY || 0);
+  const c = $("targCenter");
+  if (c) c.textContent = `RA ${fmtRA(raDeg)}  Dec ${fmtDec(decDeg)}`;
+  const p = $("targPA");
+  if (p) p.textContent = `PA ${Math.round(posAngle)}°`;
 }
 
 function drawTarget(t, cx, cy, D) {
