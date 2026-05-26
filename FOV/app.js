@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v24";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v25";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -215,6 +215,32 @@ function saveCustomTargets() {
   catch (e) { console.warn("could not save custom targets:", e); }
 }
 function allTargets() { return TARGETS.concat(customTargets); }
+
+/* ---- Session persistence -------------------------------------------------
+ * Remember what the user had set up so a reload/relaunch restores it: the
+ * compare list (cameras + each one's focal length), the default focal length,
+ * the selected target (by name), and the position angle. The last target's
+ * image already lives in IndexedDB — restoring the selected target makes it
+ * reappear on the post-load re-render. Stored in localStorage as one JSON blob.
+ * ------------------------------------------------------------------------- */
+const SESSION_KEY = "fovSession";
+
+function saveSession() {
+  try {
+    const sel = allTargets()[targetIdx];
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      activeList, focalMM, posAngle,
+      targetName: sel && sel.name,
+    }));
+  } catch (e) { console.warn("could not save session:", e); }
+}
+
+function loadSession() {
+  try {
+    const j = localStorage.getItem(SESSION_KEY);
+    return j ? JSON.parse(j) : null;
+  } catch (e) { console.warn("session unavailable:", e); return null; }
+}
 
 // Resolve a name to {ra, dec, kind} via CDS Sesame (SIMBAD/NED/VizieR).
 function resolveByName(name) {
@@ -514,6 +540,11 @@ function camFromSelectValue(value) {
 
 /* ---- Populate dropdowns --------------------------------------------------- */
 function initSelectors() {
+  // Restore a saved session (cameras, focal, PA, target) if present. Each piece
+  // is applied defensively at the matching setup point below; bad/missing
+  // fields fall back to the normal defaults and never throw.
+  const session = loadSession();
+
   // Camera dropdown.
   const cam = buildCameraSelect();
   // Default selection = first My-gear entry (ASI533) if present, else first option.
@@ -535,9 +566,30 @@ function initSelectors() {
     applyCameraSelection(cam.value);
   });
 
-  // Seed the compare list with one camera by default (ASI533).
-  const seed = camFromSelectValue(cam.value);
-  if (seed) addCam(seed.key, seed.cam);
+  // Restore the saved compare list verbatim if we have one; otherwise seed the
+  // list with one camera by default (ASI533).
+  const savedList = session && Array.isArray(session.activeList) ? session.activeList : null;
+  if (savedList && savedList.length) {
+    savedList.forEach((e) => {
+      if (e && e.cam) {
+        activeList.push({
+          key: e.key,
+          cam: e.cam,
+          focalMM: (isFinite(e.focalMM) && e.focalMM > 0) ? e.focalMM : focalMM,
+          locked: !!e.locked,
+        });
+      }
+    });
+  }
+  if (activeList.length === 0) {
+    const seed = camFromSelectValue(cam.value);
+    if (seed) addCam(seed.key, seed.cam);
+  }
+
+  // Restore the default focal length (for the NEXT added camera).
+  if (session && isFinite(session.focalMM) && session.focalMM >= 50 && session.focalMM <= 4000) {
+    focalMM = session.focalMM;
+  }
 
   // "Add" button — append the currently selected camera to the compare list.
   const addBtn = $("addCamBtn");
@@ -605,12 +657,25 @@ function initSelectors() {
   if (paNum) paNum.addEventListener("input", () => setPA(parseFloat(paNum.value)));
   if (paReset) paReset.addEventListener("click", () => setPA(0));
 
+  // Restore the saved position angle. setPA wraps into 0–359 and syncs both
+  // inputs; it calls render(), but the boot render() below repaints anyway.
+  if (session && isFinite(session.posAngle)) setPA(session.posAngle);
+
   // Target combobox: ONE control that both picks a known target and resolves
   // any object name. Typing/selecting an exact known-name match selects it;
   // pressing Enter (or Find) on an unknown name runs the Sesame resolver and
   // creates a custom target. The datalist offers all current target names.
   const input = $("targetInput"), btn = $("findBtn"), status = $("findStatus");
   rebuildTargetSelect();
+
+  // Restore the saved selected target by name (exact, case-insensitive). If the
+  // name isn't found (e.g. a custom target was deleted), leave the default.
+  if (session && session.targetName) {
+    const wanted = String(session.targetName).toLowerCase();
+    const idx = allTargets().findIndex((t) => t.name.toLowerCase() === wanted);
+    if (idx >= 0) targetIdx = idx;
+  }
+
   input.value = allTargets()[targetIdx] ? allTargets()[targetIdx].name : "";
 
   // Find the index of a target whose name matches `name` (case-insensitive).
@@ -1422,6 +1487,11 @@ function render() {
   renderImagePanel(target);
   renderCards(scope, target, focalMM);
   renderVerdict(scope, target, focalMM);
+
+  // Persist the session on every render — this catches every change to the
+  // compare list, default focal length, selected target, and position angle,
+  // since they all re-render. (saveSession itself is wrapped in try/catch.)
+  saveSession();
 }
 
 /* ---- Boot ----------------------------------------------------------------- */
