@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v33";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v34";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -288,12 +288,29 @@ function identifyRegion(ra, dec, radiusDeg) {
       if (mid == null || seen.has(mid)) return;
       seen.add(mid);
       const d = Math.hypot((ora - ra) * Math.cos(dec * Math.PI / 180), odec - dec);
-      out.push({ name: String(mid).replace(/^NAME\s+/, ""), type: ot || "", deg: d });
+      out.push({ name: String(mid).replace(/^NAME\s+/, ""), type: ot || "", deg: d, ra: ora, dec: odec });
     });
     out.sort((a, b) => a.deg - b.deg);
     return out;
   });
 }
+
+// Forward gnomonic: screen offset (deg, +right/+up) of (ra,dec) relative to the
+// diagram-center target (ra0,dec0). Inverse of centerRaDec; used to plot the
+// "What's here?" hits on the diagram. Returns null if >90° away.
+function offsetOfRaDec(ra0, dec0, ra, dec) {
+  const r = Math.PI / 180;
+  const a0 = ra0 * r, d0 = dec0 * r, a = ra * r, d = dec * r;
+  const cosc = Math.sin(d0) * Math.sin(d) + Math.cos(d0) * Math.cos(d) * Math.cos(a - a0);
+  if (cosc <= 0) return null;
+  const xi = Math.cos(d) * Math.sin(a - a0) / cosc;                                  // east (rad)
+  const eta = (Math.cos(d0) * Math.sin(d) - Math.sin(d0) * Math.cos(d) * Math.cos(a - a0)) / cosc; // north
+  return { offX: -(xi / r), offY: (eta / r) };   // east is LEFT (−x); north is up
+}
+
+// Objects from the last "What's here?" search, plotted on the diagram until the
+// target changes.
+let whatsHereHits = [];
 
 /* ---- User object images (optional, per target) ---------------------------
  * Each target may have a user-supplied photo that replaces the schematic blob.
@@ -694,6 +711,26 @@ function initSelectors() {
 
   // "What's here?" — reverse lookup of cataloged objects near the reticle.
   const whBtn = $("whatsHereBtn"), whStatus = $("whatsHereStatus"), whList = $("whatsHereList");
+
+  // Tap a result -> make it the target (recenter the diagram on it). We already
+  // have its coords from SIMBAD, so no re-resolve needed.
+  const moveTo = (o) => {
+    let idx = allTargets().findIndex((t) => t.name === o.name);
+    if (idx < 0) {
+      const kind = /Dk|DNe/.test(o.type) ? "dark" : /^G/.test(o.type) ? "galaxy"
+                 : /PN/.test(o.type) ? "pn" : "neb";
+      customTargets.push({ name: o.name, ra: o.ra, dec: o.dec, wDeg: 0.5, hDeg: 0.5, kind, custom: true });
+      saveCustomTargets();
+      rebuildTargetSelect();
+      idx = allTargets().length - 1;
+    }
+    whatsHereHits = [];                       // moved center; drop old markers
+    targetIdx = idx;
+    $("targetInput").value = o.name;
+    whStatus.textContent = ""; whList.hidden = true; whList.innerHTML = "";
+    render();
+  };
+
   if (whBtn) whBtn.addEventListener("click", () => {
     const t = allTargets()[targetIdx];
     if (!t || !isFinite(t.ra) || !isFinite(t.dec)) {
@@ -706,19 +743,22 @@ function initSelectors() {
     whBtn.disabled = true; whList.hidden = true; whList.innerHTML = "";
     whStatus.textContent = "Searching SIMBAD…";
     identifyRegion(c.raDeg, c.decDeg, rad).then((list) => {
+      whatsHereHits = list.slice(0, 20);      // plot these on the diagram
       if (!list.length) {
         whStatus.textContent = `Nothing cataloged within ${rad.toFixed(1)}° of the reticle.`;
-        return;
+        render(); return;
       }
-      whStatus.textContent = `${list.length} within ${rad.toFixed(1)}° (nearest first):`;
-      list.slice(0, 20).forEach((o) => {
+      whStatus.textContent = `${list.length} within ${rad.toFixed(1)}° — tap one to go there:`;
+      whatsHereHits.forEach((o) => {
         const li = el("li", "wh-item");
         const arc = o.deg < 1 ? Math.round(o.deg * 60) + "′" : o.deg.toFixed(2) + "°";
         li.innerHTML = `<strong>${o.name}</strong> <span class="wh-type">${o.type}</span>`
           + `<span class="wh-dist">${arc}</span>`;
+        li.addEventListener("click", () => moveTo(o));
         whList.appendChild(li);
       });
       whList.hidden = false;
+      render();                               // draw the markers on the diagram
     }).catch((e) => {
       console.warn("identify failed:", e);
       whStatus.textContent = "Couldn't reach SIMBAD — needs a network connection.";
@@ -780,6 +820,9 @@ function initSelectors() {
     targetIdx = idx;
     input.value = allTargets()[idx].name;
     status.textContent = "";
+    whatsHereHits = [];                       // new target -> clear old markers/list
+    if ($("whatsHereList")) { $("whatsHereList").hidden = true; $("whatsHereList").innerHTML = ""; }
+    if ($("whatsHereStatus")) $("whatsHereStatus").textContent = "";
     render();
   };
 
@@ -1061,6 +1104,25 @@ function renderDiagram(scope, target, focalMM) {
   cross.appendChild(svgEl("line", { x1: fx - ch, y1: fy, x2: fx + ch, y2: fy }));
   cross.appendChild(svgEl("line", { x1: fx, y1: fy - ch, x2: fx, y2: fy + ch }));
   svg.appendChild(cross);
+
+  // --- "What's here?" hits: plot each found object at its sky position + label ---
+  if (whatsHereHits && whatsHereHits.length && isFinite(target.ra) && isFinite(target.dec)) {
+    whatsHereHits.forEach((h) => {
+      const o = offsetOfRaDec(target.ra, target.dec, h.ra, h.dec);
+      if (!o) return;
+      const mx = cx + D(o.offX), my = cy - D(o.offY);
+      svg.appendChild(svgEl("circle", {
+        cx: mx, cy: my, r: 6, fill: "none", stroke: "#ffd479", "stroke-width": 2.2
+      }));
+      const tx = svgEl("text", {
+        x: mx + 10, y: my + 6, fill: "#ffd479", "font-size": 22, "font-weight": 600,
+        "font-family": "-apple-system, Helvetica, Arial, sans-serif",
+        style: "paint-order:stroke; stroke:#0a0d12; stroke-width:4px;"
+      });
+      tx.textContent = h.name;
+      svg.appendChild(tx);
+    });
+  }
 
   // Update the Targeting readout from this frame's offset + position angle.
   renderTargeting(target, offX, offY);
