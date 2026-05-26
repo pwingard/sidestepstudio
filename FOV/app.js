@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v27";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v28";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -918,12 +918,19 @@ function renderDiagram(scope, target, focalMM) {
     // nebulosity, unlike a linear brightness() multiply which barely moves dim
     // detail). img.bright 1..4 -> exponent 1..0.25.
     const exp = 1 / Math.max(1, (img.bright || 1));
+    // Two-stage: (1) clip a black-point pedestal so the survey's grey noise floor
+    // goes to black, then (2) gamma-lift the remaining real signal. Reveals faint
+    // nebulosity WITHOUT washing the background grey (the v27 single-gamma did).
+    const bp = 0.09, slope = 1 / (1 - bp), intercept = -bp * slope;
     const defs = svgEl("defs", {});
     const filt = svgEl("filter", { id: "imgStretch", "color-interpolation-filters": "sRGB" });
-    const ct = svgEl("feComponentTransfer", {});
+    const ctClip = svgEl("feComponentTransfer", {});
     ["feFuncR", "feFuncG", "feFuncB"].forEach((fn) =>
-      ct.appendChild(svgEl(fn, { type: "gamma", exponent: exp, amplitude: 1, offset: 0 })));
-    filt.appendChild(ct); defs.appendChild(filt); svg.appendChild(defs);
+      ctClip.appendChild(svgEl(fn, { type: "linear", slope, intercept })));
+    const ctGamma = svgEl("feComponentTransfer", {});
+    ["feFuncR", "feFuncG", "feFuncB"].forEach((fn) =>
+      ctGamma.appendChild(svgEl(fn, { type: "gamma", exponent: exp, amplitude: 1, offset: 0 })));
+    filt.appendChild(ctClip); filt.appendChild(ctGamma); defs.appendChild(filt); svg.appendChild(defs);
     svg.appendChild(svgEl("image", {
       id: "skyImage",
       href: img.dataUrl, x: cx - w / 2, y: cy - h / 2, width: w, height: h,
@@ -1220,7 +1227,7 @@ function renderImagePanel(target) {
         saveImage(target.name, {
           dataUrl, aspect: 1, fovWDeg: v,
           source: "survey", survey: survey.name, offX: 0, offY: 0,
-          bright: 2.0   // survey cutouts are dim; start brightened
+          bright: 1.4   // survey cutouts are dim; start gently stretched
         });
         render();
       } catch (e) {
@@ -1271,7 +1278,7 @@ function renderImagePanel(target) {
     // Live-update the gamma exponent on the stretch filter (no full re-render).
     const exp = 1 / Math.max(1, v);
     document.querySelectorAll("#imgStretch feComponentTransfer > *")
-      .forEach((f) => f.setAttribute("exponent", exp));
+      .forEach((f) => { if (f.getAttribute("type") === "gamma") f.setAttribute("exponent", exp); });
     bVal.textContent = v.toFixed(1) + "×";
   });
   slider.addEventListener("change", () => {
