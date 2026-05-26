@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v22";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v23";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -1111,29 +1111,8 @@ function renderImagePanel(target) {
     wrap.appendChild(wf);
   }
 
-  // Framing nudge — slide the sensor/optics over the fixed sky.
-  wrap.appendChild(el("span", "img-sublabel", "Drag on the image to move the frame, or nudge:"));
-  const step = rec.fovWDeg * 0.1;
-  const nudge = (dx, dy) => () => {
-    const cur = targetImages.get(target.name);
-    saveImage(target.name, Object.assign({}, cur, {
-      offX: (cur.offX || 0) + dx * step,
-      offY: (cur.offY || 0) + dy * step
-    }));
-    render();
-  };
-  const pad = el("div", "img-pad");
-  const mk = (txt, fn, cls) => { const b = el("button", "nudge" + (cls ? " " + cls : ""), txt); b.addEventListener("click", fn); return b; };
-  pad.appendChild(el("span"));                              // grid spacer
-  pad.appendChild(mk("▲", nudge(0, 1)));
-  pad.appendChild(el("span"));
-  pad.appendChild(mk("◀", nudge(-1, 0)));
-  pad.appendChild(mk("◎", () => { const c = targetImages.get(target.name); saveImage(target.name, Object.assign({}, c, { offX: 0, offY: 0 })); render(); }, "center"));
-  pad.appendChild(mk("▶", nudge(1, 0)));
-  pad.appendChild(el("span"));
-  pad.appendChild(mk("▼", nudge(0, -1)));
-  pad.appendChild(el("span"));
-  wrap.appendChild(pad);
+  // Framing: drag the image to slide the frame (touch/mouse). Nudge pad removed.
+  wrap.appendChild(el("span", "img-sublabel", "Drag on the image to move the frame."));
 
   const remove = el("button", "img-btn danger", "Remove image");
   remove.addEventListener("click", () => { deleteImage(target.name); render(); });
@@ -1147,31 +1126,7 @@ function renderCustomPanel(target) {
   if (!target.custom) { wrap.hidden = true; return; }
   wrap.hidden = false;
 
-  wrap.appendChild(el("div", "img-head", "Custom object — approximate size (verdict only)"));
-
-  const sizeFn = (key, labelText) => {
-    const f = el("label", "img-field");
-    f.appendChild(el("span", null, labelText));
-    const num = el("input");
-    num.type = "number"; num.min = "0.01"; num.step = "0.01"; num.inputMode = "decimal";
-    num.value = round2(target[key]);
-    num.addEventListener("change", () => {
-      const v = parseFloat(num.value);
-      if (!isFinite(v) || v <= 0) { num.value = round2(target[key]); return; }
-      target[key] = v; saveCustomTargets(); render();
-    });
-    f.appendChild(num);
-    return f;
-  };
-  const row = el("div", "size-row");
-  row.appendChild(sizeFn("wDeg", "Width (°)"));
-  row.appendChild(sizeFn("hDeg", "Height (°)"));
-  wrap.appendChild(row);
-
-  wrap.appendChild(el("p", "img-hint",
-    "Sesame gives coordinates, not size. This only affects the fit verdict and " +
-    "the schematic — it does NOT size the fetched picture (use “Image field " +
-    "width” in the Object image panel for that)."));
+  wrap.appendChild(el("div", "img-head", target.name + " — resolved by name"));
 
   const del = el("button", "img-btn danger", "Delete this target");
   del.addEventListener("click", () => {
