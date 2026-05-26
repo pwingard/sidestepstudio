@@ -548,3 +548,20 @@ select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .verdict-row { display: flex; align-items: center; gap: 10px; }
 .verdict-row .swatch { width: 16px; height: 16px; border-radius: 5px; }
 .verdict-txt { font-size: 13px; color: var(--muted); line-height: 1.4; }
+
+/* "What's here?" reverse-lookup (SIMBAD) */
+.whats-here { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.whats-here button {
+  flex: 0 0 auto; height: 40px; padding: 0 14px;
+  background: var(--accent); color: var(--bg); border: none; border-radius: var(--radius);
+  font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.whats-here button[disabled] { opacity: 0.55; cursor: default; }
+.wh-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.wh-item {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 6px 10px; background: var(--panel-2); border-radius: 8px; font-size: 14px;
+}
+.wh-item strong { color: var(--text); }
+.wh-type { color: var(--muted); font-size: 12px; }
+.wh-dist { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }

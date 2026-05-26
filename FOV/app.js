@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v32";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v33";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -261,6 +261,37 @@ function resolveByName(name) {
       else if (/Dk|DNe/.test(t)) kind = "dark";
     }
     return { ra, dec, kind };
+  });
+}
+
+/* Reverse lookup ("What's here?"): list recognizable cataloged objects within
+ * `radiusDeg` of (ra,dec) via SIMBAD's TAP cone search. Filtered to notable
+ * catalogs (M/NGC/IC/LBN/LDN/Sh2/Barnard/vdB/Ced/Mel/Cr/NAME) so we get real
+ * objects, not a Gaia star dump. Online only. Returns [{name,type,deg}] sorted
+ * nearest-first. */
+function identifyRegion(ra, dec, radiusDeg) {
+  const cats = ["M %", "NGC %", "IC %", "LBN %", "LDN %", "Sh 2-%", "Barnard %",
+                "vdB %", "Ced %", "Mel %", "Cr %", "NAME %"];
+  const like = cats.map((c) => `i.id LIKE '${c}'`).join(" OR ");
+  const adql = `SELECT b.main_id, b.otype_txt, b.ra, b.dec FROM basic b `
+    + `JOIN ident i ON b.oid = i.oidref `
+    + `WHERE CONTAINS(POINT('ICRS', b.ra, b.dec), CIRCLE('ICRS', ${ra}, ${dec}, ${radiusDeg})) = 1 `
+    + `AND (${like})`;
+  const url = "https://simbad.cds.unistra.fr/simbad/sim-tap/sync"
+    + "?request=doQuery&lang=adql&format=json&query=" + encodeURIComponent(adql);
+  return fetch(url).then((r) => {
+    if (!r.ok) throw new Error("SIMBAD HTTP " + r.status);
+    return r.json();
+  }).then((j) => {
+    const seen = new Set(), out = [];
+    (j.data || []).forEach(([mid, ot, ora, odec]) => {
+      if (mid == null || seen.has(mid)) return;
+      seen.add(mid);
+      const d = Math.hypot((ora - ra) * Math.cos(dec * Math.PI / 180), odec - dec);
+      out.push({ name: String(mid).replace(/^NAME\s+/, ""), type: ot || "", deg: d });
+    });
+    out.sort((a, b) => a.deg - b.deg);
+    return out;
   });
 }
 
@@ -660,6 +691,39 @@ function initSelectors() {
   // Restore the saved position angle. setPA wraps into 0–359 and syncs both
   // inputs; it calls render(), but the boot render() below repaints anyway.
   if (session && isFinite(session.posAngle)) setPA(session.posAngle);
+
+  // "What's here?" — reverse lookup of cataloged objects near the reticle.
+  const whBtn = $("whatsHereBtn"), whStatus = $("whatsHereStatus"), whList = $("whatsHereList");
+  if (whBtn) whBtn.addEventListener("click", () => {
+    const t = allTargets()[targetIdx];
+    if (!t || !isFinite(t.ra) || !isFinite(t.dec)) {
+      whStatus.textContent = "No coordinates for this target."; return;
+    }
+    const rec = targetImages.get(t.name);
+    const ox = rec ? (rec.offX || 0) : 0, oy = rec ? (rec.offY || 0) : 0;
+    const c = centerRaDec(t.ra, t.dec, ox, oy);
+    const rad = Math.min(2.5, Math.max(0.25, rec ? rec.fovWDeg / 2 : 1.0));
+    whBtn.disabled = true; whList.hidden = true; whList.innerHTML = "";
+    whStatus.textContent = "Searching SIMBAD…";
+    identifyRegion(c.raDeg, c.decDeg, rad).then((list) => {
+      if (!list.length) {
+        whStatus.textContent = `Nothing cataloged within ${rad.toFixed(1)}° of the reticle.`;
+        return;
+      }
+      whStatus.textContent = `${list.length} within ${rad.toFixed(1)}° (nearest first):`;
+      list.slice(0, 20).forEach((o) => {
+        const li = el("li", "wh-item");
+        const arc = o.deg < 1 ? Math.round(o.deg * 60) + "′" : o.deg.toFixed(2) + "°";
+        li.innerHTML = `<strong>${o.name}</strong> <span class="wh-type">${o.type}</span>`
+          + `<span class="wh-dist">${arc}</span>`;
+        whList.appendChild(li);
+      });
+      whList.hidden = false;
+    }).catch((e) => {
+      console.warn("identify failed:", e);
+      whStatus.textContent = "Couldn't reach SIMBAD — needs a network connection.";
+    }).finally(() => { whBtn.disabled = false; });
+  });
 
   // Target combobox: ONE control that both picks a known target and resolves
   // any object name. Typing/selecting an exact known-name match selects it;
