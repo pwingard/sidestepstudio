@@ -37,9 +37,10 @@ main {
 /* Phone: panes are transparent wrappers — children flow in DOM order. */
 .pane { display: contents; }
 
-/* iPad landscape / desktop: two columns. LEFT (sticky) = selections
- * (camera/target/find + targeting + image tools); RIGHT = the diagram + cards
- * + verdict. (Make your selections on the left, watch the framing on the right.) */
+/* iPad landscape / desktop: two columns. LEFT = selections (camera/target/find);
+ * RIGHT = the diagram + targeting + cards + verdict. Neither column is sticky —
+ * the whole layout scrolls as ONE page so the two sides move together (a sticky
+ * column made them scroll out of sync, which felt awkward on iPad). */
 @media (min-width: 900px) {
   main {
     max-width: 1180px;
@@ -54,11 +55,7 @@ main {
     gap: 18px;
     min-width: 0;
   }
-  .pane-side {
-    grid-column: 1;
-    position: sticky;
-    top: 82px;
-  }
+  .pane-side { grid-column: 1; }
   .pane-main { grid-column: 2; }
 }
 
