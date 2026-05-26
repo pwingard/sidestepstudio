@@ -6,7 +6,7 @@
 
 "use strict";
 
-const APP_VERSION = "v31";   // shown in the title bar; bump with sw.js CACHE_VERSION
+const APP_VERSION = "v32";   // shown in the title bar; bump with sw.js CACHE_VERSION
 const DEG = 180 / Math.PI;
 
 /* ---- Core math (from spec) ------------------------------------------------ */
@@ -346,12 +346,12 @@ function processFile(file) {
  * is then cached in IndexedDB for offline use. */
 const HIPS_ENDPOINT = "https://alasky.cds.unistra.fr/hips-image-services/hips2fits";
 const SURVEY_PX = 1000;            // square cutout edge, in pixels
-function fetchSurveyImage(target, hips, fovDeg) {
+function fetchSurveyImage(ra, dec, hips, fovDeg) {
   const u = new URL(HIPS_ENDPOINT);
   u.search = new URLSearchParams({
     hips, width: SURVEY_PX, height: SURVEY_PX, fov: fovDeg,
     projection: "TAN", coordsys: "icrs",
-    ra: target.ra, dec: target.dec, format: "jpg"
+    ra, dec, format: "jpg"
   }).toString();
   return fetch(u.toString()).then((r) => {
     if (!r.ok) throw new Error("survey HTTP " + r.status);
@@ -886,15 +886,21 @@ function renderDiagram(scope, target, focalMM) {
   const imgW = img ? img.fovWDeg : 0;
   const imgH = img ? img.fovWDeg * img.aspect : 0;
 
+  // Image-centre offset (deg from the target, +right/+up): where the photo's
+  // CENTRE sits. 0/0 == centred on the target (default / legacy behaviour).
+  // Images fetched "at reticle" carry the reticle's offset here.
+  const imgCX = img && img.imgCX ? img.imgCX : 0;
+  const imgCY = img && img.imgCY ? img.imgCY : 0;
+
   // Framing offset (deg): the scope (image circle + sensor frames) slides over
   // the fixed sky so you can hunt the best composition. +offX right, +offY up.
   const offX = img && img.offX ? img.offX : 0;
   const offY = img && img.offY ? img.offY : 0;
 
-  // Auto-zoom: fit the fixed sky {image, target} AND the offset optics
-  // {image circle, every enabled frame} with ~6% margin. Computed per-axis.
-  let halfX = Math.max(target.wDeg / 2, imgW / 2, Math.abs(offX) + circleDeg / 2);
-  let halfY = Math.max(target.hDeg / 2, imgH / 2, Math.abs(offY) + circleDeg / 2);
+  // Auto-zoom: fit the fixed sky {image at its offset, target} AND the offset
+  // optics {image circle, every enabled frame} with ~6% margin. Per-axis.
+  let halfX = Math.max(target.wDeg / 2, Math.abs(imgCX) + imgW / 2, Math.abs(offX) + circleDeg / 2);
+  let halfY = Math.max(target.hDeg / 2, Math.abs(imgCY) + imgH / 2, Math.abs(offY) + circleDeg / 2);
   cams.forEach((c) => {
     halfX = Math.max(halfX, Math.abs(offX) + c.fov.w / 2);
     halfY = Math.max(halfY, Math.abs(offY) + c.fov.h / 2);
@@ -914,6 +920,9 @@ function renderDiagram(scope, target, focalMM) {
   if (img) {
     // --- real photo backdrop (replaces schematic + synthetic stars) ---
     const w = D(imgW), h = D(imgH);
+    // The image centre sits at the image-centre offset (icx,icy), not always
+    // at the diagram centre — so an "at reticle" fetch lands under the reticle.
+    const icx = cx + D(imgCX), icy = cy - D(imgCY);
     // The "brightness" control is a GAMMA stretch (exponent < 1 lifts faint
     // nebulosity, unlike a linear brightness() multiply which barely moves dim
     // detail). img.bright 1..4 -> exponent 1..0.25.
@@ -933,7 +942,7 @@ function renderDiagram(scope, target, focalMM) {
     filt.appendChild(ctClip); filt.appendChild(ctGamma); defs.appendChild(filt); svg.appendChild(defs);
     svg.appendChild(svgEl("image", {
       id: "skyImage",
-      href: img.dataUrl, x: cx - w / 2, y: cy - h / 2, width: w, height: h,
+      href: img.dataUrl, x: icx - w / 2, y: icy - h / 2, width: w, height: h,
       preserveAspectRatio: "xMidYMid meet", opacity: 0.96,
       filter: "url(#imgStretch)"
     }));
@@ -1228,10 +1237,11 @@ function renderImagePanel(target) {
       const survey = SURVEYS[+sel.value];
       go.disabled = true; go.textContent = "Fetching…";
       try {
-        const dataUrl = await fetchSurveyImage(target, survey.hips, v);
+        const dataUrl = await fetchSurveyImage(target.ra, target.dec, survey.hips, v);
         saveImage(target.name, {
           dataUrl, aspect: 1, fovWDeg: v,
           source: "survey", survey: survey.name, offX: 0, offY: 0,
+          imgCX: 0, imgCY: 0,   // centred on the target
           bright: 1.4   // survey cutouts are dim; start gently stretched
         });
         render();
@@ -1243,6 +1253,44 @@ function renderImagePanel(target) {
       }
     });
     box.appendChild(go);
+
+    // Fetch a NEW image centred where the reticle currently sits. Needs an image
+    // already loaded (that's how the reticle gets moved off the target). Uses the
+    // SAME field-width input as "Fetch sky image".
+    const goRet = el("button", "img-btn", "Fetch at reticle ⊕");
+    goRet.id = "fetchAtReticleBtn";
+    goRet.disabled = !rec;   // only meaningful once an image exists to move over
+    if (!rec) goRet.title = "Load an image first, then drag the frame and fetch here.";
+    goRet.addEventListener("click", async () => {
+      const cur = targetImages.get(target.name);
+      if (!cur) return;
+      const v = parseFloat(fov.value);
+      if (!isFinite(v) || v <= 0) { alert("Enter a field width in degrees."); return; }
+      const survey = SURVEYS[+sel.value];
+      // Reticle = frame centre = target offset by the current (offX,offY).
+      const rOffX = cur.offX || 0, rOffY = cur.offY || 0;
+      const { raDeg, decDeg } = centerRaDec(target.ra, target.dec, rOffX, rOffY);
+      goRet.disabled = true; goRet.textContent = "Fetching…";
+      try {
+        const dataUrl = await fetchSurveyImage(raDeg, decDeg, survey.hips, v);
+        saveImage(target.name, {
+          dataUrl, aspect: 1, fovWDeg: v,
+          source: "survey", survey: survey.name,
+          // New image is centred at the reticle; keep the frame at the reticle so
+          // it now sits centred on the fresh cutout.
+          offX: rOffX, offY: rOffY,
+          imgCX: rOffX, imgCY: rOffY,
+          bright: (cur.bright && cur.bright > 0) ? cur.bright : 1.4
+        });
+        render();
+      } catch (e) {
+        console.warn("reticle fetch failed:", e);
+        alert("Couldn't fetch the survey image — you need a network connection " +
+              "for this step. (" + e.message + ")");
+        goRet.disabled = false; goRet.textContent = "Fetch at reticle ⊕";
+      }
+    });
+    box.appendChild(goRet);
     wrap.appendChild(box);
   }
 
