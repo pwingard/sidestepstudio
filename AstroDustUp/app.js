@@ -1,5 +1,5 @@
 // Astro Dust Up
-const APP_VERSION = "v8";
+const APP_VERSION = "v9";
 
 // Cloudflare Worker that relays nova.astrometry.net (CORS). Set after deploying
 // nova-proxy/ (see its README). Empty = plate-solve disabled, manual align only.
@@ -155,9 +155,17 @@ els.file.addEventListener("change", (e) => {
     els.solve.disabled = false;
     els.opacity.value = "1"; els.user.style.opacity = "1";
     resetUserTransform();
-    setStatus(NOVA_PROXY
-      ? "Tap Plate-solve to align your image to the dust map, then Blink to compare."
-      : "Drag / pinch / rotate to line up the stars, then Blink.");
+    // If we've solved this exact file before, reuse it — no nova queue.
+    const cached = getCachedSolve(fileKey(userFile));
+    if (cached) {
+      autoAlign(cached)
+        .then(() => solveStatus("Reused your saved plate-solve for this image — no re-solving needed. (Tap Plate-solve to redo.)"))
+        .catch(() => {});
+    } else {
+      setStatus(NOVA_PROXY
+        ? "Tap Plate-solve to align your image to the dust map, then Blink to compare."
+        : "Drag / pinch / rotate to line up the stars, then Blink.");
+    }
   };
   els.user.src = url;
 });
@@ -294,6 +302,20 @@ els.novaKeyChange.addEventListener("click", () => {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function solveStatus(msg) { els.solveStatus.textContent = msg || ""; }
 
+// Plate-solving the same file always gives the same answer, and nova's queue is slow —
+// so cache the calibration by file identity and reuse it (no re-solve) for a while.
+const SOLVE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+function fileKey(f) { return f ? `${f.name}|${f.size}|${f.lastModified}` : ""; }
+function loadSolveCache() { try { return JSON.parse(localStorage.getItem("dustSolveCache") || "{}"); } catch { return {}; } }
+function pruneSolveCache(c) { const now = Date.now(); for (const k in c) if (now - (c[k].t || 0) > SOLVE_TTL_MS) delete c[k]; return c; }
+function getCachedSolve(key) { const c = pruneSolveCache(loadSolveCache()); return key && c[key] ? c[key].cal : null; }
+function setCachedSolve(key, cal) {
+  if (!key) return;
+  const c = pruneSolveCache(loadSolveCache());
+  c[key] = { cal, t: Date.now() };
+  try { localStorage.setItem("dustSolveCache", JSON.stringify(c)); } catch {}
+}
+
 async function novaJSON(path, opts) {
   const r = await fetch(NOVA_PROXY.replace(/\/$/, "") + path, opts);
   return r.json();
@@ -389,6 +411,7 @@ async function runSolve() {
     const cal = await novaJSON("/api/jobs/" + jobid + "/calibration/");
     if (cal.ra == null || cal.pixscale == null) throw new Error("No calibration returned.");
     clearPending();
+    setCachedSolve(fileKey(userFile), cal); // remember it so re-loading this image skips the queue
     await autoAlign(cal);
     solveStatus(`Aligned & locked: ${fmtRA(cal.ra)} ${fmtDec(cal.dec)} · ${cal.pixscale.toFixed(2)}″/px. ` +
                 `Tap Blink to compare. (If it lands mirrored or rotated, tap Flip / nudge Rotate.)`);
