@@ -1,6 +1,6 @@
 {
-  "name": "Dust Check",
-  "short_name": "Dust Check",
+  "name": "Astro Dust Up",
+  "short_name": "Dust Up",
   "description": "See the real interstellar dust in your target so you don't mistake it for a gradient.",
   "start_url": "./",
   "scope": "./",

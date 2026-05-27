@@ -1,5 +1,5 @@
-// Dust Check
-const APP_VERSION = "v2";
+// Astro Dust Up
+const APP_VERSION = "v3";
 
 // Cloudflare Worker that relays nova.astrometry.net (CORS). Set after deploying
 // nova-proxy/ (see its README). Empty = plate-solve disabled, manual align only.
@@ -27,7 +27,7 @@ SURVEYS.forEach((s, i) => {
 TARGETS.forEach((t) => {
   const o = document.createElement("option"); o.value = t.name; els.list.appendChild(o);
 });
-els.ver.textContent = "Dust Check " + APP_VERSION;
+els.ver.textContent = "Astro Dust Up " + APP_VERSION;
 
 // Plate-solve depends on the nova proxy; hide that whole block until it's configured.
 if (!NOVA_PROXY) { const sb = document.querySelector(".solvebox"); if (sb) sb.hidden = true; }
