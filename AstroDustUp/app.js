@@ -1,5 +1,5 @@
 // Astro Dust Up
-const APP_VERSION = "v4";
+const APP_VERSION = "v5";
 
 // Cloudflare Worker that relays nova.astrometry.net (CORS). Set after deploying
 // nova-proxy/ (see its README). Empty = plate-solve disabled, manual align only.
@@ -14,7 +14,8 @@ const els = {
   bright: $("brightRange"),
   file: $("fileInput"), opacity: $("opacityRange"), rot: $("rotRange"), rotVal: $("rotVal"),
   blink: $("blinkBtn"), flip: $("flipBtn"), clearImg: $("clearImgBtn"),
-  novaKey: $("novaKey"), solve: $("solveBtn"), solveStatus: $("solveStatus"),
+  novaKey: $("novaKey"), novaKeyRow: $("novaKeyRow"), novaKeySaved: $("novaKeySaved"),
+  novaKeyChange: $("novaKeyChange"), solve: $("solveBtn"), solveStatus: $("solveStatus"),
   ver: $("ver"),
 };
 
@@ -224,8 +225,30 @@ els.fov.addEventListener("change", () => { if (current) showDust(); });
 
 // ---- plate-solve (nova.astrometry.net via the CORS proxy) ----
 // Remember the user's key locally (their own key, never sent anywhere but nova).
-els.novaKey.value = localStorage.getItem("dustNovaKey") || "";
-els.novaKey.addEventListener("change", () => localStorage.setItem("dustNovaKey", els.novaKey.value.trim()));
+// Once saved, collapse the field to a "key saved" row so it isn't left exposed.
+function savedKey() { return (localStorage.getItem("dustNovaKey") || "").trim(); }
+function refreshKeyUI() {
+  const have = !!savedKey();
+  els.novaKeyRow.hidden = have;       // hide the input once a key is stored
+  els.novaKeySaved.hidden = !have;    // show the "saved / change" row instead
+}
+function saveKey(value) {
+  const v = (value || "").trim();
+  if (v) localStorage.setItem("dustNovaKey", v); else localStorage.removeItem("dustNovaKey");
+  els.novaKey.value = v;
+  refreshKeyUI();
+}
+els.novaKey.value = savedKey();
+refreshKeyUI();
+// Save + collapse as soon as a key is entered/pasted (on blur, or after a paste settles).
+els.novaKey.addEventListener("change", () => saveKey(els.novaKey.value));
+els.novaKey.addEventListener("paste", () => setTimeout(() => saveKey(els.novaKey.value), 0));
+els.novaKeyChange.addEventListener("click", () => {
+  els.novaKeySaved.hidden = true;
+  els.novaKeyRow.hidden = false;
+  els.novaKey.value = "";
+  els.novaKey.focus();
+});
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function solveStatus(msg) { els.solveStatus.textContent = msg || ""; }
@@ -237,10 +260,10 @@ async function novaJSON(path, opts) {
 
 els.solve.addEventListener("click", async () => {
   if (!NOVA_PROXY) { solveStatus("Plate-solve isn't configured yet (the nova proxy URL is unset)."); return; }
-  const key = els.novaKey.value.trim();
+  const key = els.novaKey.value.trim() || savedKey();
   if (!key) { solveStatus("Paste your astrometry.net API key first."); return; }
   if (!userFile) { solveStatus("Load your image first."); return; }
-  localStorage.setItem("dustNovaKey", key);
+  saveKey(key);
   els.solve.disabled = true;
   try {
     // 1) login → session
