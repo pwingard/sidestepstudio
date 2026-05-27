@@ -1,5 +1,5 @@
 // Astro Dust Up
-const APP_VERSION = "v6";
+const APP_VERSION = "v7";
 
 // Cloudflare Worker that relays nova.astrometry.net (CORS). Set after deploying
 // nova-proxy/ (see its README). Empty = plate-solve disabled, manual align only.
@@ -124,6 +124,7 @@ function fmtDec(deg) {
 
 // ---- your image: load + align (manual drag/rotate, or plate-solve) + blink ----
 const xform = { x: 0, y: 0, scale: 1, rot: 0, flip: 1 }; // px offset, scale, degrees, mirror
+let solvedLock = false; // once plate-solved, the app owns the alignment — no manual drag/pinch
 function applyUserTransform() {
   // flip first (in image space), then rotate, then scale/translate
   els.user.style.transform =
@@ -137,6 +138,7 @@ els.file.addEventListener("change", (e) => {
   if (!f) return;
   userFile = f;
   clearPending(); // a new image starts a fresh solve
+  solvedLock = false;
   const url = URL.createObjectURL(f);
   els.user.onload = () => {
     els.user.hidden = false; els.user.style.objectFit = "cover";
@@ -144,10 +146,10 @@ els.file.addEventListener("change", (e) => {
     els.rot.disabled = false; els.rot.value = "0"; els.rotVal.textContent = "0";
     els.flip.disabled = false;
     els.solve.disabled = false;
-    els.opacity.value = "0.5"; els.user.style.opacity = "0.5";
+    els.opacity.value = "1"; els.user.style.opacity = "1";
     resetUserTransform();
     setStatus(NOVA_PROXY
-      ? "Plate-solve to auto-align, or drag / pinch / rotate to line up the stars."
+      ? "Tap Plate-solve to align your image to the dust map, then Blink to compare."
       : "Drag / pinch / rotate to line up the stars, then Blink.");
   };
   els.user.src = url;
@@ -162,21 +164,25 @@ els.clearImg.addEventListener("click", () => {
   els.rot.disabled = true; els.flip.disabled = true; els.solve.disabled = true;
   els.solveStatus.textContent = "";
   clearPending();
+  solvedLock = false;
   stopBlink();
 });
 
-// Blink: rapidly toggle your image's opacity 0↔set value for A/B comparison.
+// Blink: hard A/B between your image (full) and the dust map (your image hidden).
+// Deliberately ignores the blend slider — a clean flip is what reveals whether your
+// glow tracks the dust. Resting state shows your image fully.
 let blinkTimer = null;
 els.blink.addEventListener("click", () => {
   if (blinkTimer) { stopBlink(); return; }
-  els.blink.textContent = "Stop blink ▣";
+  els.blink.textContent = "Stop blinking";
   let on = true;
-  const setVal = parseFloat(els.opacity.value) || 1;
-  blinkTimer = setInterval(() => { els.user.style.opacity = (on ? setVal : 0); on = !on; }, 650);
+  els.user.style.opacity = "1";
+  blinkTimer = setInterval(() => { els.user.style.opacity = on ? "0" : "1"; on = !on; }, 650);
 });
 function stopBlink() {
-  clearInterval(blinkTimer); blinkTimer = null;
-  els.blink.textContent = "Blink ▣";
+  if (blinkTimer) { clearInterval(blinkTimer); blinkTimer = null; }
+  els.blink.textContent = "Blink — your image ⇄ dust";
+  // Back to the static blend value (full unless the user dialed it down).
   els.user.style.opacity = els.opacity.value;
 }
 
@@ -184,7 +190,7 @@ function stopBlink() {
 const pointers = new Map();
 let pinchStart = null;
 els.viewer.addEventListener("pointerdown", (e) => {
-  if (els.user.hidden) return;
+  if (els.user.hidden || solvedLock) return;
   els.viewer.setPointerCapture(e.pointerId);
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pointers.size === 2) {
@@ -193,7 +199,7 @@ els.viewer.addEventListener("pointerdown", (e) => {
   }
 });
 els.viewer.addEventListener("pointermove", (e) => {
-  if (els.user.hidden || !pointers.has(e.pointerId)) return;
+  if (els.user.hidden || solvedLock || !pointers.has(e.pointerId)) return;
   const prev = pointers.get(e.pointerId);
   if (pointers.size === 1) {
     xform.x += e.clientX - prev.x; xform.y += e.clientY - prev.y;
@@ -210,7 +216,7 @@ function endPointer(e) { pointers.delete(e.pointerId); if (pointers.size < 2) pi
 els.viewer.addEventListener("pointerup", endPointer);
 els.viewer.addEventListener("pointercancel", endPointer);
 els.viewer.addEventListener("wheel", (e) => {
-  if (els.user.hidden) return;
+  if (els.user.hidden || solvedLock) return;
   e.preventDefault();
   xform.scale = clamp(xform.scale * (e.deltaY < 0 ? 1.06 : 0.94), 0.2, 6);
   applyUserTransform();
@@ -351,8 +357,8 @@ async function runSolve() {
     if (cal.ra == null || cal.pixscale == null) throw new Error("No calibration returned.");
     clearPending();
     await autoAlign(cal);
-    solveStatus(`Solved: ${fmtRA(cal.ra)} ${fmtDec(cal.dec)} · ${cal.pixscale.toFixed(2)}″/px · rot ${cal.orientation.toFixed(1)}°. ` +
-                `If it's mirrored or rotated wrong, tap Flip / nudge Rotate.`);
+    solveStatus(`Aligned & locked: ${fmtRA(cal.ra)} ${fmtDec(cal.dec)} · ${cal.pixscale.toFixed(2)}″/px. ` +
+                `Tap Blink to compare. (If it lands mirrored or rotated, tap Flip / nudge Rotate.)`);
   } catch (e) {
     solveStatus(e.message || "Plate-solve failed.");
   } finally {
@@ -378,7 +384,8 @@ async function autoAlign(cal) {
   xform.rot = -cal.orientation;
   xform.flip = (cal.parity < 0) ? -1 : 1;
   els.rot.value = xform.rot.toFixed(1); els.rotVal.textContent = xform.rot.toFixed(1);
-  els.opacity.value = "0.5"; els.user.style.opacity = "0.5";
+  els.opacity.value = "1"; els.user.style.opacity = "1"; // rest showing your image, full
+  solvedLock = true; // app owns the alignment now — manual drag/pinch is off
   applyUserTransform();
 }
 

@@ -57,6 +57,8 @@
       <div id="placeholder" class="placeholder">Type a target and tap <b>Show dust</b>.</div>
     </div>
 
+    <button id="blinkBtn" class="blink-main" disabled>Blink — your image ⇄ dust</button>
+
     <div class="viewerctl">
       <label class="ctl">
         Dust brightness
@@ -78,8 +80,8 @@
           <input id="fileInput" type="file" accept="image/*">
         </div>
         <div>
-          <label for="opacityRange">Your image opacity</label>
-          <input id="opacityRange" type="range" min="0" max="1" step="0.02" value="0.5" disabled>
+          <label for="opacityRange">Blend (static view only)</label>
+          <input id="opacityRange" type="range" min="0" max="1" step="0.02" value="1" disabled>
         </div>
       </div>
       <div class="solvebox">
@@ -108,7 +110,6 @@
         <input id="rotRange" type="range" min="-180" max="180" step="0.5" value="0" disabled>
       </div>
       <div class="row">
-        <button id="blinkBtn" disabled>Blink ▣</button>
         <button id="flipBtn" class="ghost" disabled>Flip ⇋</button>
         <button id="clearImgBtn" class="ghost" disabled>Remove image</button>
       </div>
