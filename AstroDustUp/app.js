@@ -1,5 +1,5 @@
 // Astro Dust Up
-const APP_VERSION = "v10";
+const APP_VERSION = "v11";
 
 // Cloudflare Worker that relays nova.astrometry.net (CORS). Set after deploying
 // nova-proxy/ (see its README). Empty = plate-solve disabled, manual align only.
@@ -111,8 +111,20 @@ function loadImageInto(img, url) {
   });
 }
 
-function applyBrightness() { els.dust.style.filter = `brightness(${els.bright.value})`; }
+// Black-point clip (drop the noise floor) then gamma lift — reveals faint dust/filaments
+// without graying the background, which a linear brightness can't do. Drives the #dustStretch SVG filter.
+const bpFuncs = document.querySelectorAll("#dustBP feFuncR, #dustBP feFuncG, #dustBP feFuncB");
+const gammaFuncs = document.querySelectorAll("#dustGamma feFuncR, #dustGamma feFuncG, #dustGamma feFuncB");
+function applyBrightness() {
+  const stretch = parseFloat(els.bright.value) || 2.4;
+  const bp = 0.06;                       // clip the bottom 6% (sky noise floor)
+  const slope = 1 / (1 - bp), intercept = -bp * slope;
+  const exponent = 1 / stretch;          // <1 → lifts faint signal
+  bpFuncs.forEach((f) => { f.setAttribute("slope", slope.toFixed(4)); f.setAttribute("intercept", intercept.toFixed(4)); });
+  gammaFuncs.forEach((f) => f.setAttribute("exponent", exponent.toFixed(4)));
+}
 els.bright.addEventListener("input", applyBrightness);
+applyBrightness();
 
 // ---- coordinate formatting ----
 function fmtRA(deg) {

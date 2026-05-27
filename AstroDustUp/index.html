@@ -68,11 +68,28 @@
 
     <div class="viewerctl">
       <label class="ctl">
-        Dust brightness
-        <input id="brightRange" type="range" min="0.6" max="3" step="0.05" value="1.4">
+        Dust stretch (reveal faint filaments)
+        <input id="brightRange" type="range" min="1" max="6" step="0.1" value="2.4">
       </label>
     </div>
   </section>
+
+  <!-- Black-point clip + gamma stretch for the dust layer, so faint dust/filaments pop
+       instead of staying buried (a plain linear brightness barely moves them). -->
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+    <filter id="dustStretch" color-interpolation-filters="sRGB">
+      <feComponentTransfer id="dustBP">
+        <feFuncR type="linear" slope="1" intercept="0"/>
+        <feFuncG type="linear" slope="1" intercept="0"/>
+        <feFuncB type="linear" slope="1" intercept="0"/>
+      </feComponentTransfer>
+      <feComponentTransfer id="dustGamma">
+        <feFuncR type="gamma" amplitude="1" exponent="1" offset="0"/>
+        <feFuncG type="gamma" amplitude="1" exponent="1" offset="0"/>
+        <feFuncB type="gamma" amplitude="1" exponent="1" offset="0"/>
+      </feComponentTransfer>
+    </filter>
+  </svg>
 
   <section class="compare">
     <details id="compareBox">
