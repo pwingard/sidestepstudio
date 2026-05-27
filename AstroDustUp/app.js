@@ -1,5 +1,5 @@
 // Astro Dust Up
-const APP_VERSION = "v9";
+const APP_VERSION = "v10";
 
 // Cloudflare Worker that relays nova.astrometry.net (CORS). Set after deploying
 // nova-proxy/ (see its README). Empty = plate-solve disabled, manual align only.
@@ -13,6 +13,7 @@ const els = {
   viewer: $("viewer"), dust: $("dustImg"), user: $("userImg"), placeholder: $("placeholder"),
   bright: $("brightRange"),
   layerToggle: $("layerToggle"), layerStars: $("layerStars"), layerDust: $("layerDust"),
+  solvedBanner: $("solvedBanner"),
   file: $("fileInput"), opacity: $("opacityRange"), rot: $("rotRange"), rotVal: $("rotVal"),
   blink: $("blinkBtn"), flip: $("flipBtn"), clearImg: $("clearImgBtn"),
   novaKey: $("novaKey"), novaKeyRow: $("novaKeyRow"), novaKeySaved: $("novaKeySaved"),
@@ -88,7 +89,7 @@ async function showDust() {
     await loadImageInto(els.dust, url);
     current = { ...coords, fov };
     // Loading by target re-centers the view → drop any solved-frame lock/toggle.
-    solvedView = null; solvedLock = false; els.layerToggle.hidden = true;
+    solvedView = null; solvedLock = false; els.layerToggle.hidden = true; els.solvedBanner.hidden = true;
     els.dust.style.objectFit = "cover";
     els.dust.hidden = false; els.placeholder.hidden = true;
     applyBrightness();
@@ -145,7 +146,7 @@ els.file.addEventListener("change", (e) => {
   if (!f) return;
   userFile = f;
   clearPending(); // a new image starts a fresh solve
-  solvedLock = false; solvedView = null; els.layerToggle.hidden = true;
+  solvedLock = false; solvedView = null; els.layerToggle.hidden = true; els.solvedBanner.hidden = true;
   const url = URL.createObjectURL(f);
   els.user.onload = () => {
     els.user.hidden = false; els.user.style.objectFit = "cover";
@@ -179,7 +180,7 @@ els.clearImg.addEventListener("click", () => {
   els.rot.disabled = true; els.flip.disabled = true; els.solve.disabled = true;
   els.solveStatus.textContent = "";
   clearPending();
-  solvedLock = false; solvedView = null; els.layerToggle.hidden = true;
+  solvedLock = false; solvedView = null; els.layerToggle.hidden = true; els.solvedBanner.hidden = true;
   stopBlink();
 });
 
@@ -187,6 +188,8 @@ els.clearImg.addEventListener("click", () => {
 // Deliberately ignores the blend slider — a clean flip is what reveals whether your
 // glow tracks the dust. Resting state shows your image fully.
 let blinkTimer = null;
+function blinkRestingLabel() { return currentLayer === "stars" ? "Blink your image with stars" : "Blink your image with dust"; }
+function updateBlinkLabel() { if (!blinkTimer) els.blink.textContent = blinkRestingLabel(); }
 els.blink.addEventListener("click", () => {
   if (blinkTimer) { stopBlink(); return; }
   els.blink.textContent = "Stop blinking";
@@ -196,7 +199,7 @@ els.blink.addEventListener("click", () => {
 });
 function stopBlink() {
   if (blinkTimer) { clearInterval(blinkTimer); blinkTimer = null; }
-  els.blink.textContent = "Blink — your image ⇄ dust";
+  els.blink.textContent = blinkRestingLabel();
   // Back to the static blend value (full unless the user dialed it down).
   els.user.style.opacity = els.opacity.value;
 }
@@ -256,14 +259,15 @@ async function loadLayer(kind) {
   const v = solvedView || current;
   if (!v) return;
   const hips = kind === "stars" ? STAR_HIPS : els.survey.value;
+  currentLayer = kind;
   els.layerStars.classList.toggle("active", kind === "stars");
   els.layerDust.classList.toggle("active", kind === "dust");
+  updateBlinkLabel(); // reflect the chosen layer right away, before the image loads
   setStatus(kind === "stars" ? "Loading star reference…" : "Loading dust map…");
   try {
     await loadImageInto(els.dust, hips2fitsURL(hips, v.ra, v.dec, v.fov));
     els.dust.hidden = false; els.placeholder.hidden = true;
     els.dust.style.objectFit = "contain"; applyBrightness();
-    currentLayer = kind;
     setStatus(kind === "stars"
       ? "Blink: your stars should land on the reference stars. If not, tap Flip or nudge Rotate."
       : "Blink: glow that tracks the dust is real nebulosity; smooth glow that doesn't is a gradient.");
@@ -440,6 +444,9 @@ async function autoAlign(cal) {
   els.opacity.value = "1"; els.user.style.opacity = "1"; // rest showing your image, full
   solvedLock = true; // app owns the alignment now — manual drag/pinch is off
   applyUserTransform();
+  // Big green confirmation that the solve landed.
+  els.solvedBanner.hidden = false;
+  els.solvedBanner.style.animation = "none"; void els.solvedBanner.offsetWidth; els.solvedBanner.style.animation = "";
   // Start on the STAR reference so verifying the alignment is the first thing you do.
   els.layerToggle.hidden = false;
   await loadLayer("stars");

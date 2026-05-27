@@ -53,6 +53,10 @@ button:disabled{opacity:.4;cursor:default}
 #userImg{transform-origin:center center}
 .placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--dim);text-align:center;padding:24px;font-size:14px}
 
+.solved-banner{background:#1f8a45;color:#eaffef;font-weight:800;letter-spacing:.3px;text-align:center;
+  padding:14px;border-radius:12px;font-size:17px;border:1px solid #34c46e;
+  box-shadow:0 0 0 3px rgba(52,196,110,.18);animation:solvedpop .35s ease}
+@keyframes solvedpop{from{transform:scale(.95);opacity:.2}to{transform:scale(1);opacity:1}}
 .layertoggle{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .lt-label{font-size:12px;color:var(--dim);font-weight:600}
 .seg{flex:1;padding:9px;font-size:14px}
