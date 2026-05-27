@@ -57,6 +57,10 @@ button:disabled{opacity:.4;cursor:default}
   padding:14px;border-radius:12px;font-size:17px;border:1px solid #34c46e;
   box-shadow:0 0 0 3px rgba(52,196,110,.18);animation:solvedpop .35s ease}
 @keyframes solvedpop{from{transform:scale(.95);opacity:.2}to{transform:scale(1);opacity:1}}
+.finetune{display:flex;align-items:center;gap:10px}
+.finetune #flipBtn{flex:0 0 auto;padding:9px 14px}
+.finetune .rotctl{flex:1;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim);font-weight:600}
+.finetune .rotctl input[type=range]{flex:1}
 .layertoggle{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .lt-label{font-size:12px;color:var(--dim);font-weight:600}
 .seg{flex:1;padding:9px;font-size:14px}
