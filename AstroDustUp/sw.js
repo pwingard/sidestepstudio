@@ -1,5 +1,5 @@
 // Astro Dust Up — network-first service worker
-const CACHE_VERSION = "dust-v5";
+const CACHE_VERSION = "dust-v6";
 const ASSETS = ["./", "index.html", "styles.css", "app.js", "data.js", "manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {

@@ -1,5 +1,5 @@
 // Astro Dust Up
-const APP_VERSION = "v5";
+const APP_VERSION = "v6";
 
 // Cloudflare Worker that relays nova.astrometry.net (CORS). Set after deploying
 // nova-proxy/ (see its README). Empty = plate-solve disabled, manual align only.
@@ -136,6 +136,7 @@ els.file.addEventListener("change", (e) => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;
   userFile = f;
+  clearPending(); // a new image starts a fresh solve
   const url = URL.createObjectURL(f);
   els.user.onload = () => {
     els.user.hidden = false; els.user.style.objectFit = "cover";
@@ -160,6 +161,7 @@ els.clearImg.addEventListener("click", () => {
   els.opacity.disabled = true; els.blink.disabled = true; els.clearImg.disabled = true;
   els.rot.disabled = true; els.flip.disabled = true; els.solve.disabled = true;
   els.solveStatus.textContent = "";
+  clearPending();
   stopBlink();
 });
 
@@ -258,7 +260,42 @@ async function novaJSON(path, opts) {
   return r.json();
 }
 
-els.solve.addEventListener("click", async () => {
+// nova's free queue can run many minutes when busy. Keep the in-flight job so a
+// slow queue (or a give-up) lets the user resume polling instead of re-uploading.
+let pendingSolve = null; // { subid, jobid }
+const QUEUE_BUDGET_MS = 20 * 60 * 1000;
+const SOLVE_BUDGET_MS = 15 * 60 * 1000;
+
+function fmtElapsed(ms) { const s = Math.round(ms / 1000); return `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, "0")}s`; }
+// Poll quickly at first, then ease off so long waits don't hammer nova.
+function pollInterval(ms) { return ms < 60000 ? 5000 : ms < 300000 ? 10000 : 15000; }
+function updateSolveLabel() { els.solve.textContent = pendingSolve ? "Keep checking solve" : "Plate-solve & auto-align"; }
+function clearPending() { pendingSolve = null; updateSolveLabel(); }
+
+async function waitForJob(subid) {
+  const start = Date.now();
+  while (Date.now() - start < QUEUE_BUDGET_MS) {
+    const s = await novaJSON("/api/submissions/" + subid);
+    if (s.jobs && s.jobs.length && s.jobs[0] != null) return s.jobs[0];
+    solveStatus(`Queued at astrometry.net (their server is busy)… ${fmtElapsed(Date.now() - start)}. You can leave this open.`);
+    await sleep(pollInterval(Date.now() - start));
+  }
+  return null; // gave up for now — caller keeps the pending job so it can resume
+}
+async function waitForSolve(jobid) {
+  const start = Date.now();
+  while (Date.now() - start < SOLVE_BUDGET_MS) {
+    const j = await novaJSON("/api/jobs/" + jobid);
+    if (j.status === "success") return "success";
+    if (j.status === "failure") return "failure";
+    solveStatus(`Solving your image… ${fmtElapsed(Date.now() - start)}.`);
+    await sleep(pollInterval(Date.now() - start));
+  }
+  return "timeout";
+}
+
+els.solve.addEventListener("click", runSolve);
+async function runSolve() {
   if (!NOVA_PROXY) { solveStatus("Plate-solve isn't configured yet (the nova proxy URL is unset)."); return; }
   const key = els.novaKey.value.trim() || savedKey();
   if (!key) { solveStatus("Paste your astrometry.net API key first."); return; }
@@ -266,51 +303,53 @@ els.solve.addEventListener("click", async () => {
   saveKey(key);
   els.solve.disabled = true;
   try {
-    // 1) login → session
-    solveStatus("Signing in to astrometry.net…");
-    const login = await novaJSON("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: "request-json=" + encodeURIComponent(JSON.stringify({ apikey: key })),
-    });
-    if (login.status !== "success") throw new Error(login.errormessage || "login failed");
-    const session = login.session;
+    let subid = pendingSolve && pendingSolve.subid;
+    let jobid = pendingSolve && pendingSolve.jobid;
 
-    // 2) upload image → submission id
-    solveStatus("Uploading your image…");
-    const fd = new FormData();
-    fd.append("request-json", JSON.stringify({
-      session, publicly_visible: "n", allow_modifications: "d", allow_commercial_use: "d",
-    }));
-    fd.append("file", userFile, userFile.name || "image.jpg");
-    const up = await novaJSON("/api/upload", { method: "POST", body: fd });
-    if (up.status !== "success") throw new Error(up.errormessage || "upload failed");
-    const subid = up.subid;
+    if (!subid) {
+      // login → session
+      solveStatus("Signing in to astrometry.net…");
+      const login = await novaJSON("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "request-json=" + encodeURIComponent(JSON.stringify({ apikey: key })),
+      });
+      if (login.status !== "success") throw new Error(login.errormessage || "login failed");
 
-    // 3) wait for a job to be created
-    let jobid = null;
-    for (let i = 0; i < 60; i++) {
-      const s = await novaJSON("/api/submissions/" + subid);
-      if (s.jobs && s.jobs.length && s.jobs[0] != null) { jobid = s.jobs[0]; break; }
-      solveStatus(`Queued at astrometry.net… (${i * 5}s)`);
-      await sleep(5000);
+      // upload image → submission id
+      solveStatus("Uploading your image…");
+      const fd = new FormData();
+      fd.append("request-json", JSON.stringify({
+        session: login.session, publicly_visible: "n", allow_modifications: "d", allow_commercial_use: "d",
+      }));
+      fd.append("file", userFile, userFile.name || "image.jpg");
+      const up = await novaJSON("/api/upload", { method: "POST", body: fd });
+      if (up.status !== "success") throw new Error(up.errormessage || "upload failed");
+      subid = up.subid; jobid = null;
+      pendingSolve = { subid, jobid: null };
+    } else {
+      solveStatus("Resuming your solve…");
     }
-    if (jobid == null) throw new Error("Timed out waiting in the queue. Try again.");
 
-    // 4) wait for the solve to finish
-    let solved = false;
-    for (let i = 0; i < 72; i++) {
-      const j = await novaJSON("/api/jobs/" + jobid);
-      if (j.status === "success") { solved = true; break; }
-      if (j.status === "failure") throw new Error("Couldn't solve this image — try a wider field with more stars.");
-      solveStatus(`Solving… (${i * 5}s)`);
-      await sleep(5000);
+    // wait for a job to be created (the queue)
+    if (jobid == null) {
+      jobid = await waitForJob(subid);
+      if (jobid == null) {
+        updateSolveLabel();
+        throw new Error("Still in nova's queue (busy). Your upload is saved — tap “Keep checking solve” to resume.");
+      }
+      pendingSolve = { subid, jobid };
     }
-    if (!solved) throw new Error("Solve timed out. Try a wider field with more stars.");
 
-    // 5) calibration → auto-align
+    // wait for the solve to finish
+    const result = await waitForSolve(jobid);
+    if (result === "timeout") throw new Error("Still solving — tap “Keep checking solve” to resume.");
+    if (result === "failure") { clearPending(); throw new Error("nova couldn't solve this image — try a wider field with more stars."); }
+
+    // calibration → auto-align
     const cal = await novaJSON("/api/jobs/" + jobid + "/calibration/");
     if (cal.ra == null || cal.pixscale == null) throw new Error("No calibration returned.");
+    clearPending();
     await autoAlign(cal);
     solveStatus(`Solved: ${fmtRA(cal.ra)} ${fmtDec(cal.dec)} · ${cal.pixscale.toFixed(2)}″/px · rot ${cal.orientation.toFixed(1)}°. ` +
                 `If it's mirrored or rotated wrong, tap Flip / nudge Rotate.`);
@@ -318,8 +357,9 @@ els.solve.addEventListener("click", async () => {
     solveStatus(e.message || "Plate-solve failed.");
   } finally {
     els.solve.disabled = false;
+    updateSolveLabel();
   }
-});
+}
 
 // Re-fetch the dust map to exactly cover the solved image, centred + scaled to match,
 // then orient the user image north-up so the two overlay. (Sign of rotation/parity is
