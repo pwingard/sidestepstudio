@@ -65,4 +65,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .compare details>*:not(summary){margin-bottom:14px}
 .compare .row.two,.compare .row{margin-top:0}
 
+.solvebox{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.solvebox a{color:var(--accent2)}
+#solveStatus{min-height:16px;color:var(--accent2)}
+
 .foot{text-align:center;color:var(--dim);font-size:11px;padding:8px 0 20px;opacity:.6}

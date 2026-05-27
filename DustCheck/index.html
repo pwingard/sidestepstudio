@@ -6,14 +6,14 @@
 <meta name="theme-color" content="#0b0d14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Dust Buster">
-<title>Astro Dust Buster</title>
+<meta name="apple-mobile-web-app-title" content="Dust Check">
+<title>Dust Check</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <header class="topbar">
-  <h1>Astro Dust Buster</h1>
+  <h1>Dust Check</h1>
   <p class="tagline">See the real dust in your target — so you don't flatten it away.</p>
 </header>
 
@@ -82,12 +82,29 @@
           <input id="opacityRange" type="range" min="0" max="1" step="0.02" value="0.5" disabled>
         </div>
       </div>
+      <div class="solvebox">
+        <p class="note"><b>Auto-align (plate-solve).</b> Uses your own free
+          <a href="https://nova.astrometry.net" target="_blank" rel="noopener">astrometry.net</a>
+          account to recognise your image's stars and snap it onto the dust map —
+          no manual lining-up. Get your API key from your nova profile page.</p>
+        <div class="row">
+          <label for="novaKey">astrometry.net API key</label>
+          <input id="novaKey" type="text" placeholder="paste your nova API key" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="row">
+          <button id="solveBtn" disabled>Plate-solve &amp; auto-align</button>
+        </div>
+        <p id="solveStatus" class="note" aria-live="polite"></p>
+      </div>
+
+      <p class="note">Fine-tune after aligning if needed:</p>
       <div class="row">
-        <label for="rotRange">Rotate to line up stars (<span id="rotVal">0</span>°)</label>
+        <label for="rotRange">Rotate (<span id="rotVal">0</span>°)</label>
         <input id="rotRange" type="range" min="-180" max="180" step="0.5" value="0" disabled>
       </div>
       <div class="row">
         <button id="blinkBtn" disabled>Blink ▣</button>
+        <button id="flipBtn" class="ghost" disabled>Flip ⇋</button>
         <button id="clearImgBtn" class="ghost" disabled>Remove image</button>
       </div>
     </details>

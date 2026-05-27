@@ -1,4 +1,4 @@
-// Astro Dust Buster — data
+// Dust Check — data
 // Dust surveys served via CDS hips2fits (CORS-open, no key).
 // Default to the IR dust tracers; DSS2 color kept as a "what your camera sees" reference.
 const SURVEYS = [

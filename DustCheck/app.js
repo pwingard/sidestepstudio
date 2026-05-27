@@ -1,5 +1,9 @@
-// Astro Dust Buster
-const APP_VERSION = "v1";
+// Dust Check
+const APP_VERSION = "v2";
+
+// Cloudflare Worker that relays nova.astrometry.net (CORS). Set after deploying
+// nova-proxy/ (see its README). Empty = plate-solve disabled, manual align only.
+const NOVA_PROXY = "";
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -9,7 +13,8 @@ const els = {
   viewer: $("viewer"), dust: $("dustImg"), user: $("userImg"), placeholder: $("placeholder"),
   bright: $("brightRange"),
   file: $("fileInput"), opacity: $("opacityRange"), rot: $("rotRange"), rotVal: $("rotVal"),
-  blink: $("blinkBtn"), clearImg: $("clearImgBtn"),
+  blink: $("blinkBtn"), flip: $("flipBtn"), clearImg: $("clearImgBtn"),
+  novaKey: $("novaKey"), solve: $("solveBtn"), solveStatus: $("solveStatus"),
   ver: $("ver"),
 };
 
@@ -22,7 +27,10 @@ SURVEYS.forEach((s, i) => {
 TARGETS.forEach((t) => {
   const o = document.createElement("option"); o.value = t.name; els.list.appendChild(o);
 });
-els.ver.textContent = "Astro Dust Buster " + APP_VERSION;
+els.ver.textContent = "Dust Check " + APP_VERSION;
+
+// Plate-solve depends on the nova proxy; hide that whole block until it's configured.
+if (!NOVA_PROXY) { const sb = document.querySelector(".solvebox"); if (sb) sb.hidden = true; }
 
 function setStatus(msg) { els.status.textContent = msg || ""; }
 function surveyBright(id) { const s = SURVEYS.find((x) => x.id === id); return s ? s.bright : 1.4; }
@@ -113,35 +121,44 @@ function fmtDec(deg) {
   return `${sign}${String(dd).padStart(2,"0")}°${String(mm).padStart(2,"0")}′${String(ss).padStart(2,"0")}″`;
 }
 
-// ---- your image: load + manual star-align (drag / pinch / scroll / rotate) + blink ----
-const xform = { x: 0, y: 0, scale: 1, rot: 0 }; // px offset, scale, degrees
+// ---- your image: load + align (manual drag/rotate, or plate-solve) + blink ----
+const xform = { x: 0, y: 0, scale: 1, rot: 0, flip: 1 }; // px offset, scale, degrees, mirror
 function applyUserTransform() {
+  // flip first (in image space), then rotate, then scale/translate
   els.user.style.transform =
-    `translate(${xform.x}px,${xform.y}px) scale(${xform.scale}) rotate(${xform.rot}deg)`;
+    `translate(${xform.x}px,${xform.y}px) scale(${xform.scale}) rotate(${xform.rot}deg) scaleX(${xform.flip})`;
 }
-function resetUserTransform() { xform.x = 0; xform.y = 0; xform.scale = 1; xform.rot = 0; applyUserTransform(); }
+function resetUserTransform() { xform.x = 0; xform.y = 0; xform.scale = 1; xform.rot = 0; xform.flip = 1; applyUserTransform(); }
 
+let userFile = null; // the actual File, needed for plate-solve upload
 els.file.addEventListener("change", (e) => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;
+  userFile = f;
   const url = URL.createObjectURL(f);
   els.user.onload = () => {
-    els.user.hidden = false;
+    els.user.hidden = false; els.user.style.objectFit = "cover";
     els.opacity.disabled = false; els.blink.disabled = false; els.clearImg.disabled = false;
     els.rot.disabled = false; els.rot.value = "0"; els.rotVal.textContent = "0";
+    els.flip.disabled = false;
+    els.solve.disabled = false;
     els.opacity.value = "0.5"; els.user.style.opacity = "0.5";
     resetUserTransform();
-    setStatus("Drag to position · pinch/scroll to scale · rotate slider to line up the stars.");
+    setStatus(NOVA_PROXY
+      ? "Plate-solve to auto-align, or drag / pinch / rotate to line up the stars."
+      : "Drag / pinch / rotate to line up the stars, then Blink.");
   };
   els.user.src = url;
 });
 els.opacity.addEventListener("input", () => { els.user.style.opacity = els.opacity.value; });
 els.rot.addEventListener("input", () => { xform.rot = parseFloat(els.rot.value); els.rotVal.textContent = els.rot.value; applyUserTransform(); });
+els.flip.addEventListener("click", () => { xform.flip *= -1; applyUserTransform(); });
 els.clearImg.addEventListener("click", () => {
-  els.user.hidden = true; els.user.src = "";
+  els.user.hidden = true; els.user.src = ""; userFile = null;
   els.file.value = "";
   els.opacity.disabled = true; els.blink.disabled = true; els.clearImg.disabled = true;
-  els.rot.disabled = true;
+  els.rot.disabled = true; els.flip.disabled = true; els.solve.disabled = true;
+  els.solveStatus.textContent = "";
   stopBlink();
 });
 
@@ -204,6 +221,103 @@ els.find.addEventListener("click", showDust);
 els.target.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); showDust(); } });
 els.survey.addEventListener("change", () => { if (current) showDust(); });
 els.fov.addEventListener("change", () => { if (current) showDust(); });
+
+// ---- plate-solve (nova.astrometry.net via the CORS proxy) ----
+// Remember the user's key locally (their own key, never sent anywhere but nova).
+els.novaKey.value = localStorage.getItem("dustNovaKey") || "";
+els.novaKey.addEventListener("change", () => localStorage.setItem("dustNovaKey", els.novaKey.value.trim()));
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function solveStatus(msg) { els.solveStatus.textContent = msg || ""; }
+
+async function novaJSON(path, opts) {
+  const r = await fetch(NOVA_PROXY.replace(/\/$/, "") + path, opts);
+  return r.json();
+}
+
+els.solve.addEventListener("click", async () => {
+  if (!NOVA_PROXY) { solveStatus("Plate-solve isn't configured yet (the nova proxy URL is unset)."); return; }
+  const key = els.novaKey.value.trim();
+  if (!key) { solveStatus("Paste your astrometry.net API key first."); return; }
+  if (!userFile) { solveStatus("Load your image first."); return; }
+  localStorage.setItem("dustNovaKey", key);
+  els.solve.disabled = true;
+  try {
+    // 1) login → session
+    solveStatus("Signing in to astrometry.net…");
+    const login = await novaJSON("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "request-json=" + encodeURIComponent(JSON.stringify({ apikey: key })),
+    });
+    if (login.status !== "success") throw new Error(login.errormessage || "login failed");
+    const session = login.session;
+
+    // 2) upload image → submission id
+    solveStatus("Uploading your image…");
+    const fd = new FormData();
+    fd.append("request-json", JSON.stringify({
+      session, publicly_visible: "n", allow_modifications: "d", allow_commercial_use: "d",
+    }));
+    fd.append("file", userFile, userFile.name || "image.jpg");
+    const up = await novaJSON("/api/upload", { method: "POST", body: fd });
+    if (up.status !== "success") throw new Error(up.errormessage || "upload failed");
+    const subid = up.subid;
+
+    // 3) wait for a job to be created
+    let jobid = null;
+    for (let i = 0; i < 60; i++) {
+      const s = await novaJSON("/api/submissions/" + subid);
+      if (s.jobs && s.jobs.length && s.jobs[0] != null) { jobid = s.jobs[0]; break; }
+      solveStatus(`Queued at astrometry.net… (${i * 5}s)`);
+      await sleep(5000);
+    }
+    if (jobid == null) throw new Error("Timed out waiting in the queue. Try again.");
+
+    // 4) wait for the solve to finish
+    let solved = false;
+    for (let i = 0; i < 72; i++) {
+      const j = await novaJSON("/api/jobs/" + jobid);
+      if (j.status === "success") { solved = true; break; }
+      if (j.status === "failure") throw new Error("Couldn't solve this image — try a wider field with more stars.");
+      solveStatus(`Solving… (${i * 5}s)`);
+      await sleep(5000);
+    }
+    if (!solved) throw new Error("Solve timed out. Try a wider field with more stars.");
+
+    // 5) calibration → auto-align
+    const cal = await novaJSON("/api/jobs/" + jobid + "/calibration/");
+    if (cal.ra == null || cal.pixscale == null) throw new Error("No calibration returned.");
+    await autoAlign(cal);
+    solveStatus(`Solved: ${fmtRA(cal.ra)} ${fmtDec(cal.dec)} · ${cal.pixscale.toFixed(2)}″/px · rot ${cal.orientation.toFixed(1)}°. ` +
+                `If it's mirrored or rotated wrong, tap Flip / nudge Rotate.`);
+  } catch (e) {
+    solveStatus(e.message || "Plate-solve failed.");
+  } finally {
+    els.solve.disabled = false;
+  }
+});
+
+// Re-fetch the dust map to exactly cover the solved image, centred + scaled to match,
+// then orient the user image north-up so the two overlay. (Sign of rotation/parity is
+// nova's convention; Flip + Rotate let the user correct if a frame lands mirrored.)
+async function autoAlign(cal) {
+  const natW = els.user.naturalWidth, natH = els.user.naturalHeight;
+  const fovDeg = (Math.max(natW, natH) * cal.pixscale) / 3600; // larger image dim → field width
+  solveStatus("Fetching matching dust map…");
+  await loadImageInto(els.dust, hips2fitsURL(els.survey.value, cal.ra, cal.dec, fovDeg));
+  current = { ra: cal.ra, dec: cal.dec, fov: fovDeg };
+  els.dust.hidden = false; els.placeholder.hidden = true; applyBrightness();
+  // both images: fit whole frame (contain) so their angular scales match
+  els.dust.style.objectFit = "contain";
+  els.user.style.objectFit = "contain";
+  xform.x = 0; xform.y = 0; xform.scale = 1;
+  xform.rot = -cal.orientation;
+  xform.flip = (cal.parity < 0) ? -1 : 1;
+  els.rot.value = xform.rot.toFixed(1); els.rotVal.textContent = xform.rot.toFixed(1);
+  els.opacity.value = "0.5"; els.user.style.opacity = "0.5";
+  applyUserTransform();
+}
 
 // ---- service worker ----
 if ("serviceWorker" in navigator) {
