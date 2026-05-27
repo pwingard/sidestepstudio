@@ -1,5 +1,5 @@
 // Astro Dust Up
-const APP_VERSION = "v7";
+const APP_VERSION = "v8";
 
 // Cloudflare Worker that relays nova.astrometry.net (CORS). Set after deploying
 // nova-proxy/ (see its README). Empty = plate-solve disabled, manual align only.
@@ -12,6 +12,7 @@ const els = {
   status: $("status"), surveyNote: $("surveyNote"),
   viewer: $("viewer"), dust: $("dustImg"), user: $("userImg"), placeholder: $("placeholder"),
   bright: $("brightRange"),
+  layerToggle: $("layerToggle"), layerStars: $("layerStars"), layerDust: $("layerDust"),
   file: $("fileInput"), opacity: $("opacityRange"), rot: $("rotRange"), rotVal: $("rotVal"),
   blink: $("blinkBtn"), flip: $("flipBtn"), clearImg: $("clearImgBtn"),
   novaKey: $("novaKey"), novaKeyRow: $("novaKeyRow"), novaKeySaved: $("novaKeySaved"),
@@ -86,6 +87,9 @@ async function showDust() {
     const url = hips2fitsURL(hips, coords.ra, coords.dec, fov);
     await loadImageInto(els.dust, url);
     current = { ...coords, fov };
+    // Loading by target re-centers the view → drop any solved-frame lock/toggle.
+    solvedView = null; solvedLock = false; els.layerToggle.hidden = true;
+    els.dust.style.objectFit = "cover";
     els.dust.hidden = false; els.placeholder.hidden = true;
     applyBrightness();
     setStatus(`${fmtRA(coords.ra)}  ${fmtDec(coords.dec)} · ${fov}° field`);
@@ -125,6 +129,9 @@ function fmtDec(deg) {
 // ---- your image: load + align (manual drag/rotate, or plate-solve) + blink ----
 const xform = { x: 0, y: 0, scale: 1, rot: 0, flip: 1 }; // px offset, scale, degrees, mirror
 let solvedLock = false; // once plate-solved, the app owns the alignment — no manual drag/pinch
+let solvedView = null;  // {ra,dec,fov} of a solved frame — lets us swap the background layer in place
+let currentLayer = "dust"; // which background is showing: "stars" (DSS2 reference) or "dust" (WISE/IR)
+const STAR_HIPS = "CDS/P/DSS2/color"; // visible star reference for the stars-vs-stars alignment check
 function applyUserTransform() {
   // flip first (in image space), then rotate, then scale/translate
   els.user.style.transform =
@@ -138,7 +145,7 @@ els.file.addEventListener("change", (e) => {
   if (!f) return;
   userFile = f;
   clearPending(); // a new image starts a fresh solve
-  solvedLock = false;
+  solvedLock = false; solvedView = null; els.layerToggle.hidden = true;
   const url = URL.createObjectURL(f);
   els.user.onload = () => {
     els.user.hidden = false; els.user.style.objectFit = "cover";
@@ -164,7 +171,7 @@ els.clearImg.addEventListener("click", () => {
   els.rot.disabled = true; els.flip.disabled = true; els.solve.disabled = true;
   els.solveStatus.textContent = "";
   clearPending();
-  solvedLock = false;
+  solvedLock = false; solvedView = null; els.layerToggle.hidden = true;
   stopBlink();
 });
 
@@ -228,8 +235,34 @@ function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 // ---- find triggers ----
 els.find.addEventListener("click", showDust);
 els.target.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); showDust(); } });
-els.survey.addEventListener("change", () => { if (current) showDust(); });
-els.fov.addEventListener("change", () => { if (current) showDust(); });
+els.survey.addEventListener("change", () => {
+  if (solvedView) { if (currentLayer === "dust") loadLayer("dust"); }  // keep the solved alignment
+  else if (current) showDust();
+});
+els.fov.addEventListener("change", () => { if (current && !solvedView) showDust(); });
+
+// ---- stars/dust background toggle (works on a solved frame, in place) ----
+// Stars = visible reference at the same WCS, for the stars-vs-stars alignment check.
+// Dust = the selected WISE/IR survey at the same WCS, for the real-dust-vs-gradient check.
+async function loadLayer(kind) {
+  const v = solvedView || current;
+  if (!v) return;
+  const hips = kind === "stars" ? STAR_HIPS : els.survey.value;
+  els.layerStars.classList.toggle("active", kind === "stars");
+  els.layerDust.classList.toggle("active", kind === "dust");
+  setStatus(kind === "stars" ? "Loading star reference…" : "Loading dust map…");
+  try {
+    await loadImageInto(els.dust, hips2fitsURL(hips, v.ra, v.dec, v.fov));
+    els.dust.hidden = false; els.placeholder.hidden = true;
+    els.dust.style.objectFit = "contain"; applyBrightness();
+    currentLayer = kind;
+    setStatus(kind === "stars"
+      ? "Blink: your stars should land on the reference stars. If not, tap Flip or nudge Rotate."
+      : "Blink: glow that tracks the dust is real nebulosity; smooth glow that doesn't is a gradient.");
+  } catch (e) { setStatus(e.message || "Couldn't load that layer."); }
+}
+els.layerStars.addEventListener("click", () => loadLayer("stars"));
+els.layerDust.addEventListener("click", () => loadLayer("dust"));
 
 // ---- plate-solve (nova.astrometry.net via the CORS proxy) ----
 // Remember the user's key locally (their own key, never sent anywhere but nova).
@@ -373,12 +406,9 @@ async function runSolve() {
 async function autoAlign(cal) {
   const natW = els.user.naturalWidth, natH = els.user.naturalHeight;
   const fovDeg = (Math.max(natW, natH) * cal.pixscale) / 3600; // larger image dim → field width
-  solveStatus("Fetching matching dust map…");
-  await loadImageInto(els.dust, hips2fitsURL(els.survey.value, cal.ra, cal.dec, fovDeg));
-  current = { ra: cal.ra, dec: cal.dec, fov: fovDeg };
-  els.dust.hidden = false; els.placeholder.hidden = true; applyBrightness();
+  solvedView = { ra: cal.ra, dec: cal.dec, fov: fovDeg };
+  current = solvedView;
   // both images: fit whole frame (contain) so their angular scales match
-  els.dust.style.objectFit = "contain";
   els.user.style.objectFit = "contain";
   xform.x = 0; xform.y = 0; xform.scale = 1;
   xform.rot = -cal.orientation;
@@ -387,6 +417,9 @@ async function autoAlign(cal) {
   els.opacity.value = "1"; els.user.style.opacity = "1"; // rest showing your image, full
   solvedLock = true; // app owns the alignment now — manual drag/pinch is off
   applyUserTransform();
+  // Start on the STAR reference so verifying the alignment is the first thing you do.
+  els.layerToggle.hidden = false;
+  await loadLayer("stars");
 }
 
 // ---- service worker ----
