@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dust Up">
+<title>Astro Dust Up</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css">
+<!-- Google Analytics 4 — same property as the rest of sidestepstudio.com -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-898TVSPLGS"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-898TVSPLGS');
+</script>
+</head>
+<body>
+<header class="topbar">
+  <h1>Astro Dust Up</h1>
+  <p class="tagline">See the real dust in your target — so you don't subtract it as gradient.</p>
+</header>
+
+<main>
+  <section class="controls">
+    <div class="row">
+      <label for="targetInput">Target</label>
+      <div class="findline">
+        <input id="targetInput" list="targetList" placeholder="e.g. M81, Polaris, Barnard 150, or  10.68 41.27"
+               autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="text">
+        <datalist id="targetList"></datalist>
+        <button id="findBtn" class="primary">Show dust</button>
+      </div>
+    </div>
+
+    <div class="row two">
+      <div>
+        <label for="surveySel">Dust survey</label>
+        <select id="surveySel"></select>
+      </div>
+      <div>
+        <label for="fovSel">Field width</label>
+        <select id="fovSel">
+          <option value="1">1°</option>
+          <option value="2">2°</option>
+          <option value="3" selected>3°</option>
+          <option value="5">5°</option>
+          <option value="8">8°</option>
+        </select>
+      </div>
+    </div>
+
+    <p id="status" class="status" aria-live="polite"></p>
+    <p id="surveyNote" class="note"></p>
+  </section>
+
+  <section class="stage">
+    <div id="solvedBanner" class="solved-banner" hidden>✓ Image solved &amp; aligned to the sky</div>
+    <div id="viewer" class="viewer">
+      <img id="dustImg" alt="" hidden>
+      <img id="userImg" alt="" hidden>
+      <div id="placeholder" class="placeholder">Type a target and tap <b>Show dust</b>.</div>
+    </div>
+
+    <div id="layerToggle" class="layertoggle" hidden>
+      <span class="lt-label">Compare against</span>
+      <button id="layerStars" class="seg">Stars (verify)</button>
+      <button id="layerDust" class="seg">Dust</button>
+    </div>
+
+    <button id="blinkBtn" class="blink-main" disabled>Blink your image with dust</button>
+
+    <div class="finetune" id="finetuneRow">
+      <button id="flipBtn" class="ghost" disabled>Flip ⇋</button>
+      <label class="rotctl">Rotate <span id="rotVal">0</span>°
+        <input id="rotRange" type="range" min="-180" max="180" step="0.5" value="0" disabled>
+      </label>
+    </div>
+
+    <div class="viewerctl">
+      <label class="ctl">
+        Dust stretch (reveal faint filaments)
+        <input id="brightRange" type="range" min="1" max="6" step="0.1" value="2.4">
+      </label>
+    </div>
+  </section>
+
+  <!-- Black-point clip + gamma stretch for the dust layer, so faint dust/filaments pop
+       instead of staying buried (a plain linear brightness barely moves them). -->
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+    <filter id="dustStretch" color-interpolation-filters="sRGB">
+      <feComponentTransfer id="dustBP">
+        <feFuncR type="linear" slope="1" intercept="0"/>
+        <feFuncG type="linear" slope="1" intercept="0"/>
+        <feFuncB type="linear" slope="1" intercept="0"/>
+      </feComponentTransfer>
+      <feComponentTransfer id="dustGamma">
+        <feFuncR type="gamma" amplitude="1" exponent="1" offset="0"/>
+        <feFuncG type="gamma" amplitude="1" exponent="1" offset="0"/>
+        <feFuncB type="gamma" amplitude="1" exponent="1" offset="0"/>
+      </feComponentTransfer>
+    </filter>
+  </svg>
+
+  <section class="compare">
+    <details id="compareBox">
+      <summary>Compare your own image</summary>
+      <p class="note">Drop in your stacked image of the <b>same target</b>. Blend or blink it
+        against the dust map: glow that <b>matches</b> the dust structure is real nebulosity —
+        smooth glow that <b>doesn't follow it</b> is a gradient. (Frame your image at the same
+        field width for the cleanest comparison.)</p>
+      <div class="row two">
+        <div>
+          <label for="fileInput">Your image</label>
+          <input id="fileInput" type="file" accept="image/*">
+        </div>
+        <div>
+          <label for="opacityRange">Blend (static view only)</label>
+          <input id="opacityRange" type="range" min="0" max="1" step="0.02" value="1" disabled>
+        </div>
+      </div>
+      <div class="solvebox">
+        <p class="note"><b>Auto-align (plate-solve).</b> Uses your own free
+          <a href="https://nova.astrometry.net" target="_blank" rel="noopener">astrometry.net</a>
+          account to recognise your image's stars and snap it onto the dust map —
+          no manual lining-up. Get your API key from your nova profile page.</p>
+        <p class="warn-note">⚠ Your key is saved only on this device. Don't paste it on a public or shared computer.</p>
+        <div class="row" id="novaKeyRow">
+          <label for="novaKey">astrometry.net API key</label>
+          <input id="novaKey" type="password" placeholder="paste your nova API key" autocomplete="off"
+                 autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="row keysaved" id="novaKeySaved" hidden>
+          <span class="note">🔒 API key saved on this device.</span>
+          <button id="novaKeyChange" class="ghost">Change key</button>
+        </div>
+        <div class="row">
+          <button id="solveBtn" disabled>Plate-solve &amp; auto-align</button>
+        </div>
+        <p id="solveStatus" class="note" aria-live="polite"></p>
+      </div>
+
+      <div class="row">
+        <button id="clearImgBtn" class="ghost" disabled>Remove image</button>
+      </div>
+    </details>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="foot-links">
+    <a class="foot-btn" href="https://sidestepstudio.com/#contact" target="_blank" rel="noopener">✉ Contact</a>
+  </div>
+  <p class="foot-credit">A tool from
+    <a href="https://sidestepstudio.com" target="_blank" rel="noopener">Sidestep Studio</a>.
+    Collect your DSOs with
+    <a href="https://sidestepstudio.com/moondance/info.html" target="_blank" rel="noopener">Moondance</a>.</p>
+  <span id="ver" class="foot-ver"></span>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
