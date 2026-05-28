@@ -112,6 +112,21 @@
             <p class="section-label">Sidestep Studio's Astro Dust Up</p>
             <p style="color: var(--muted); margin-top: 8px;">A plate-solved blink tool for telling real interstellar dust from a processing gradient.</p>
             <div class="card">
+                <!-- Demo video: facade-load (click thumbnail -> iframe) so YouTube branding
+                     doesn't overlay the still, and no YouTube JS loads until interaction. -->
+                <div style="margin-bottom: 18px;">
+                    <div style="position: relative; aspect-ratio: 16/9; width: 100%; border-radius: 8px; overflow: hidden; background: #000;">
+                        <button data-vid="4x27kb9KSqg"
+                                aria-label="Play: Astro Dust Up demo"
+                                onclick="var f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+this.dataset.vid+'?autoplay=1&rel=0';f.title=this.getAttribute('aria-label');f.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');f.setAttribute('allowfullscreen','');f.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:8px;';this.replaceWith(f);"
+                                style="position: absolute; inset: 0; padding: 0; border: 0; cursor: pointer; background-image: url('https://i.ytimg.com/vi/4x27kb9KSqg/maxresdefault.jpg'); background-size: cover; background-position: center; background-color: #000; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                            <span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%; background: rgba(0,0,0,0.65); border: 2px solid rgba(255,255,255,0.85);">
+                                <span style="display: block; width: 0; height: 0; margin-left: 6px; border-left: 18px solid #fff; border-top: 11px solid transparent; border-bottom: 11px solid transparent;"></span>
+                            </span>
+                        </button>
+                    </div>
+                    <p style="margin: 8px 0 0; font-size: 0.9rem; color: var(--muted);">Watch the demo (3 min)</p>
+                </div>
                 <ul class="features">
                     <li>Fetches a real WISE / IR dust map of any deep-sky target</li>
                     <li>Plate-solves your stacked image and aligns it to the sky automatically</li>
