@@ -1,5 +1,5 @@
 // Astro Dust Up
-const APP_VERSION = "v21";
+const APP_VERSION = "v22";
 
 // Cloudflare Worker that relays nova.astrometry.net (CORS). Set after deploying
 // nova-proxy/ (see its README). Empty = plate-solve disabled, manual align only.
