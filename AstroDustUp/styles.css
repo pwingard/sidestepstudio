@@ -81,6 +81,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 
 .solvebox{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
 .solvebox a{color:var(--accent2)}
+.warn-note{margin:0;padding:8px 10px;font-size:12px;color:#f0b25b;
+  background:rgba(240,178,91,.08);border:1px solid rgba(240,178,91,.35);border-radius:8px;line-height:1.4}
 #solveStatus{min-height:16px;color:var(--accent2)}
 .keysaved{flex-direction:row!important;align-items:center;justify-content:space-between;gap:10px}
 .keysaved .note{color:var(--accent2)}
