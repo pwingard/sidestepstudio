@@ -1,5 +1,5 @@
 // Astro Dust Up
-const APP_VERSION = "v20";
+const APP_VERSION = "v21";
 
 // Cloudflare Worker that relays nova.astrometry.net (CORS). Set after deploying
 // nova-proxy/ (see its README). Empty = plate-solve disabled, manual align only.
@@ -492,6 +492,19 @@ async function autoAlign(cal) {
 document.querySelectorAll('.foot a[href*="/moondance/"]').forEach((a) => {
   a.addEventListener("click", () => track("moondance_click", { where: "footer" }));
 });
+
+// ---- how-to video link: friendly placeholder until the YouTube URL is wired in ----
+const howto = document.getElementById("howtoLink");
+if (howto) {
+  howto.addEventListener("click", (e) => {
+    const href = howto.getAttribute("href");
+    track("howto_click", { ready: href && href !== "#" });
+    if (!href || href === "#") {
+      e.preventDefault();
+      alert("How-to video coming soon — check back!");
+    }
+  });
+}
 
 // ---- service worker ----
 if ("serviceWorker" in navigator) {
