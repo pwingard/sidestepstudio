@@ -51,6 +51,33 @@
         position: absolute; inset: 0; width: 100%; height: 100%;
         border: 0; border-radius: 8px;
       }
+      /* facade: clean thumbnail + play button; iframe loads on click */
+      .yt-facade {
+        position: absolute; inset: 0; border-radius: 8px; overflow: hidden;
+        background-size: cover; background-position: center; background-color: #000;
+        cursor: pointer; border: 0; padding: 0; width: 100%; height: 100%;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .yt-facade::after {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(to bottom, rgba(0,0,0,0) 60%, rgba(0,0,0,0.55) 100%);
+        pointer-events: none;
+      }
+      .yt-play {
+        position: relative; z-index: 1;
+        width: 64px; height: 64px; border-radius: 50%;
+        background: rgba(0,0,0,0.65); border: 2px solid rgba(255,255,255,0.85);
+        display: flex; align-items: center; justify-content: center;
+        transition: background 0.15s ease, transform 0.15s ease;
+      }
+      .yt-facade:hover .yt-play { background: rgba(229,9,20,0.92); transform: scale(1.06); }
+      .yt-play::before {
+        content: ''; display: block;
+        width: 0; height: 0; margin-left: 6px;
+        border-left: 18px solid #fff;
+        border-top: 11px solid transparent;
+        border-bottom: 11px solid transparent;
+      }
       .video-card .vlabel {
         margin-top: 10px; font-size: 0.92rem;
         color: var(--muted, #aaa); text-align: center;
@@ -146,10 +173,11 @@
 
                     <div class="video-card">
                         <div class="vshort">
-                            <iframe src="https://www.youtube.com/embed/VpZMGPFHmwA"
-                                    title="Use Moondance for WHEN a Target is Up"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                    allowfullscreen></iframe>
+                            <button class="yt-facade" data-vid="VpZMGPFHmwA"
+                                    aria-label="Play: Use Moondance for WHEN a target is up"
+                                    style="background-image: url('https://i.ytimg.com/vi/VpZMGPFHmwA/maxresdefault.jpg');">
+                                <span class="yt-play" aria-hidden="true"></span>
+                            </button>
                         </div>
                         <p class="vlabel">Use Moondance for WHEN a target is up</p>
                     </div>
@@ -157,10 +185,11 @@
                     <!-- TODO: paste 2nd YouTube URL (e.g., Humason long-form) — copy this block, swap VIDEO_ID + title
                     <div class="video-card">
                         <div class="vlong">
-                            <iframe src="https://www.youtube.com/embed/VIDEO_ID"
-                                    title="Title here"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                    allowfullscreen></iframe>
+                            <button class="yt-facade" data-vid="VIDEO_ID"
+                                    aria-label="Play: Title here"
+                                    style="background-image: url('https://i.ytimg.com/vi/VIDEO_ID/maxresdefault.jpg');">
+                                <span class="yt-play" aria-hidden="true"></span>
+                            </button>
                         </div>
                         <p class="vlabel">Title here</p>
                     </div>
@@ -169,10 +198,11 @@
                     <!-- TODO: paste 3rd YouTube URL (e.g., Humason Short) — copy this block, swap VIDEO_ID + title
                     <div class="video-card">
                         <div class="vshort">
-                            <iframe src="https://www.youtube.com/embed/VIDEO_ID"
-                                    title="Title here"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                    allowfullscreen></iframe>
+                            <button class="yt-facade" data-vid="VIDEO_ID"
+                                    aria-label="Play: Title here"
+                                    style="background-image: url('https://i.ytimg.com/vi/VIDEO_ID/maxresdefault.jpg');">
+                                <span class="yt-play" aria-hidden="true"></span>
+                            </button>
                         </div>
                         <p class="vlabel">Title here</p>
                     </div>
@@ -180,6 +210,26 @@
 
                 </div>
             </div>
+
+            <script>
+                // Lazy-load YouTube iframe on click — avoids pre-play branded chrome
+                // overlapping the thumbnail and keeps initial page load light.
+                document.querySelectorAll('.yt-facade').forEach(function(el){
+                    el.addEventListener('click', function(){
+                        var vid = el.dataset.vid;
+                        if (!vid) return;
+                        var iframe = document.createElement('iframe');
+                        iframe.src = 'https://www.youtube-nocookie.com/embed/' + vid +
+                                     '?autoplay=1&rel=0&playsinline=1';
+                        iframe.title = el.getAttribute('aria-label') || 'YouTube video';
+                        iframe.setAttribute('allow',
+                            'accelerometer; autoplay; clipboard-write; encrypted-media; ' +
+                            'gyroscope; picture-in-picture; web-share');
+                        iframe.setAttribute('allowfullscreen', '');
+                        el.replaceWith(iframe);
+                    });
+                });
+            </script>
 
             <!-- BEFORE YOU SIGN UP -->
             <h2>Before you sign up</h2>
