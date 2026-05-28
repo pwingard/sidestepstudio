@@ -41,10 +41,10 @@
       }
       .video-section { margin: 40px 0; }
       .video-grid {
-        display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 22px; align-items: start; justify-items: center;
+        display: flex; flex-wrap: wrap; gap: 22px;
+        justify-content: center; align-items: flex-start;
       }
-      .video-card { width: 100%; max-width: 320px; }
+      .video-card { flex: 0 1 320px; max-width: 320px; }
       .video-card .vshort { position: relative; aspect-ratio: 9/16; width: 100%; }
       .video-card .vlong  { position: relative; aspect-ratio: 16/9; width: 100%; }
       .video-card iframe {
