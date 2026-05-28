@@ -1,5 +1,5 @@
 // Astro Dust Up
-const APP_VERSION = "v19";
+const APP_VERSION = "v20";
 
 // Cloudflare Worker that relays nova.astrometry.net (CORS). Set after deploying
 // nova-proxy/ (see its README). Empty = plate-solve disabled, manual align only.
@@ -37,6 +37,24 @@ if (!NOVA_PROXY) { const sb = document.querySelector(".solvebox"); if (sb) sb.hi
 
 function setStatus(msg) { els.status.textContent = msg || ""; }
 function surveyBright(id) { const s = SURVEYS.find((x) => x.id === id); return s ? s.bright : 1.4; }
+
+// Lightweight GA4 event helper — silently no-ops if gtag isn't loaded (ad-blocker, offline, etc.)
+function track(name, params) {
+  if (typeof gtag === "function") {
+    try { gtag("event", name, params || {}); } catch {}
+  }
+}
+function categorizeSolveFailure(msg) {
+  const m = (msg || "").toLowerCase();
+  if (m.includes("queue")) return "queue_timeout";
+  if (m.includes("still solving") || m.includes("solve timed")) return "solve_timeout";
+  if (m.includes("couldn't solve") || m.includes("solve failed")) return "nova_failure";
+  if (m.includes("apikey") || m.includes("login failed") || m.includes("paste your")) return "auth";
+  if (m.includes("upload failed")) return "upload";
+  if (m.includes("no calibration")) return "no_calibration";
+  if (m.includes("load your image")) return "no_image";
+  return "other";
+}
 
 // ---- coordinate parsing / name resolve ----
 // Accept "ra dec" in decimal degrees, or resolve a name via CDS Sesame.
@@ -172,7 +190,10 @@ els.file.addEventListener("change", (e) => {
     const cached = getCachedSolve(fileKey(userFile));
     if (cached) {
       autoAlign(cached)
-        .then(() => solveStatus("Reused your saved plate-solve for this image — no re-solving needed. (Tap Plate-solve to redo.)"))
+        .then(() => {
+          track("solve_success", { target: els.target.value.trim() || "(none)", source: "cached", survey: els.survey.value });
+          solveStatus("Reused your saved plate-solve for this image — no re-solving needed. (Tap Plate-solve to redo.)");
+        })
         .catch(() => {});
     } else {
       setStatus(NOVA_PROXY
@@ -204,6 +225,7 @@ function blinkRestingLabel() { return currentLayer === "stars" ? "Blink your ima
 function updateBlinkLabel() { if (!blinkTimer) els.blink.textContent = blinkRestingLabel(); }
 els.blink.addEventListener("click", () => {
   if (blinkTimer) { stopBlink(); return; }
+  track("blink_start", { layer: currentLayer });
   els.blink.textContent = "Stop blinking";
   let on = true;
   els.user.style.opacity = "1";
@@ -285,8 +307,8 @@ async function loadLayer(kind) {
       : "Blink: glow that tracks the dust is real nebulosity; smooth glow that doesn't is a gradient.");
   } catch (e) { setStatus(e.message || "Couldn't load that layer."); }
 }
-els.layerStars.addEventListener("click", () => loadLayer("stars"));
-els.layerDust.addEventListener("click", () => loadLayer("dust"));
+els.layerStars.addEventListener("click", () => { track("layer_switch", { to: "stars" }); loadLayer("stars"); });
+els.layerDust.addEventListener("click",  () => { track("layer_switch", { to: "dust"  }); loadLayer("dust"); });
 
 // ---- plate-solve (nova.astrometry.net via the CORS proxy) ----
 // Remember the user's key locally (their own key, never sent anywhere but nova).
@@ -429,10 +451,12 @@ async function runSolve() {
     clearPending();
     setCachedSolve(fileKey(userFile), cal); // remember it so re-loading this image skips the queue
     await autoAlign(cal);
+    track("solve_success", { target: els.target.value.trim() || "(none)", source: "fresh", survey: els.survey.value });
     solveStatus(`Aligned & locked: ${fmtRA(cal.ra)} ${fmtDec(cal.dec)} · ${cal.pixscale.toFixed(2)}″/px. ` +
                 `Tap Blink to compare. (If it lands mirrored or rotated, tap Flip / nudge Rotate.)`);
   } catch (e) {
     solveStatus(e.message || "Plate-solve failed.");
+    track("solve_failure", { reason: categorizeSolveFailure(e.message) });
   } finally {
     els.solve.disabled = false;
     updateSolveLabel();
@@ -463,6 +487,11 @@ async function autoAlign(cal) {
   els.layerToggle.hidden = false;
   await loadLayer("stars");
 }
+
+// ---- footer Moondance click tracking ----
+document.querySelectorAll('.foot a[href*="/moondance/"]').forEach((a) => {
+  a.addEventListener("click", () => track("moondance_click", { where: "footer" }));
+});
 
 // ---- service worker ----
 if ("serviceWorker" in navigator) {
