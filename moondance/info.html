@@ -3,12 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moondance Astrophotography Planner — Sidestep Studio</title>
-    <meta name="description" content="Moondance is a data-driven astrophotography planner. Build collections, maximise darkness, image methodically.">
+    <title>Moondance — Methodical Imaging Planner | Sidestep Studio</title>
+    <meta name="description" content="Plan astrophotography sessions around the moon, your targets, and your sky. See a full year of imaging windows at a glance.">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+      /* page-local styles for the consolidated landing */
+      .moondance-hero { text-align: center; padding: 8px 0 4px; }
+      .moondance-hero h1 { margin-bottom: 6px; }
+      .moondance-hero .subtitle {
+        color: var(--muted, #aaa); font-size: 0.95rem;
+        letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 22px;
+      }
+      .moondance-hero .promo {
+        font-size: 1.15rem; max-width: 640px; margin: 0 auto 24px; line-height: 1.5;
+      }
+      .cta-row {
+        display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+        margin: 18px 0 40px;
+      }
+      .pitch-block { margin: 40px 0; }
+      .pitch-block .lede { font-size: 1.25rem; font-weight: 600; margin: 24px 0 14px; }
+      .pitch-block ul { margin: 8px 0 18px 1.4em; }
+      .pitch-block li { margin: 6px 0; }
+      .beta-story { margin: 40px 0; }
+      .beta-story figure { margin: 18px 0; }
+      .beta-story img {
+        display: block; width: 100%; max-width: 720px; height: auto;
+        border-radius: 6px; margin: 0 auto;
+      }
+      .beta-story figcaption {
+        text-align: center; font-size: 0.9rem;
+        color: var(--muted, #888); margin-top: 8px;
+      }
+      .video-section { margin: 40px 0; }
+      .video-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 22px; align-items: start; justify-items: center;
+      }
+      .video-card { width: 100%; max-width: 320px; }
+      .video-card .vshort { position: relative; aspect-ratio: 9/16; width: 100%; }
+      .video-card .vlong  { position: relative; aspect-ratio: 16/9; width: 100%; }
+      .video-card iframe {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        border: 0; border-radius: 8px;
+      }
+      .video-card .vlabel {
+        margin-top: 10px; font-size: 0.92rem;
+        color: var(--muted, #aaa); text-align: center;
+      }
+      .pdf-row {
+        display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+        margin: 16px 0 28px;
+      }
+      .pdf-row a {
+        display: inline-block; padding: 8px 14px;
+        border: 1px solid rgba(255,255,255,0.18); border-radius: 6px;
+        color: var(--accent, #4af); text-decoration: none;
+      }
+      .pdf-row a:hover { background: rgba(255,255,255,0.04); }
+    </style>
+
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-898TVSPLGS"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -31,39 +89,117 @@
 </header>
 
 <main>
-    <div class="container" style="padding-top: 60px; padding-bottom: 80px;">
+    <div class="container" style="padding-top: 50px; padding-bottom: 80px;">
         <div class="prose">
 
-            <h1>Moondance</h1>
-            <p class="updated">Build Collections to Image Methodically</p>
+            <!-- HERO -->
+            <div class="moondance-hero">
+                <h1>Moondance</h1>
+                <p class="subtitle">Methodical Imaging Planner</p>
+                <p class="promo">Plan astrophotography sessions around the moon, your targets, and your sky. See a full year of imaging windows at a glance.</p>
+                <div class="cta-row">
+                    <a class="app-store-btn" href="https://testflight.apple.com/join/vubsPjWM" target="_blank" rel="noopener">Free Beta in TestFlight</a>
+                    <!-- App Store badge slot — uncomment when v5.0 ships
+                    <a class="app-store-btn" href="https://apps.apple.com/app/idXXXXXXXXX">Get it on the App Store</a>
+                    -->
+                </div>
+            </div>
 
-            <p>Moondance is a data-driven astrophotography planner designed by an astrophotographer for those who want a more methodical approach to imaging the night sky.</p>
+            <!-- PITCH / DIFFERENTIATION -->
+            <div class="pitch-block">
+                <p class="lede">Collect your DSOs. Image them methodically.</p>
+                <p>Most astronomy apps show you the sky. <strong>Moondance shows you when to image it.</strong></p>
+                <p>SkySafari, Stellarium, and the rest are beautiful sky maps &mdash; they render constellations, planets, and deep-sky objects in real time. Perfect for visual observers, navigation, education.</p>
+                <p>But if you're an <em>imager</em>, you're not asking "what's in the sky right now." You're asking:</p>
+                <ul>
+                    <li>Which of <em>my</em> targets are imageable this week, or this month?</li>
+                    <li>When is the moon out of the way of them?</li>
+                    <li>Can I fit M51 and NGC 4236 in tonight, given when each clears my horizon?</li>
+                    <li>I've shot 53 Messier objects &mdash; which is the easiest next one this month?</li>
+                </ul>
+                <p>Atlas tools don't really answer those questions. They give you the sky; they don't give you a plan.</p>
+                <p>Moondance is built for imagers and collectors &mdash; people who want to capture their targets methodically, over time. It answers <strong>"what should I shoot, given what I want and what the sky's doing?"</strong></p>
+            </div>
 
-            <p>The app allows you to explore any night of the year for suitable targets &mdash; and any target for its best available nights throughout the year.</p>
+            <!-- BETA STORY -->
+            <div class="beta-story">
+                <p>With my Origin telescope I just imaged a dark nebula in Atlanta &mdash; under a full moon, in the city glow. Moondance found the targets minimally affected by the moonlight&hellip; and it actually worked.</p>
+                <figure>
+                    <img src="/moondance/ldn949-beta.jpg" alt="LDN 949 dark nebula imaged from Atlanta under a full moon">
+                    <figcaption>LDN 949 &mdash; Atlanta, full moon</figcaption>
+                </figure>
+            </div>
 
+            <!-- KEY FEATURES -->
             <h2>Key Features</h2>
-
             <p><strong>Collections</strong> (with thumbnails) let you group and save targets by constellation, object type, season, equipment, or any criteria you choose. Once saved, you can easily pull from these collections to build a target list for any given night.</p>
-
             <p><strong>Night Scrubber</strong> &mdash; Drag the clock hand around the sky dome to sweep through the night from sunset to sunrise. Watch constellations rise and set in real time. Use it to scout what's available at specific hours or to catch targets that are only up for a short window.</p>
-
             <p><strong>Smart Moon Handling</strong> &mdash; Moondance is built around the idea that the Moon's phase and position should not automatically rule out imaging. With adjustable moon tolerance settings, you can identify usable imaging time based on your equipment, abilities, and preferences.</p>
-
-            <p><strong>Search</strong> over 2,000 deep sky objects.</p>
-
-            <p><strong>Messier Tracker</strong> &mdash; Helps track and record the capture of all 108 Messier objects.</p>
-
+            <p><strong>Search</strong> over 2,000 deep sky objects, with a Messier tracker built in to record progress on all 108.</p>
             <p>All the revolving data for DSOs in constant slow motion, richly complex yet simplistically beautiful, is pulled together and presented in a clear graphical interface.</p>
+            <p style="margin-top: 24px; font-weight: 500;">With Moondance, plan methodically and image with intention.</p>
 
-            <p>&hellip;and much more.</p>
+            <!-- VIDEOS -->
+            <h2>See it in action</h2>
+            <div class="video-section">
+                <div class="video-grid">
 
-            <p style="margin-top: 32px; font-weight: 500;">With Moondance, plan methodically and image with intention.</p>
+                    <div class="video-card">
+                        <div class="vshort">
+                            <iframe src="https://www.youtube.com/embed/VpZMGPFHmwA"
+                                    title="Use Moondance for WHEN a Target is Up"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowfullscreen></iframe>
+                        </div>
+                        <p class="vlabel">Use Moondance for WHEN a target is up</p>
+                    </div>
 
+                    <!-- TODO: paste 2nd YouTube URL (e.g., Humason long-form) — copy this block, swap VIDEO_ID + title
+                    <div class="video-card">
+                        <div class="vlong">
+                            <iframe src="https://www.youtube.com/embed/VIDEO_ID"
+                                    title="Title here"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowfullscreen></iframe>
+                        </div>
+                        <p class="vlabel">Title here</p>
+                    </div>
+                    -->
+
+                    <!-- TODO: paste 3rd YouTube URL (e.g., Humason Short) — copy this block, swap VIDEO_ID + title
+                    <div class="video-card">
+                        <div class="vshort">
+                            <iframe src="https://www.youtube.com/embed/VIDEO_ID"
+                                    title="Title here"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowfullscreen></iframe>
+                        </div>
+                        <p class="vlabel">Title here</p>
+                    </div>
+                    -->
+
+                </div>
+            </div>
+
+            <!-- BEFORE YOU SIGN UP -->
+            <h2>Before you sign up</h2>
+            <p>Skim the Quick Start or the User Guide to see whether Moondance fits how you image.</p>
+            <div class="pdf-row">
+                <a href="/moondance/quickstart.pdf" target="_blank" rel="noopener">Quick Start (PDF)</a>
+                <a href="/moondance/user-guide.pdf" target="_blank" rel="noopener">User Guide (PDF)</a>
+            </div>
+            <div class="cta-row">
+                <a class="app-store-btn" href="https://testflight.apple.com/join/vubsPjWM" target="_blank" rel="noopener">Join the Free Beta in TestFlight</a>
+            </div>
+
+            <!-- LINKS -->
             <h2>Links</h2>
             <p>
                 <a href="/moondance/support.html" style="color: var(--accent);">Support</a>
                 &nbsp;&middot;&nbsp;
                 <a href="/moondance/privacy.html" style="color: var(--accent);">Privacy Policy</a>
+                &nbsp;&middot;&nbsp;
+                <a href="/moondance/quickstart.html" style="color: var(--accent);">Quick Start</a>
             </p>
 
         </div>
