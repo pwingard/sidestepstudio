@@ -110,7 +110,7 @@
         <div class="sb-body">
           <div class="sb-t">Read / solve a sub</div>
           <div class="sb-d">Pick a sub. <b>FITS</b> → FOV read straight from its header, instantly. JPG/PNG → needs plate-solving.</div>
-          <label class="sb-cta">Choose a sub…<input type="file" id="subfile" accept=".fit,.fits,.fts,image/*" style="display:none"></label>
+          <label class="sb-cta">Choose a sub…<input type="file" id="subfile" style="display:none"></label>
         </div>
       </div>
       <div class="card" id="f-result" style="display:none"><h2>Your rig</h2><div id="f-resbody"></div></div>
@@ -133,7 +133,7 @@
 
 <script>
 "use strict";
-var VERSION = "0.3.0";   // ← bumped every deploy
+var VERSION = "0.3.1";   // ← bumped every deploy
 var A = window.Astronomy;
 var CATALOG = [
  {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
