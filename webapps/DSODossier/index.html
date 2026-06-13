@@ -85,6 +85,11 @@
   .ctrlrow .cv{font-weight:700;color:#cfe0ff;font-size:12px;min-width:40px;text-align:right;flex:0 0 auto}
   .stp{width:28px;height:28px;border-radius:7px;border:1px solid var(--line);background:var(--card2);color:var(--acc);font-size:17px;font-weight:700;line-height:1;cursor:pointer;flex:0 0 auto}
   .usebtn{margin:12px 14px 2px;padding:11px;text-align:center;background:var(--acc);color:#06101f;font-weight:700;border-radius:10px;cursor:pointer}
+  .keyrow input{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#0c1422;color:var(--ink);font-size:12.5px}
+  .keysaved{font-size:12px;color:var(--good)} .keysaved .lnk{color:var(--acc);cursor:pointer;text-decoration:underline}
+  .sbbtns{display:flex;gap:8px;margin-top:9px}
+  .sb-cta2{display:inline-block;background:var(--card2);border:1px solid var(--line);color:var(--ink);font-weight:700;font-size:12.5px;padding:7px 13px;border-radius:8px;cursor:pointer}
+  .sstat{font-size:12px;color:var(--dim);margin-top:8px;line-height:1.4}.sstat b{color:#cfe0ff}
 </style>
 </head>
 <body>
@@ -120,11 +125,14 @@
       <div class="card"><div class="row"><span class="k">Center on</span><span class="v" id="f-coord">—</span></div>
         <div class="row"><span class="k">Target size</span><span class="v" id="f-tsize">—</span></div></div>
       <div class="solvebox">
-        <div class="sb-ico">📷</div>
+        <div class="sb-ico">🎯</div>
         <div class="sb-body">
-          <div class="sb-t">Read / solve a sub</div>
-          <div class="sb-d">Pick a sub. <b>FITS</b> → FOV read straight from its header, instantly. JPG/PNG → needs plate-solving.</div>
-          <label class="sb-cta">Choose a sub…<input type="file" id="subfile" style="display:none"></label>
+          <div class="sb-t">Read / plate-solve a sub</div>
+          <div class="sb-d"><b>FITS</b> → FOV from header instantly. <b>Plate-solve</b> any sub → your camera's actual <b>angle + center</b> (the rotate loop).</div>
+          <div class="keyrow" id="keyrow"><input type="password" id="novakey" placeholder="astrometry.net API key" autocomplete="off" spellcheck="false"></div>
+          <div class="keysaved" id="keysaved" style="display:none">🔑 key saved · <span class="lnk" id="keychange">change</span></div>
+          <div class="sbbtns"><label class="sb-cta2">Choose sub<input type="file" id="subfile" style="display:none"></label><span class="sb-cta" id="solvebtn">🎯 Plate-solve</span></div>
+          <div class="sstat" id="solvestatus"></div>
         </div>
       </div>
       <div class="card" id="f-result" style="display:none"><h2>Your rig</h2><div id="f-resbody"></div></div>
@@ -157,7 +165,7 @@
 
 <script>
 "use strict";
-var VERSION = "0.6.0";   // ← bumped every deploy
+var VERSION = "0.7.0";   // ← bumped every deploy
 var A = window.Astronomy;
 var CATALOG = [
  {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
@@ -179,6 +187,8 @@ var boxOff = {x:0, y:0}, boxDims = {w:50, h:30};         // box pan offset + siz
 var SURVEYS = [ {id:"CDS/P/DSS2/color",label:"DSS"}, {id:"CDS/P/DSS2/red",label:"DSS red"},
                 {id:"CDS/P/WISE/WSSA/12um",label:"Dust (IR)"}, {id:"CDS/P/unWISE/color",label:"unWISE"} ];
 var survey = 0, imgBright = 1.15, imgContrast = 1.40, lastSurvFov = 2;
+var NOVA_PROXY = "https://astro-dust-up-nova.bizpfw.workers.dev";  // shared proxy (swappable backend)
+var userFile = null, userPixels = null, pendingSolve = null, solvedCal = null;
 var weatherCloud = null;        // function(date)->cloud% or null
 var weatherHorizonDays = 7;
 
@@ -439,14 +449,17 @@ function fnum(h,k){ return (h&&h[k]!==undefined)? parseFloat(h[k]):null; }
 function rowHTML(k,v,color){ return '<div class="row"><span class="k">'+k+'</span><span class="v"'+(color?' style="color:'+color+'"':'')+'>'+v+'</span></div>'; }
 function handleSub(e){
   var f=e.target.files&&e.target.files[0]; if(!f) return;
+  userFile=f; userPixels=null; solvedCal=null; pendingSolve=null;
   var res=document.getElementById('f-result'), body=document.getElementById('f-resbody'), note=document.getElementById('f-note');
   res.style.display="block"; body.innerHTML='<div class="load">reading…</div>';
+  solveStatus('Loaded <b>'+f.name+'</b> — tap Plate-solve for angle + center.');
   var isFits=/\.(fit|fits|fts)$/i.test(f.name);
   if(isFits){
     var r=new FileReader();
     r.onload=function(){ var h=parseFitsHeader(r.result);
       var fl=fnum(h,"FOCALLEN"), px=fnum(h,"XPIXSZ")||fnum(h,"PIXSIZE1")||fnum(h,"PIXSIZE"),
           nx=fnum(h,"NAXIS1"), ny=fnum(h,"NAXIS2"), cam=h&&h.INSTRUME?h.INSTRUME.replace(/'/g,"").trim():null;
+      if(nx&&ny) userPixels={w:nx,h:ny};
       var out=rowHTML("File",f.name);
       if(cam) out+=rowHTML("Camera",cam);
       if(nx&&ny) out+=rowHTML("Pixels",nx+"×"+ny);
@@ -463,12 +476,79 @@ function handleSub(e){
     r.readAsArrayBuffer(f.slice(0,46080));
   } else {
     var img=new Image();
-    img.onload=function(){ body.innerHTML=rowHTML("File",f.name)+rowHTML("Pixels",img.width+"×"+img.height)
-        +rowHTML("FOV","needs plate-solve","var(--warn)");
-      note.innerHTML="Image received. FOV + rotation from a JPG/PNG need server-side plate-solving (astrometry.net) — that's the next build."; };
+    img.onload=function(){ userPixels={w:img.width,h:img.height};
+      body.innerHTML=rowHTML("File",f.name)+rowHTML("Pixels",img.width+"×"+img.height)
+        +rowHTML("FOV","plate-solve for angle+FOV","var(--acc)");
+      note.innerHTML="Image loaded. Tap <b>Plate-solve</b> to get your camera's actual angle, FOV and center."; };
     img.onerror=function(){ body.innerHTML=rowHTML("File",f.name)+rowHTML("FOV","needs plate-solve","var(--warn)"); };
     img.src=URL.createObjectURL(f);
   }
+}
+// ---------- plate-solve (nova.astrometry.net via shared proxy) ----------
+function savedKey(){ try{ return (localStorage.getItem("dustNovaKey")||"").trim(); }catch(e){ return ""; } }
+function saveKey(v){ v=(v||"").trim(); if(v){ try{ localStorage.setItem("dustNovaKey",v); }catch(e){} } refreshKeyUI(); }
+function refreshKeyUI(){ var have=!!savedKey();
+  var kr=document.getElementById('keyrow'), ks=document.getElementById('keysaved');
+  if(kr) kr.style.display=have?'none':'block'; if(ks) ks.style.display=have?'block':'none'; }
+function solveStatus(m){ var s=document.getElementById('solvestatus'); if(s) s.innerHTML=m||""; }
+function _sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+function novaJSON(path,opts){ return fetch(NOVA_PROXY.replace(/\/$/,'')+path,opts).then(function(r){ return r.json(); }); }
+function pollInt(ms){ return ms<60000?5000:ms<300000?10000:15000; }
+function fmtEl(ms){ var s=Math.round(ms/1000); return Math.floor(s/60)+"m "+("0"+(s%60)).slice(-2)+"s"; }
+async function waitForJob(subid){ var st=Date.now();
+  while(Date.now()-st<1200000){ var s=await novaJSON("/api/submissions/"+subid);
+    if(s.jobs&&s.jobs.length&&s.jobs[0]!=null) return s.jobs[0];
+    solveStatus("Queued at astrometry.net (their server's busy)… "+fmtEl(Date.now()-st)+". Leave this open.");
+    await _sleep(pollInt(Date.now()-st)); } return null; }
+async function waitForSolve(jobid){ var st=Date.now();
+  while(Date.now()-st<900000){ var j=await novaJSON("/api/jobs/"+jobid);
+    if(j.status==="success") return "success"; if(j.status==="failure") return "failure";
+    solveStatus("Solving your image… "+fmtEl(Date.now()-st)+".");
+    await _sleep(pollInt(Date.now()-st)); } return "timeout"; }
+async function runSolve(){
+  var nk=document.getElementById('novakey'); var key=((nk&&nk.value)||"").trim()||savedKey();
+  if(!key){ solveStatus("Paste your astrometry.net API key first."); return; }
+  if(!userFile){ solveStatus("Choose a sub first."); return; }
+  saveKey(key);
+  var btn=document.getElementById('solvebtn'); if(btn) btn.style.opacity=.5;
+  try{
+    var subid=pendingSolve&&pendingSolve.subid, jobid=pendingSolve&&pendingSolve.jobid;
+    if(!subid){
+      solveStatus("Signing in to astrometry.net…");
+      var login=await novaJSON("/api/login",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},
+        body:"request-json="+encodeURIComponent(JSON.stringify({apikey:key}))});
+      if(login.status!=="success") throw new Error(login.errormessage||"login failed (check key)");
+      solveStatus("Uploading your image…");
+      var fd=new FormData();
+      fd.append("request-json",JSON.stringify({session:login.session,publicly_visible:"n",allow_modifications:"d",allow_commercial_use:"d"}));
+      fd.append("file",userFile,userFile.name||"image.jpg");
+      var up=await novaJSON("/api/upload",{method:"POST",body:fd});
+      if(up.status!=="success") throw new Error(up.errormessage||"upload failed");
+      subid=up.subid; pendingSolve={subid:subid,jobid:null};
+    }
+    if(jobid==null){ jobid=await waitForJob(subid);
+      if(jobid==null) throw new Error("Still queued — tap Plate-solve again to resume."); pendingSolve={subid:subid,jobid:jobid}; }
+    var r=await waitForSolve(jobid);
+    if(r==="timeout") throw new Error("Still solving — tap Plate-solve again to resume.");
+    if(r==="failure"){ pendingSolve=null; throw new Error("Couldn't solve — try a wider, star-rich frame."); }
+    var cal=await novaJSON("/api/jobs/"+jobid+"/calibration/");
+    if(cal.ra==null) throw new Error("No calibration returned.");
+    pendingSolve=null; solvedCal=cal; showSolveResult(cal);
+  }catch(e){ solveStatus((e&&e.message)||"Plate-solve failed."); }
+  finally{ if(btn) btn.style.opacity=1; }
+}
+function showSolveResult(cal){
+  var ori=cal.orientation, par=(cal.parity<0?"mirrored":"normal");
+  var fovw=userPixels?(userPixels.w*cal.pixscale/3600):cal.radius*2, fovh=userPixels?(userPixels.h*cal.pixscale/3600):cal.radius*2;
+  var desired=rotAngle, delta=Math.round(((desired-ori)%360+540)%360-180);
+  document.getElementById('f-result').style.display='block';
+  document.getElementById('f-resbody').innerHTML=
+    rowHTML("Camera angle",ori.toFixed(1)+"°","var(--good)")
+    +rowHTML("Field of view",fovw.toFixed(2)+"° × "+fovh.toFixed(2)+"°")
+    +rowHTML("Center",raStr(((cal.ra%360)+360)%360)+" "+decStr(cal.dec))
+    +rowHTML("Parity",par)+rowHTML("Pixel scale",cal.pixscale.toFixed(2)+"″/px");
+  solveStatus("✓ Solved — <b>your camera is at "+ori.toFixed(1)+"°.</b> To reach your planned <b>"+desired+"°</b>, rotate ≈ <b>"+delta+"°</b>, then re-solve to confirm. (The *change* between solves is exact; the zero-point is nova's convention.)");
+  rigFOV={w:fovw,h:fovh}; renderSurvey();
 }
 function boot(){
   if(!window.Astronomy){ document.getElementById('t-verdict').textContent="astronomy library failed to load (need internet)"; return; }
@@ -477,6 +557,14 @@ function boot(){
   var br=document.getElementById('brslider'); if(br) br.addEventListener('input',function(){ imgBright=br.value/100; document.getElementById('brval').textContent=imgBright.toFixed(2); applyFilter(); });
   var ct=document.getElementById('ctslider'); if(ct) ct.addEventListener('input',function(){ imgContrast=ct.value/100; document.getElementById('ctval').textContent=imgContrast.toFixed(2); applyFilter(); });
   setupDrag();
+  var sb=document.getElementById('solvebtn'); if(sb) sb.addEventListener('click',runSolve);
+  var nk=document.getElementById('novakey'); if(nk){ if(savedKey()) nk.value=savedKey();
+    nk.addEventListener('change',function(){ saveKey(nk.value); });
+    nk.addEventListener('paste',function(){ setTimeout(function(){ saveKey(nk.value); },0); }); }
+  var kc=document.getElementById('keychange'); if(kc) kc.addEventListener('click',function(){
+    document.getElementById('keyrow').style.display='block'; document.getElementById('keysaved').style.display='none';
+    var k=document.getElementById('novakey'); if(k){ k.value=''; k.focus(); } });
+  refreshKeyUI();
   document.getElementById('ver').textContent="v"+VERSION;
   document.getElementById('vercred').textContent="DSO DOSSIER · v"+VERSION;
   A=window.Astronomy;
