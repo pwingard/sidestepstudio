@@ -165,7 +165,7 @@
 
 <script>
 "use strict";
-var VERSION = "0.7.0";   // ← bumped every deploy
+var VERSION = "0.7.1";   // ← bumped every deploy
 var A = window.Astronomy;
 var CATALOG = [
  {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
@@ -374,10 +374,11 @@ function layoutBox(){
   box.style.transform='rotate('+rotAngle+'deg)';
 }
 function setRot(a){ rotAngle=a; layoutBox(); var v=document.getElementById('rotval'); if(v) v.textContent=a+'°'; }
+function lockPager(lock){ var p=document.getElementById('pager'); if(p) p.style.overflowX=lock?'hidden':'auto'; }
 function setupDrag(){
   var h=document.getElementById('draghandle'); if(!h) return;
   var drag=false, sx=0, sy=0, ox=0, oy=0;
-  h.addEventListener('pointerdown',function(e){ drag=true; sx=e.clientX; sy=e.clientY; ox=boxOff.x; oy=boxOff.y;
+  h.addEventListener('pointerdown',function(e){ drag=true; sx=e.clientX; sy=e.clientY; ox=boxOff.x; oy=boxOff.y; lockPager(true);
     h.setPointerCapture&&h.setPointerCapture(e.pointerId); e.preventDefault(); e.stopPropagation(); });
   h.addEventListener('pointermove',function(e){ if(!drag) return;
     var s=document.querySelector('.survey'); if(!s) return; var r=s.getBoundingClientRect();
@@ -553,6 +554,9 @@ function showSolveResult(cal){
 function boot(){
   if(!window.Astronomy){ document.getElementById('t-verdict').textContent="astronomy library failed to load (need internet)"; return; }
   var sf=document.getElementById('subfile'); if(sf) sf.addEventListener('change',handleSub);
+  ['rotslider','brslider','ctslider'].forEach(function(id){ var el=document.getElementById(id);
+    if(el){ el.addEventListener('pointerdown',function(){ lockPager(true); }); el.addEventListener('touchstart',function(){ lockPager(true); },{passive:true}); } });
+  ['pointerup','pointercancel','touchend','touchcancel'].forEach(function(ev){ document.addEventListener(ev,function(){ lockPager(false); }); });
   var rs=document.getElementById('rotslider'); if(rs) rs.addEventListener('input',function(){ setRot(+rs.value); });
   var br=document.getElementById('brslider'); if(br) br.addEventListener('input',function(){ imgBright=br.value/100; document.getElementById('brval').textContent=imgBright.toFixed(2); applyFilter(); });
   var ct=document.getElementById('ctslider'); if(ct) ct.addEventListener('input',function(){ imgContrast=ct.value/100; document.getElementById('ctval').textContent=imgContrast.toFixed(2); applyFilter(); });
