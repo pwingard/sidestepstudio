@@ -76,11 +76,15 @@
   .survchooser{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 8px}
   .survpill{font-size:11px;font-weight:600;padding:4px 9px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--dim);cursor:pointer}
   .survpill.on{background:var(--acc);color:#06101f;border-color:var(--acc)}
-  .fovbox{position:absolute;border:2px solid var(--acc);box-shadow:0 0 0 9999px rgba(5,8,15,.4);transform-origin:center;pointer-events:auto;cursor:move;touch-action:none}
+  .fovbox{position:absolute;border:2px solid var(--acc);box-shadow:0 0 0 9999px rgba(5,8,15,.4);transform-origin:center;pointer-events:none}
   .fovtag{position:absolute;top:2px;left:3px;background:rgba(93,177,255,.92);color:#06101f;font-size:9px;font-weight:700;padding:0 5px;border-radius:4px;white-space:nowrap}
-  .rotrow{display:flex;align-items:center;gap:10px;padding:10px 14px 4px;font-size:12px;color:var(--dim)}
-  .rotrow input{flex:1;accent-color:var(--acc)}
-  .rotrow #rotval{font-weight:700;color:#cfe0ff;min-width:34px;text-align:right}
+  .draghandle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:rgba(93,177,255,.95);color:#06101f;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;pointer-events:auto;cursor:move;touch-action:none;box-shadow:0 0 0 3px rgba(5,8,15,.45)}
+  .ctrlrow{display:flex;align-items:center;gap:8px;padding:8px 14px 0}
+  .ctrlrow .cl{font-size:11.5px;color:var(--dim);width:44px;flex:0 0 auto}
+  .ctrlrow input{flex:1;accent-color:var(--acc);touch-action:none}
+  .ctrlrow .cv{font-weight:700;color:#cfe0ff;font-size:12px;min-width:40px;text-align:right;flex:0 0 auto}
+  .stp{width:28px;height:28px;border-radius:7px;border:1px solid var(--line);background:var(--card2);color:var(--acc);font-size:17px;font-weight:700;line-height:1;cursor:pointer;flex:0 0 auto}
+  .usebtn{margin:12px 14px 2px;padding:11px;text-align:center;background:var(--acc);color:#06101f;font-weight:700;border-radius:10px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -126,12 +130,14 @@
       <div class="card" id="f-result" style="display:none"><h2>Your rig</h2><div id="f-resbody"></div></div>
       <div class="card" id="f-survey" style="display:none"><h2 id="f-survhead">Your frame on the sky</h2>
         <div class="survchooser" id="survchooser"></div>
-        <div class="survey"><img id="surveyimg" alt="survey"><div class="fovbox" id="fovbox"><span class="fovtag" id="fovtag"></span></div></div>
-        <div class="rotrow"><span>Rotate</span><input type="range" id="rotslider" min="0" max="180" step="1" value="0"><span id="rotval">0°</span></div>
-        <div class="rotrow"><span>Bright</span><input type="range" id="brslider" min="50" max="200" step="2" value="115"><span id="brval">1.15</span></div>
-        <div class="rotrow"><span>Contrast</span><input type="range" id="ctslider" min="80" max="260" step="2" value="140"><span id="ctval">1.40</span></div>
-        <div class="story" style="padding:6px 0 0"><b>Drag</b> the frame to move it · slider to rotate · pick a survey + tune brightness/contrast to see the target. (Actual rig angle needs a plate-solve.)</div>
+        <div class="survey"><img id="surveyimg" alt="survey"><div class="fovbox" id="fovbox"><span class="fovtag" id="fovtag"></span><div class="draghandle" id="draghandle">✛</div></div></div>
+        <div class="ctrlrow"><span class="cl">Rotate</span><button class="stp" onclick="nudgeRot(-1)">−</button><input type="range" id="rotslider" min="0" max="180" step="1" value="0"><button class="stp" onclick="nudgeRot(1)">+</button><span class="cv" id="rotval">0°</span></div>
+        <div class="ctrlrow"><span class="cl">Bright</span><button class="stp" onclick="nudgeBr(-5)">−</button><input type="range" id="brslider" min="50" max="200" step="2" value="115"><button class="stp" onclick="nudgeBr(5)">+</button><span class="cv" id="brval">1.15</span></div>
+        <div class="ctrlrow"><span class="cl">Contr</span><button class="stp" onclick="nudgeCt(-5)">−</button><input type="range" id="ctslider" min="80" max="260" step="2" value="140"><button class="stp" onclick="nudgeCt(5)">+</button><span class="cv" id="ctval">1.40</span></div>
+        <div class="usebtn" id="usebtn" onclick="useFraming()">📍 Use this framing</div>
+        <div class="story" style="padding:6px 0 0"><b>Drag the ✛</b> to move · slider/± to rotate · pick a survey + tune brightness/contrast.</div>
       </div>
+      <div class="card" id="f-lock" style="display:none"><h2>Set this at the scope</h2><div id="f-lockbody"></div></div>
       <div class="story" id="f-note">FITS headers carry focal length + pixel size — the app reads your field of view directly, no solving, crop-proof. Load a sub to draw your frame on the survey below.</div>
     </section>
 
@@ -151,7 +157,7 @@
 
 <script>
 "use strict";
-var VERSION = "0.5.0";   // ← bumped every deploy
+var VERSION = "0.6.0";   // ← bumped every deploy
 var A = window.Astronomy;
 var CATALOG = [
  {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
@@ -172,7 +178,7 @@ var rigFOV = null, rigName = "your rig", rotAngle = 0;   // rigFOV = {w,h} in de
 var boxOff = {x:0, y:0}, boxDims = {w:50, h:30};         // box pan offset + size, in survey-%
 var SURVEYS = [ {id:"CDS/P/DSS2/color",label:"DSS"}, {id:"CDS/P/DSS2/red",label:"DSS red"},
                 {id:"CDS/P/WISE/WSSA/12um",label:"Dust (IR)"}, {id:"CDS/P/unWISE/color",label:"unWISE"} ];
-var survey = 0, imgBright = 1.15, imgContrast = 1.40;
+var survey = 0, imgBright = 1.15, imgContrast = 1.40, lastSurvFov = 2;
 var weatherCloud = null;        // function(date)->cloud% or null
 var weatherHorizonDays = 7;
 
@@ -340,7 +346,7 @@ function renderSurvey(){
   if(!rigFOV) return;
   var t=CATALOG[sel];
   document.getElementById('f-survey').style.display='block';
-  var survFov=Math.min(6, Math.max(0.5, Math.max(rigFOV.w, rigFOV.h, t.size)*1.6));
+  var survFov=Math.min(6, Math.max(0.5, Math.max(rigFOV.w, rigFOV.h, t.size)*1.6)); lastSurvFov=survFov;
   var url="https://alasky.u-strasbg.fr/hips-image-services/hips2fits?hips="+encodeURIComponent(SURVEYS[survey].id)+
     "&width=440&height=440&fov="+survFov.toFixed(3)+"&projection=TAN&coordsys=icrs&ra="+t.ra+"&dec="+t.dec+"&format=jpg";
   var im=document.getElementById('surveyimg'); if(im.src!==url) im.src=url;
@@ -359,16 +365,31 @@ function layoutBox(){
 }
 function setRot(a){ rotAngle=a; layoutBox(); var v=document.getElementById('rotval'); if(v) v.textContent=a+'°'; }
 function setupDrag(){
-  var box=document.getElementById('fovbox'); if(!box) return;
+  var h=document.getElementById('draghandle'); if(!h) return;
   var drag=false, sx=0, sy=0, ox=0, oy=0;
-  box.addEventListener('pointerdown',function(e){ drag=true; sx=e.clientX; sy=e.clientY; ox=boxOff.x; oy=boxOff.y;
-    box.setPointerCapture&&box.setPointerCapture(e.pointerId); e.preventDefault(); });
-  box.addEventListener('pointermove',function(e){ if(!drag) return;
+  h.addEventListener('pointerdown',function(e){ drag=true; sx=e.clientX; sy=e.clientY; ox=boxOff.x; oy=boxOff.y;
+    h.setPointerCapture&&h.setPointerCapture(e.pointerId); e.preventDefault(); e.stopPropagation(); });
+  h.addEventListener('pointermove',function(e){ if(!drag) return;
     var s=document.querySelector('.survey'); if(!s) return; var r=s.getBoundingClientRect();
     boxOff.x=Math.max(-45,Math.min(45, ox+(e.clientX-sx)/r.width*100));
     boxOff.y=Math.max(-45,Math.min(45, oy+(e.clientY-sy)/r.height*100)); layoutBox(); });
-  box.addEventListener('pointerup',function(){ drag=false; });
-  box.addEventListener('pointercancel',function(){ drag=false; });
+  h.addEventListener('pointerup',function(){ drag=false; });
+  h.addEventListener('pointercancel',function(){ drag=false; });
+}
+function nudgeRot(d){ var s=document.getElementById('rotslider'); var v=Math.max(0,Math.min(180,+s.value+d)); s.value=v; setRot(v); }
+function nudgeBr(d){ var s=document.getElementById('brslider'); var v=Math.max(50,Math.min(200,+s.value+d)); s.value=v; imgBright=v/100; document.getElementById('brval').textContent=imgBright.toFixed(2); applyFilter(); }
+function nudgeCt(d){ var s=document.getElementById('ctslider'); var v=Math.max(80,Math.min(260,+s.value+d)); s.value=v; imgContrast=v/100; document.getElementById('ctval').textContent=imgContrast.toFixed(2); applyFilter(); }
+function useFraming(){
+  if(!rigFOV) return; var t=CATALOG[sel];
+  var dRA=-(boxOff.x/100)*lastSurvFov/Math.cos(t.dec*Math.PI/180);
+  var dDec=-(boxOff.y/100)*lastSurvFov;
+  var nRA=((t.ra+dRA)%360+360)%360, nDec=t.dec+dDec;
+  var lc=document.getElementById('f-lock'); lc.style.display='block';
+  document.getElementById('f-lockbody').innerHTML=
+    rowHTML("GoTo RA",raStr(nRA),"var(--good)")+rowHTML("GoTo Dec",decStr(nDec),"var(--good)")+
+    rowHTML("Camera angle",rotAngle+"° (target)","var(--good)")+
+    '<div class="story" style="padding:10px 14px 4px">GoTo these coords — your Origin/ASIAIR plate-solves right to them. The angle is your <b>desired</b> camera rotation: match it by eye, or wire the plate-solve to read your <b>current</b> angle and rotate the difference.</div>';
+  lc.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function applyFilter(){ var im=document.getElementById('surveyimg'); if(im) im.style.filter="brightness("+imgBright+") contrast("+imgContrast+") saturate(1.1)"; }
 function renderChooser(){ var c=document.getElementById('survchooser'); if(!c) return;
