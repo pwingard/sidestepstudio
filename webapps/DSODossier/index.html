@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DSO Dossier">
+<meta name="theme-color" content="#0a0e17">
+<link rel="manifest" href="manifest.webmanifest">
+<title>DSO Dossier</title>
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+<style>
+  :root{ --bg:#0a0e17; --card:#131a28; --card2:#1a2336; --line:#26304a; --ink:#e8edf7;
+         --dim:#8a97b0; --acc:#5db1ff; --good:#48d18b; --warn:#ffc24d; --bad:#ff6b6b; --tag:#243049; }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0;background:#05080f;color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  .phone{max-width:430px;height:100dvh;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;position:relative}
+  .pager{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+  .pager::-webkit-scrollbar{display:none}
+  .pg{min-width:100%;height:100%;scroll-snap-align:start;overflow-y:auto;padding-bottom:8px}
+  .pg::-webkit-scrollbar{display:none}
+  .nav{display:flex;border-top:1px solid var(--line);background:#0c1220}
+  .nav a{flex:1;text-align:center;padding:8px 0 9px;color:var(--dim);font-size:10.5px;font-weight:600;text-decoration:none}
+  .nav a .d{display:block;width:5px;height:5px;border-radius:50%;background:#33405d;margin:0 auto 4px}
+  .nav a.on{color:var(--acc)} .nav a.on .d{background:var(--acc)}
+  .top{display:flex;align-items:center;gap:8px;padding:11px 16px 6px}
+  .top h1{margin:0;font-size:19px;letter-spacing:-.3px}
+  .top .chip{background:var(--tag);color:#cfe0ff;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+  .card{background:var(--card);margin:9px 12px;border-radius:14px;border:1px solid var(--line);overflow:hidden}
+  .card h2{margin:0;padding:10px 14px 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+  .verdict{display:flex;gap:11px;align-items:center;padding:12px 14px}
+  .vdot{flex:0 0 auto;width:11px;height:11px;border-radius:50%}
+  .verdict .big{font-size:15.5px;font-weight:700}.verdict .why{color:var(--dim);font-size:12.5px;margin-top:1px}
+  .row{display:flex;justify-content:space-between;padding:8px 14px;border-top:1px solid var(--line);font-size:13px}
+  .row .k{color:var(--dim)} .row .v{font-weight:600}
+  svg{display:block;width:100%;height:150px}
+  .axis{fill:var(--dim);font-size:10px}
+  .azstrip{display:flex;justify-content:space-between;gap:2px;padding:7px 8px 0}
+  .aztick{flex:1;text-align:center;display:flex;flex-direction:column;align-items:center;gap:1px}
+  .aztick .arr{font-size:18px;line-height:1;color:var(--acc)}
+  .aztick b{font-size:11px;color:#cfe0ff}.aztick i{font-size:8.5px;color:var(--dim);font-style:normal}
+  .moonline{padding:7px 14px 0;font-size:11.5px;color:var(--dim)}.moonline b{color:#cfe0ff}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;padding:6px 14px 12px;color:var(--dim);font-size:10.5px}.legend b{font-style:normal}
+  .datebar{display:flex;align-items:center;gap:9px;margin:2px 12px 0;padding:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+  .datebar .a{color:var(--acc);font-weight:700;font-size:15px;cursor:pointer;user-select:none}
+  .datebar .d{flex:1;text-align:center;font-weight:700;font-size:13px}
+  .datebar .wx{font-size:10px}
+  .brand{padding:26px 20px 4px;text-align:center}
+  .brand .logo{font-size:26px;font-weight:800;letter-spacing:.5px}.brand .logo .b{color:var(--acc)}
+  .brand .tg{color:var(--dim);font-size:12.5px;margin-top:3px}
+  .loc{text-align:center;color:var(--dim);font-size:11.5px;padding:2px 0 8px}
+  .loc b{color:#cfe0ff}
+  .tgt{display:flex;align-items:center;gap:11px;margin:7px 12px;padding:11px 13px;background:var(--card);border:1px solid var(--line);border-radius:13px;cursor:pointer}
+  .tgt.sel{border-color:var(--acc)}
+  .tgt .nm{font-weight:700;font-size:14.5px}.tgt .mt{color:var(--dim);font-size:11.5px}
+  .tgt .st{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:auto;white-space:nowrap}
+  .st-go{background:rgba(72,209,139,.16);color:var(--good)}
+  .st-mb{background:rgba(255,194,77,.16);color:var(--warn)}
+  .st-no{background:rgba(255,107,107,.14);color:var(--bad)}
+  .setrow{display:flex;align-items:center;gap:12px;margin:9px 12px;padding:11px 13px;background:var(--card);border:1px solid var(--line);border-radius:13px}
+  .setrow .ic{font-size:18px}.setrow .st-t{font-weight:700;font-size:14px}.setrow .st-s{color:var(--dim);font-size:11px}
+  .setrow .ar{margin-left:auto;color:var(--dim);font-size:18px}
+  .credits{text-align:center;color:#4b566f;font-size:11px;padding:14px 20px 8px;line-height:1.6}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}
+  .cell{background:var(--card);padding:11px 14px}.cell .n{font-size:17px;font-weight:700}.cell .l{color:var(--dim);font-size:11.5px}
+  .story{padding:5px 14px 14px;font-size:13px;color:#d4ddef}.story b{color:#fff}
+  .load{padding:20px;text-align:center;color:var(--dim);font-size:13px}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="pager" id="pager">
+
+    <section class="pg" id="home">
+      <div class="brand"><div class="logo">DSO <span class="b">Dossier</span></div>
+        <div class="tg">Everything to shoot one target, tonight.</div></div>
+      <div class="loc" id="locline">📍 locating…</div>
+      <div id="tgtlist"></div>
+      <div class="setrow"><span class="ic">⚙</span><div><div class="st-t">Settings</div>
+        <div class="st-s">Location · Imaging type · Astrometry key · Rig</div></div><span class="ar">›</span></div>
+      <div class="credits">DSO DOSSIER · v0.2 live<br>© 2026 P Wingard · @See_theShow<br>astronomy-engine · open-meteo</div>
+    </section>
+
+    <section class="pg" id="tonight">
+      <div class="top"><h1 id="t-name">—</h1><span class="chip" id="t-type"></span></div>
+      <div class="datebar"><span class="a" id="dprev">◀</span><span class="d" id="t-date">Tonight</span>
+        <span class="a" id="dnext">▶</span><span class="wx" id="t-wx"></span></div>
+      <div class="card"><div class="verdict"><div class="vdot" id="t-dot"></div>
+        <div><div class="big" id="t-verdict">computing…</div><div class="why" id="t-why"></div></div></div></div>
+      <div class="card"><h2 id="t-graphhead">Sky tonight</h2><div id="t-graph"></div>
+        <div class="azstrip" id="t-az"></div>
+        <div class="moonline" id="t-moon"></div>
+        <div class="legend"><span><b style="color:#5db1ff">━</b> target</span><span><b style="color:#fff">┈</b> moon</span><span><b>▒</b> clouds</span></div>
+      </div>
+    </section>
+
+    <section class="pg" id="fov">
+      <div class="top"><h1>Framing</h1><span class="chip" id="f-size">—</span></div>
+      <div class="card"><div class="row"><span class="k">Center on</span><span class="v" id="f-coord">—</span></div>
+        <div class="row"><span class="k">Rig (mock)</span><span class="v">my Askar 80/384/2600</span></div>
+        <div class="row"><span class="k">Solve a frame</span><span class="v" style="color:var(--acc)">Upload →</span></div></div>
+      <div class="story">Upload one sub → exact <b>FOV + rotation</b> measured from your rig, drawn on the target. Plate-solve is server-side (astrometry.net) — not wired in this build.</div>
+    </section>
+
+    <section class="pg" id="about">
+      <div class="top"><h1>About</h1><span class="chip" id="a-name"></span></div>
+      <div class="card"><div class="grid" id="a-grid"></div><div class="story" id="a-story"></div></div>
+    </section>
+
+  </div>
+  <nav class="nav" id="nav">
+    <a href="#home" data-i="0"><span class="d"></span>HOME</a>
+    <a href="#tonight" data-i="1" class="on"><span class="d"></span>TONIGHT</a>
+    <a href="#fov" data-i="2"><span class="d"></span>FOV</a>
+    <a href="#about" data-i="3"><span class="d"></span>ABOUT</a>
+  </nav>
+</div>
+
+<script>
+"use strict";
+var A = window.Astronomy;
+var CATALOG = [
+ {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
+  story:"A cloud of cold interstellar <b>dust</b> thick enough to blot out the Milky Way behind it. Two clouds — <b>B143</b> (hook) + <b>B142</b> (bar) — draw the letter <b>E</b>. Catalogued by Edward Barnard, who proved dark patches are dust, not empty sky."},
+ {name:"NGC 4725", type:"Galaxy", ra:192.61, dec:25.5, con:"Coma Berenices", size:0.18, dist:"~40M ly", light:"broadband (RGB/OSC)",
+  story:"A rare <b>one-armed</b> barred spiral — most spirals have two or more arms. Also a Seyfert galaxy with an active, feeding black hole. The warped smudge nearby (NGC 4747) was tugged out of shape by a gravitational pass."},
+ {name:"M13 Hercules", type:"Globular Cluster", ra:250.42, dec:36.46, con:"Hercules", size:0.33, dist:"~22,000 ly", light:"broadband (RGB/OSC)",
+  story:"The Great Hercules Cluster — hundreds of thousands of ancient stars packed into a ball, blue-white and gold resolving toward the core. One of the showpiece globulars of the northern sky."},
+ {name:"M51 Whirlpool", type:"Galaxy", ra:202.47, dec:47.2, con:"Canes Venatici", size:0.18, dist:"~31M ly", light:"broadband (RGB/OSC)",
+  story:"The classic interacting spiral — its companion NGC 5195 is tearing a tidal bridge out of one arm. A textbook grand-design spiral and a favorite first galaxy."},
+ {name:"Elephant's Trunk (IC 1396)", type:"Emission Nebula", ra:324.7, dec:57.5, con:"Cepheus", size:2.0, dist:"~2,400 ly", light:"narrowband / OSC",
+  story:"A dark, dusty pillar of gas being sculpted and lit by a hot young star — a stellar nursery with new stars forming inside the trunk. Big, bright in Hα, perfect for a wide fast scope."}
+];
+
+var LOC = {lat:34.25, lon:-80.61, name:"Camden, SC (default)"};
+var sel = 0, dateOffset = 0;
+var weatherCloud = null;        // function(date)->cloud% or null
+var weatherHorizonDays = 7;
+
+function obs(){ return new A.Observer(LOC.lat, LOC.lon, 120); }
+function horiz(date, raDeg, decDeg){ var h=A.Horizon(date, obs(), raDeg/15, decDeg, 'normal'); return {alt:h.altitude, az:h.azimuth}; }
+function bodyEq(body, date){ return A.Equator(body, date, obs(), true, true); }
+function sunAlt(date){ var e=bodyEq(A.Body.Sun,date); return A.Horizon(date,obs(),e.ra,e.dec,'normal').altitude; }
+function moonAt(date){ var e=bodyEq(A.Body.Moon,date); var h=A.Horizon(date,obs(),e.ra,e.dec,'normal'); return {alt:h.altitude, ra:e.ra*15, dec:e.dec}; }
+function moonIllum(date){ return A.Illumination(A.Body.Moon,date).phase_fraction; }
+function angSep(r1,d1,r2,d2){ var r=Math.PI/180; var a=Math.sin(d1*r)*Math.sin(d2*r)+Math.cos(d1*r)*Math.cos(d2*r)*Math.cos((r1-r2)*r); return Math.acos(Math.min(1,Math.max(-1,a)))/r; }
+function fmt(date){ if(!date) return "—"; var h=date.getHours(), m=date.getMinutes(); var ap=h<12?"AM":"PM"; var hh=h%12||12; return hh+":"+(m<10?"0":"")+m+" "+ap; }
+function hm(date){ var h=date.getHours(),m=date.getMinutes(); var ap=h<12?"a":"p"; var hh=h%12||12; return hh+(m?(":"+(m<10?"0":"")+m):"")+ap; }
+
+function compute(t){
+  var now = new Date();
+  var base = new Date(now.getFullYear(), now.getMonth(), now.getDate()+dateOffset, 14,0,0,0); // 2pm local
+  var step=4, N=20*60/step;       // 2pm -> +20h (10am next day)
+  var S=[];
+  for(var i=0;i<=N;i++){ var d=new Date(base.getTime()+i*step*60000);
+    S.push({d:d, alt:horiz(d,t.ra,t.dec).alt, az:horiz(d,t.ra,t.dec).az, sun:sunAlt(d), moon:moonAt(d).alt}); }
+  // astro dark: sun crosses -18
+  var darkS=null, darkE=null;
+  for(var j=1;j<S.length;j++){ if(darkS===null && S[j-1].sun>-18 && S[j].sun<=-18) darkS=S[j].d;
+    else if(darkS!==null && darkE===null && S[j-1].sun<=-18 && S[j].sun>-18){ darkE=S[j].d; break; } }
+  if(!darkS||!darkE){ // fallback: sun<0 window (nautical-ish)
+    for(var j2=1;j2<S.length;j2++){ if(darkS===null && S[j2-1].sun>0 && S[j2].sun<=0) darkS=S[j2].d;
+      else if(darkS!==null && !darkE && S[j2-1].sun<=0 && S[j2].sun>0){ darkE=S[j2].d; break; } } }
+  // target rise/transit/set
+  var rise=null,sett=null,tmax=-99,tmaxD=null,tmaxAz=0;
+  for(var k=1;k<S.length;k++){ if(!rise && S[k-1].alt<=0 && S[k].alt>0){ rise=S[k].d; }
+    if(S[k].alt>tmax){ tmax=S[k].alt; tmaxD=S[k].d; tmaxAz=S[k].az; }
+    if(rise && !sett && S[k-1].alt>0 && S[k].alt<=0) sett=S[k].d; }
+  // moon
+  var midnight = new Date(base.getFullYear?base.getFullYear():0); midnight=new Date(base.getTime()+10*3600000); // ~midnight
+  var mIll=moonIllum(midnight)*100;
+  var mNow=moonAt(midnight);
+  var mSep=angSep(mNow.ra,mNow.dec,t.ra,t.dec);
+  var mRise=null; for(var q=1;q<S.length;q++){ if(!mRise && S[q-1].moon<=0 && S[q].moon>0){ mRise=S[q].d; break; } }
+  return {S:S, darkS:darkS, darkE:darkE, rise:rise, set:sett, tmax:tmax, tmaxD:tmaxD, tmaxAz:tmaxAz,
+          mIll:mIll, mSep:mSep, mAltMid:mNow.alt, mRise:mRise, base:base};
+}
+
+// shootable window: within dark, alt>=30, clouds<40 (if known)
+function window30(c){
+  if(!c.darkS) return null;
+  var best=null, cur=null;
+  for(var i=0;i<c.S.length;i++){ var s=c.S[i];
+    if(s.d<c.darkS||s.d>c.darkE) continue;
+    var cloud = weatherCloud? weatherCloud(s.d):null;
+    var ok = s.alt>=30 && (cloud===null||cloud<40);
+    if(ok){ if(!cur) cur={a:s.d,b:s.d}; else cur.b=s.d; }
+    else if(cur){ if(!best||(cur.b-cur.a)>(best.b-best.a)) best=cur; cur=null; }
+  }
+  if(cur && (!best||(cur.b-cur.a)>(best.b-best.a))) best=cur;
+  return best;
+}
+
+function statusFor(t){
+  var c=compute(t); var w=window30(c);
+  if(!w) return {cls:"st-no", txt:"not tonight", c:c, w:null};
+  var hrs=(w.b-w.a)/3600000;
+  if(hrs>=2.5) return {cls:"st-go", txt:hm(w.a)+"–"+hm(w.b).replace(/[ap]$/,''), c:c, w:w};
+  if(hrs>=1) return {cls:"st-mb", txt:hm(w.a)+"–"+hm(w.b).replace(/[ap]$/,''), c:c, w:w};
+  return {cls:"st-no", txt:"too brief", c:c, w:w};
+}
+
+// ---------- rendering ----------
+function yAlt(a){ return 108 - Math.max(0,Math.min(90,a))*(94/90); }
+function renderTonight(){
+  var t=CATALOG[sel];
+  document.getElementById('t-name').textContent=t.name;
+  document.getElementById('t-type').textContent=t.type;
+  document.getElementById('a-name').textContent=t.name;
+  document.getElementById('f-coord').textContent=raStr(t.ra)+" · "+decStr(t.dec);
+  document.getElementById('f-size').textContent="~"+t.size+"° · "+t.con;
+  // about
+  document.getElementById('a-grid').innerHTML=
+    cell(t.type.split(' ')[0],t.type)+cell(t.dist,"distance")+cell("~"+t.size+"°","size")+cell(t.con,"constellation");
+  document.getElementById('a-story').innerHTML=t.story;
+
+  var c=compute(t), w=window30(c);
+  // date label
+  var dl = dateOffset===0?"Tonight":(dateOffset===1?"Tomorrow":c.base.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}));
+  document.getElementById('t-date').textContent=dl+" · "+c.base.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  // weather badge
+  var wxEl=document.getElementById('t-wx');
+  if(dateOffset>weatherHorizonDays){ wxEl.textContent="weather: too far"; wxEl.style.color="var(--dim)"; }
+  else if(weatherCloud){ wxEl.textContent="● live"; wxEl.style.color="var(--good)"; }
+  else { wxEl.textContent="● weather…"; wxEl.style.color="var(--dim)"; }
+
+  // verdict
+  var dot=document.getElementById('t-dot'), big=document.getElementById('t-verdict'), why=document.getElementById('t-why');
+  if(!w){ dot.style.background="var(--bad)"; big.textContent="Not tonight";
+    why.textContent = c.tmax<30? "Never clears 30° — wrong season/too far south." : "Clouded or below the horizon during dark hours."; }
+  else { var hrs=(w.b-w.a)/3600000;
+    if(hrs>=2.5){ dot.style.background="var(--good)"; big.textContent="Good · "+fmt(w.a)+" – "+fmt(w.b); why.textContent=hrs.toFixed(1)+" hr high & clear."; }
+    else { dot.style.background="var(--warn)"; big.textContent="Marginal · "+fmt(w.a)+" – "+fmt(w.b); why.textContent="Only "+hrs.toFixed(1)+" hr usable."; }
+  }
+  // graph head
+  document.getElementById('t-graphhead').innerHTML = c.darkS?
+    ("Astro dark "+fmt(c.darkS)+" – "+fmt(c.darkE)+" · 🌒 "+Math.round(c.mIll)+"%") : "Sky tonight";
+  document.getElementById('t-graph').innerHTML = buildSVG(c);
+  document.getElementById('t-az').innerHTML = buildAz(c);
+  document.getElementById('t-moon').innerHTML =
+    "🌒 "+Math.round(c.mIll)+"% · <b>"+Math.round(c.mSep)+"° from target</b> · "+
+    (c.mAltMid>0? "up tonight":"down") + (c.mRise? " · rises "+fmt(c.mRise):"");
+  renderHome();
+}
+function buildSVG(c){
+  if(!c.darkS){ return '<div class="load">No astronomical darkness for this date/location.</div>'; }
+  var x0=c.darkS.getTime(), x1=c.darkE.getTime(), W=396, X=34;
+  function xt(d){ return X + (d.getTime()-x0)/(x1-x0)*W; }
+  var g='<svg viewBox="0 0 440 150" preserveAspectRatio="none">';
+  // alt gridlines
+  [0,20,40,60].forEach(function(a){ var y=yAlt(a); g+='<line x1="34" y1="'+y+'" x2="430" y2="'+y+'" stroke="'+(a%40?"#1b2334":"#2b364f")+'"/>';
+    g+='<text x="3" y="'+(y+3)+'" class="axis">'+a+'°</text>'; });
+  // hour gridlines + labels
+  var d=new Date(c.darkS); d.setMinutes(0,0,0); d=new Date(d.getTime()+3600000);
+  while(d<c.darkE){ var x=xt(d); g+='<line x1="'+x.toFixed(0)+'" y1="6" x2="'+x.toFixed(0)+'" y2="108" stroke="#1a2236"/>';
+    g+='<text x="'+(x-6).toFixed(0)+'" y="138" class="axis">'+hm(d)+'</text>'; d=new Date(d.getTime()+3600000); }
+  g+='<text x="30" y="138" class="axis">'+hm(c.darkS)+'</text>';
+  // cloud haze
+  if(weatherCloud){ var dd=new Date(c.darkS);
+    while(dd<c.darkE){ var cl=weatherCloud(dd); if(cl!==null && cl>40){ var xa=xt(dd), xb=xt(new Date(Math.min(dd.getTime()+3600000,x1)));
+      var op=(cl>75?.20:.11); g+='<rect x="'+xa.toFixed(0)+'" y="6" width="'+(xb-xa).toFixed(0)+'" height="102" fill="rgba(255,255,255,'+op+')"/>'; }
+      dd=new Date(dd.getTime()+3600000); } }
+  // target curve
+  var pts=[]; c.S.forEach(function(s){ if(s.d>=c.darkS && s.d<=c.darkE) pts.push(xt(s.d).toFixed(0)+","+yAlt(s.alt).toFixed(0)); });
+  g+='<polyline fill="none" stroke="#5db1ff" stroke-width="2.6" points="'+pts.join(' ')+'"/>';
+  // transit dot
+  if(c.tmaxD>=c.darkS&&c.tmaxD<=c.darkE){ g+='<circle cx="'+xt(c.tmaxD).toFixed(0)+'" cy="'+yAlt(c.tmax).toFixed(0)+'" r="3" fill="#5db1ff"/>';
+    g+='<text x="'+(xt(c.tmaxD)-10).toFixed(0)+'" y="'+(yAlt(c.tmax)-5).toFixed(0)+'" class="axis" style="fill:#5db1ff">'+Math.round(c.tmax)+'°</text>'; }
+  // moon curve
+  var mp=[]; c.S.forEach(function(s){ if(s.d>=c.darkS && s.d<=c.darkE) mp.push(xt(s.d).toFixed(0)+","+yAlt(Math.max(s.moon,-2)).toFixed(0)); });
+  g+='<polyline fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="5 3" opacity=".8" points="'+mp.join(' ')+'"/>';
+  g+='</svg>'; return g;
+}
+function buildAz(c){
+  if(!c.darkS) return "";
+  var out="", x0=c.darkS.getTime(), x1=c.darkE.getTime();
+  for(var f=0; f<6; f++){ var d=new Date(x0 + (x1-x0)*(f+0.5)/6);
+    var aa=horiz(d,CATALOG[sel].ra,CATALOG[sel].dec);
+    out+='<div class="aztick"><span class="arr" style="transform:rotate('+aa.az.toFixed(0)+'deg)">↑</span><b>'+aa.az.toFixed(0)+'°</b><i>'+hm(d)+'</i></div>';
+  }
+  return out;
+}
+function raStr(deg){ var h=deg/15; var hh=Math.floor(h); var m=(h-hh)*60; return hh+"h "+m.toFixed(1)+"m"; }
+function decStr(deg){ var s=deg<0?"-":"+"; deg=Math.abs(deg); var d=Math.floor(deg); var m=Math.round((deg-d)*60); return s+d+"° "+(m<10?"0":"")+m+"′"; }
+function cell(n,l){ return '<div class="cell"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>'; }
+
+function renderHome(){
+  var html="";
+  CATALOG.forEach(function(t,i){ var s=statusFor(t);
+    html+='<div class="tgt'+(i===sel?' sel':'')+'" onclick="pick('+i+')"><div><div class="nm">'+t.name+'</div>'+
+      '<div class="mt">'+t.type+' · '+t.con+'</div></div><span class="st '+s.cls+'">'+s.txt+'</span></div>';
+  });
+  document.getElementById('tgtlist').innerHTML=html;
+  document.getElementById('locline').innerHTML="📍 <b>"+LOC.name+"</b>";
+}
+function pick(i){ sel=i; renderTonight(); pages[1].scrollIntoView({inline:'start',behavior:'smooth'}); }
+
+// ---------- weather ----------
+function loadWeather(){
+  var url="https://api.open-meteo.com/v1/forecast?latitude="+LOC.lat+"&longitude="+LOC.lon+
+    "&hourly=cloudcover&timezone=auto&forecast_days="+(weatherHorizonDays+1);
+  fetch(url).then(function(r){return r.json();}).then(function(j){
+    if(!j.hourly) return;
+    var times=j.hourly.time.map(function(s){return new Date(s).getTime();});
+    var cc=j.hourly.cloudcover;
+    weatherCloud=function(date){ var tt=date.getTime();
+      var best=0,bd=1e15; for(var i=0;i<times.length;i++){ var dd=Math.abs(times[i]-tt); if(dd<bd){bd=dd;best=i;} }
+      return bd<3600000*1.5? cc[best]:null; };
+    renderTonight();
+  }).catch(function(e){ /* weather optional */ });
+}
+// ---------- location ----------
+function startLoc(){
+  if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(function(p){
+    LOC={lat:+p.coords.latitude.toFixed(3), lon:+p.coords.longitude.toFixed(3), name:"my location"};
+    loadWeather(); renderTonight();
+  }, function(){ loadWeather(); }, {timeout:6000}); }
+  else loadWeather();
+}
+
+// ---------- nav ----------
+var pager=document.getElementById('pager'), pages=[].slice.call(document.querySelectorAll('.pg')),
+    links=[].slice.call(document.querySelectorAll('#nav a'));
+links.forEach(function(a){ a.addEventListener('click',function(e){ e.preventDefault(); pages[+a.dataset.i].scrollIntoView({inline:'start',behavior:'smooth'}); }); });
+pager.addEventListener('scroll',function(){ var i=Math.round(pager.scrollLeft/pager.clientWidth); links.forEach(function(a,n){ a.classList.toggle('on',n===i); }); });
+document.getElementById('dprev').onclick=function(){ if(dateOffset>0){dateOffset--; renderTonight();} };
+document.getElementById('dnext').onclick=function(){ if(dateOffset<14){dateOffset++; renderTonight();} };
+
+function boot(){
+  if(!window.Astronomy){ document.getElementById('t-verdict').textContent="astronomy library failed to load (need internet)"; return; }
+  A=window.Astronomy;
+  renderTonight();
+  pages[1].scrollIntoView({inline:'start'});
+  startLoc();
+}
+if(window.Astronomy) boot(); else window.addEventListener('load',boot);
+</script>
+</body>
+</html>

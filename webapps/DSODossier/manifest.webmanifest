@@ -1,0 +1,5 @@
+{
+  "name":"DSO Dossier","short_name":"DSO Dossier","display":"standalone",
+  "orientation":"portrait","background_color":"#0a0e17","theme_color":"#0a0e17",
+  "start_url":"./index.html","scope":"./"
+}
