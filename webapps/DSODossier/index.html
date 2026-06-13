@@ -66,6 +66,10 @@
   .cell{background:var(--card);padding:11px 14px}.cell .n{font-size:17px;font-weight:700}.cell .l{color:var(--dim);font-size:11.5px}
   .story{padding:5px 14px 14px;font-size:13px;color:#d4ddef}.story b{color:#fff}
   .load{padding:20px;text-align:center;color:var(--dim);font-size:13px}
+  .solvebox{display:flex;gap:11px;align-items:flex-start;margin:9px 12px;padding:13px;border-radius:13px;background:linear-gradient(135deg,#15233c,#101726);border:1px solid #2c3c5c}
+  .sb-ico{font-size:21px}.sb-t{font-weight:700;font-size:14.5px;color:#fff}
+  .sb-d{color:var(--dim);font-size:12px;margin:3px 0 9px}.sb-d b{color:#cfe0ff}
+  .sb-cta{display:inline-block;background:var(--acc);color:#06101f;font-weight:700;font-size:12.5px;padding:7px 13px;border-radius:8px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -98,9 +102,17 @@
     <section class="pg" id="fov">
       <div class="top"><h1>Framing</h1><span class="chip" id="f-size">—</span></div>
       <div class="card"><div class="row"><span class="k">Center on</span><span class="v" id="f-coord">—</span></div>
-        <div class="row"><span class="k">Rig (mock)</span><span class="v">my Askar 80/384/2600</span></div>
-        <div class="row"><span class="k">Solve a frame</span><span class="v" style="color:var(--acc)">Upload →</span></div></div>
-      <div class="story">Upload one sub → exact <b>FOV + rotation</b> measured from your rig, drawn on the target. Plate-solve is server-side (astrometry.net) — not wired in this build.</div>
+        <div class="row"><span class="k">Target size</span><span class="v" id="f-tsize">—</span></div></div>
+      <div class="solvebox">
+        <div class="sb-ico">📷</div>
+        <div class="sb-body">
+          <div class="sb-t">Read / solve a sub</div>
+          <div class="sb-d">Pick a sub. <b>FITS</b> → FOV read straight from its header, instantly. JPG/PNG → needs plate-solving.</div>
+          <label class="sb-cta">Choose a sub…<input type="file" id="subfile" accept=".fit,.fits,.fts,image/*" style="display:none"></label>
+        </div>
+      </div>
+      <div class="card" id="f-result" style="display:none"><h2>Your rig</h2><div id="f-resbody"></div></div>
+      <div class="story" id="f-note">FITS headers carry focal length + pixel size — the app reads your field of view directly from them, no solving, crop-proof. JPG/PNG and rotation need server-side plate-solving (next build).</div>
     </section>
 
     <section class="pg" id="about">
@@ -210,6 +222,7 @@ function renderTonight(){
   document.getElementById('a-name').textContent=t.name;
   document.getElementById('f-coord').textContent=raStr(t.ra)+" · "+decStr(t.dec);
   document.getElementById('f-size').textContent="~"+t.size+"° · "+t.con;
+  document.getElementById('f-tsize').textContent="~"+t.size+"° across";
   // about
   document.getElementById('a-grid').innerHTML=
     cell(t.type.split(' ')[0],t.type)+cell(t.dist,"distance")+cell("~"+t.size+"°","size")+cell(t.con,"constellation");
@@ -327,8 +340,51 @@ pager.addEventListener('scroll',function(){ var i=Math.round(pager.scrollLeft/pa
 document.getElementById('dprev').onclick=function(){ if(dateOffset>0){dateOffset--; renderTonight();} };
 document.getElementById('dnext').onclick=function(){ if(dateOffset<14){dateOffset++; renderTonight();} };
 
+// ---------- read a sub (FITS header FOV, client-side) ----------
+function parseFitsHeader(buf){
+  var b=new Uint8Array(buf), s=""; for(var i=0;i<b.length;i++) s+=String.fromCharCode(b[i]);
+  if(s.substr(0,6)!=="SIMPLE") return null;
+  var h={}; for(var c=0;c+80<=s.length;c+=80){ var card=s.substr(c,80); var key=card.substr(0,8).trim();
+    if(key==="END") break; if(card[8]==="="){ var v=card.substr(10).split("/")[0].trim(); h[key]=v; } }
+  return h;
+}
+function fnum(h,k){ return (h&&h[k]!==undefined)? parseFloat(h[k]):null; }
+function rowHTML(k,v,color){ return '<div class="row"><span class="k">'+k+'</span><span class="v"'+(color?' style="color:'+color+'"':'')+'>'+v+'</span></div>'; }
+function handleSub(e){
+  var f=e.target.files&&e.target.files[0]; if(!f) return;
+  var res=document.getElementById('f-result'), body=document.getElementById('f-resbody'), note=document.getElementById('f-note');
+  res.style.display="block"; body.innerHTML='<div class="load">reading…</div>';
+  var isFits=/\.(fit|fits|fts)$/i.test(f.name);
+  if(isFits){
+    var r=new FileReader();
+    r.onload=function(){ var h=parseFitsHeader(r.result);
+      var fl=fnum(h,"FOCALLEN"), px=fnum(h,"XPIXSZ")||fnum(h,"PIXSIZE1")||fnum(h,"PIXSIZE"),
+          nx=fnum(h,"NAXIS1"), ny=fnum(h,"NAXIS2"), cam=h&&h.INSTRUME?h.INSTRUME.replace(/'/g,"").trim():null;
+      var out=rowHTML("File",f.name);
+      if(cam) out+=rowHTML("Camera",cam);
+      if(nx&&ny) out+=rowHTML("Pixels",nx+"×"+ny);
+      if(fl&&px&&nx&&ny){ var sc=206.265*px/fl, fw=nx*sc/3600, fh=ny*sc/3600;
+        out+=rowHTML("Focal length",fl+" mm")+rowHTML("Pixel scale",sc.toFixed(2)+"″/px")
+            +rowHTML("Field of view",fw.toFixed(2)+"° × "+fh.toFixed(2)+"°","var(--good)");
+        note.innerHTML="✓ FOV read straight from the FITS header — no solving, crop-proof. Rotation still needs a plate-solve (next build).";
+      } else { out+=rowHTML("FOV","header missing focal length / pixel size","var(--warn)");
+        note.innerHTML="This FITS has no focal-length/pixel-size in its header — that one needs plate-solving (next build)."; }
+      body.innerHTML=out;
+    };
+    r.onerror=function(){ body.innerHTML=rowHTML("Error","couldn't read file","var(--bad)"); };
+    r.readAsArrayBuffer(f.slice(0,46080));
+  } else {
+    var img=new Image();
+    img.onload=function(){ body.innerHTML=rowHTML("File",f.name)+rowHTML("Pixels",img.width+"×"+img.height)
+        +rowHTML("FOV","needs plate-solve","var(--warn)");
+      note.innerHTML="Image received. FOV + rotation from a JPG/PNG need server-side plate-solving (astrometry.net) — that's the next build."; };
+    img.onerror=function(){ body.innerHTML=rowHTML("File",f.name)+rowHTML("FOV","needs plate-solve","var(--warn)"); };
+    img.src=URL.createObjectURL(f);
+  }
+}
 function boot(){
   if(!window.Astronomy){ document.getElementById('t-verdict').textContent="astronomy library failed to load (need internet)"; return; }
+  var sf=document.getElementById('subfile'); if(sf) sf.addEventListener('change',handleSub);
   A=window.Astronomy;
   renderTonight();
   pages[1].scrollIntoView({inline:'start'});
