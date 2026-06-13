@@ -66,6 +66,7 @@
   .cell{background:var(--card);padding:11px 14px}.cell .n{font-size:17px;font-weight:700}.cell .l{color:var(--dim);font-size:11.5px}
   .story{padding:5px 14px 14px;font-size:13px;color:#d4ddef}.story b{color:#fff}
   .load{padding:20px;text-align:center;color:var(--dim);font-size:13px}
+  .verbadge{position:absolute;top:7px;right:10px;font-size:9px;color:#52607c;z-index:9;pointer-events:none;letter-spacing:.03em}
   .solvebox{display:flex;gap:11px;align-items:flex-start;margin:9px 12px;padding:13px;border-radius:13px;background:linear-gradient(135deg,#15233c,#101726);border:1px solid #2c3c5c}
   .sb-ico{font-size:21px}.sb-t{font-weight:700;font-size:14.5px;color:#fff}
   .sb-d{color:var(--dim);font-size:12px;margin:3px 0 9px}.sb-d b{color:#cfe0ff}
@@ -74,6 +75,7 @@
 </head>
 <body>
 <div class="phone">
+  <div class="verbadge" id="ver"></div>
   <div class="pager" id="pager">
 
     <section class="pg" id="home">
@@ -83,7 +85,7 @@
       <div id="tgtlist"></div>
       <div class="setrow"><span class="ic">⚙</span><div><div class="st-t">Settings</div>
         <div class="st-s">Location · Imaging type · Astrometry key · Rig</div></div><span class="ar">›</span></div>
-      <div class="credits">DSO DOSSIER · v0.2 live<br>© 2026 P Wingard · @See_theShow<br>astronomy-engine · open-meteo</div>
+      <div class="credits"><span id="vercred">DSO DOSSIER</span><br>© 2026 P Wingard · @See_theShow<br>astronomy-engine · open-meteo</div>
     </section>
 
     <section class="pg" id="tonight">
@@ -131,6 +133,7 @@
 
 <script>
 "use strict";
+var VERSION = "0.3.0";   // ← bumped every deploy
 var A = window.Astronomy;
 var CATALOG = [
  {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
@@ -385,6 +388,8 @@ function handleSub(e){
 function boot(){
   if(!window.Astronomy){ document.getElementById('t-verdict').textContent="astronomy library failed to load (need internet)"; return; }
   var sf=document.getElementById('subfile'); if(sf) sf.addEventListener('change',handleSub);
+  document.getElementById('ver').textContent="v"+VERSION;
+  document.getElementById('vercred').textContent="DSO DOSSIER · v"+VERSION;
   A=window.Astronomy;
   renderTonight();
   pages[1].scrollIntoView({inline:'start'});
