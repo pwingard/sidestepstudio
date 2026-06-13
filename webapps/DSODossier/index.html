@@ -71,9 +71,12 @@
   .sb-ico{font-size:21px}.sb-t{font-weight:700;font-size:14.5px;color:#fff}
   .sb-d{color:var(--dim);font-size:12px;margin:3px 0 9px}.sb-d b{color:#cfe0ff}
   .sb-cta{display:inline-block;background:var(--acc);color:#06101f;font-weight:700;font-size:12.5px;padding:7px 13px;border-radius:8px;cursor:pointer}
-  .survey{position:relative;width:100%;aspect-ratio:1/1;background:#000;overflow:hidden}
-  .survey img{width:100%;height:100%;object-fit:cover;display:block}
-  .fovbox{position:absolute;border:2px solid var(--acc);box-shadow:0 0 0 9999px rgba(5,8,15,.45);transform-origin:center;pointer-events:none}
+  .survey{position:relative;width:100%;aspect-ratio:1/1;background:#000;overflow:hidden;touch-action:none}
+  .survey img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(1.15) contrast(1.4) saturate(1.1)}
+  .survchooser{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 8px}
+  .survpill{font-size:11px;font-weight:600;padding:4px 9px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--dim);cursor:pointer}
+  .survpill.on{background:var(--acc);color:#06101f;border-color:var(--acc)}
+  .fovbox{position:absolute;border:2px solid var(--acc);box-shadow:0 0 0 9999px rgba(5,8,15,.4);transform-origin:center;pointer-events:auto;cursor:move;touch-action:none}
   .fovtag{position:absolute;top:2px;left:3px;background:rgba(93,177,255,.92);color:#06101f;font-size:9px;font-weight:700;padding:0 5px;border-radius:4px;white-space:nowrap}
   .rotrow{display:flex;align-items:center;gap:10px;padding:10px 14px 4px;font-size:12px;color:var(--dim)}
   .rotrow input{flex:1;accent-color:var(--acc)}
@@ -122,9 +125,12 @@
       </div>
       <div class="card" id="f-result" style="display:none"><h2>Your rig</h2><div id="f-resbody"></div></div>
       <div class="card" id="f-survey" style="display:none"><h2 id="f-survhead">Your frame on the sky</h2>
+        <div class="survchooser" id="survchooser"></div>
         <div class="survey"><img id="surveyimg" alt="survey"><div class="fovbox" id="fovbox"><span class="fovtag" id="fovtag"></span></div></div>
         <div class="rotrow"><span>Rotate</span><input type="range" id="rotslider" min="0" max="180" step="1" value="0"><span id="rotval">0°</span></div>
-        <div class="story" style="padding:2px 0 0">Drag to rotate your frame and read the angle. (This plans your *desired* framing — your rig's *actual* current angle needs a plate-solve.)</div>
+        <div class="rotrow"><span>Bright</span><input type="range" id="brslider" min="50" max="200" step="2" value="115"><span id="brval">1.15</span></div>
+        <div class="rotrow"><span>Contrast</span><input type="range" id="ctslider" min="80" max="260" step="2" value="140"><span id="ctval">1.40</span></div>
+        <div class="story" style="padding:6px 0 0"><b>Drag</b> the frame to move it · slider to rotate · pick a survey + tune brightness/contrast to see the target. (Actual rig angle needs a plate-solve.)</div>
       </div>
       <div class="story" id="f-note">FITS headers carry focal length + pixel size — the app reads your field of view directly, no solving, crop-proof. Load a sub to draw your frame on the survey below.</div>
     </section>
@@ -145,7 +151,7 @@
 
 <script>
 "use strict";
-var VERSION = "0.4.0";   // ← bumped every deploy
+var VERSION = "0.5.0";   // ← bumped every deploy
 var A = window.Astronomy;
 var CATALOG = [
  {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
@@ -163,6 +169,10 @@ var CATALOG = [
 var LOC = {lat:34.25, lon:-80.61, name:"Camden, SC (default)"};
 var sel = 0, dateOffset = 0;
 var rigFOV = null, rigName = "your rig", rotAngle = 0;   // rigFOV = {w,h} in degrees
+var boxOff = {x:0, y:0}, boxDims = {w:50, h:30};         // box pan offset + size, in survey-%
+var SURVEYS = [ {id:"CDS/P/DSS2/color",label:"DSS"}, {id:"CDS/P/DSS2/red",label:"DSS red"},
+                {id:"CDS/P/WISE/WSSA/12um",label:"Dust (IR)"}, {id:"CDS/P/unWISE/color",label:"unWISE"} ];
+var survey = 0, imgBright = 1.15, imgContrast = 1.40;
 var weatherCloud = null;        // function(date)->cloud% or null
 var weatherHorizonDays = 7;
 
@@ -331,19 +341,39 @@ function renderSurvey(){
   var t=CATALOG[sel];
   document.getElementById('f-survey').style.display='block';
   var survFov=Math.min(6, Math.max(0.5, Math.max(rigFOV.w, rigFOV.h, t.size)*1.6));
-  var url="https://alasky.u-strasbg.fr/hips-image-services/hips2fits?hips=CDS%2FP%2FDSS2%2Fcolor"+
+  var url="https://alasky.u-strasbg.fr/hips-image-services/hips2fits?hips="+encodeURIComponent(SURVEYS[survey].id)+
     "&width=440&height=440&fov="+survFov.toFixed(3)+"&projection=TAN&coordsys=icrs&ra="+t.ra+"&dec="+t.dec+"&format=jpg";
   var im=document.getElementById('surveyimg'); if(im.src!==url) im.src=url;
+  applyFilter(); renderChooser();
   document.getElementById('f-survhead').textContent=t.name+" — your frame";
-  var bw=Math.min(99,rigFOV.w/survFov*100), bh=Math.min(99,rigFOV.h/survFov*100);
-  var box=document.getElementById('fovbox');
-  box.style.width=bw.toFixed(1)+'%'; box.style.height=bh.toFixed(1)+'%';
-  box.style.left=((100-bw)/2).toFixed(1)+'%'; box.style.top=((100-bh)/2).toFixed(1)+'%';
-  box.style.transform='rotate('+rotAngle+'deg)';
+  boxDims={ w:Math.min(99,rigFOV.w/survFov*100), h:Math.min(99,rigFOV.h/survFov*100) };
   document.getElementById('fovtag').textContent=rigFOV.w.toFixed(1)+'×'+rigFOV.h.toFixed(1)+'°';
+  layoutBox();
 }
-function setRot(a){ rotAngle=a; var b=document.getElementById('fovbox'); if(b) b.style.transform='rotate('+a+'deg)';
-  var v=document.getElementById('rotval'); if(v) v.textContent=a+'°'; }
+function layoutBox(){
+  var box=document.getElementById('fovbox'); if(!box) return;
+  box.style.width=boxDims.w.toFixed(1)+'%'; box.style.height=boxDims.h.toFixed(1)+'%';
+  box.style.left=((100-boxDims.w)/2 + boxOff.x).toFixed(1)+'%';
+  box.style.top =((100-boxDims.h)/2 + boxOff.y).toFixed(1)+'%';
+  box.style.transform='rotate('+rotAngle+'deg)';
+}
+function setRot(a){ rotAngle=a; layoutBox(); var v=document.getElementById('rotval'); if(v) v.textContent=a+'°'; }
+function setupDrag(){
+  var box=document.getElementById('fovbox'); if(!box) return;
+  var drag=false, sx=0, sy=0, ox=0, oy=0;
+  box.addEventListener('pointerdown',function(e){ drag=true; sx=e.clientX; sy=e.clientY; ox=boxOff.x; oy=boxOff.y;
+    box.setPointerCapture&&box.setPointerCapture(e.pointerId); e.preventDefault(); });
+  box.addEventListener('pointermove',function(e){ if(!drag) return;
+    var s=document.querySelector('.survey'); if(!s) return; var r=s.getBoundingClientRect();
+    boxOff.x=Math.max(-45,Math.min(45, ox+(e.clientX-sx)/r.width*100));
+    boxOff.y=Math.max(-45,Math.min(45, oy+(e.clientY-sy)/r.height*100)); layoutBox(); });
+  box.addEventListener('pointerup',function(){ drag=false; });
+  box.addEventListener('pointercancel',function(){ drag=false; });
+}
+function applyFilter(){ var im=document.getElementById('surveyimg'); if(im) im.style.filter="brightness("+imgBright+") contrast("+imgContrast+") saturate(1.1)"; }
+function renderChooser(){ var c=document.getElementById('survchooser'); if(!c) return;
+  c.innerHTML=SURVEYS.map(function(s,i){ return '<span class="survpill'+(i===survey?' on':'')+'" onclick="setSurvey('+i+')">'+s.label+'</span>'; }).join(''); }
+function setSurvey(i){ survey=i; renderSurvey(); }
 
 // ---------- weather ----------
 function loadWeather(){
@@ -423,6 +453,9 @@ function boot(){
   if(!window.Astronomy){ document.getElementById('t-verdict').textContent="astronomy library failed to load (need internet)"; return; }
   var sf=document.getElementById('subfile'); if(sf) sf.addEventListener('change',handleSub);
   var rs=document.getElementById('rotslider'); if(rs) rs.addEventListener('input',function(){ setRot(+rs.value); });
+  var br=document.getElementById('brslider'); if(br) br.addEventListener('input',function(){ imgBright=br.value/100; document.getElementById('brval').textContent=imgBright.toFixed(2); applyFilter(); });
+  var ct=document.getElementById('ctslider'); if(ct) ct.addEventListener('input',function(){ imgContrast=ct.value/100; document.getElementById('ctval').textContent=imgContrast.toFixed(2); applyFilter(); });
+  setupDrag();
   document.getElementById('ver').textContent="v"+VERSION;
   document.getElementById('vercred').textContent="DSO DOSSIER · v"+VERSION;
   A=window.Astronomy;
