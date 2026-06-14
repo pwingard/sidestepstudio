@@ -169,7 +169,7 @@
 
 <script>
 "use strict";
-var VERSION = "0.8.0";   // ← bumped every deploy
+var VERSION = "0.8.1";   // ← bumped every deploy
 var A = window.Astronomy;
 var CATALOG = [
  {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
@@ -565,7 +565,9 @@ function showSolveResult(cal){
     +rowHTML("Center",raStr(((cal.ra%360)+360)%360)+" "+decStr(cal.dec))
     +rowHTML("Parity",par)+rowHTML("Pixel scale",cal.pixscale.toFixed(2)+"″/px");
   solveStatus("✓ Solved — <b>your camera (blue box) is at "+ori.toFixed(1)+"°.</b> To reach your target (red, "+desired+"°), rotate ≈ <b>"+delta+"°</b>, then re-solve. (Re-solve only when you rotate or change gear.)");
-  rigFOV={w:fovw,h:fovh}; actualPA=ori; rigSavedAt=Date.now(); saveRig(); renderSurvey();
+  rigFOV={w:fovw,h:fovh}; actualPA=ori; rigSavedAt=Date.now(); saveRig();
+  var fn=document.getElementById('f-note'); if(fn) fn.innerHTML=camStamp();
+  renderSurvey();
 }
 function saveRig(){ try{ localStorage.setItem("ddRig", JSON.stringify({w:rigFOV.w,h:rigFOV.h,pa:actualPA,t:rigSavedAt})); }catch(e){} }
 function loadRig(){ try{ var r=JSON.parse(localStorage.getItem("ddRig")||"null");
