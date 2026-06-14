@@ -76,7 +76,9 @@
   .survchooser{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 8px}
   .survpill{font-size:11px;font-weight:600;padding:4px 9px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--dim);cursor:pointer}
   .survpill.on{background:var(--acc);color:#06101f;border-color:var(--acc)}
-  .fovbox{position:absolute;border:2px solid var(--acc);box-shadow:0 0 0 9999px rgba(5,8,15,.4);transform-origin:center;pointer-events:none}
+  .fovbox{position:absolute;border:2px solid var(--bad);transform-origin:center;pointer-events:none}
+  .fovbox.actual{border:2px dashed var(--acc)}
+  .boxlegend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:7px 14px 0;color:var(--dim);font-size:10.5px}.boxlegend b{font-style:normal}
   .fovtag{position:absolute;top:2px;left:3px;background:rgba(93,177,255,.92);color:#06101f;font-size:9px;font-weight:700;padding:0 5px;border-radius:4px;white-space:nowrap}
   .draghandle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:rgba(93,177,255,.95);color:#06101f;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;pointer-events:auto;cursor:move;touch-action:none;box-shadow:0 0 0 3px rgba(5,8,15,.45)}
   .survey,.survey img,.fovbox,.fovtag,.draghandle{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
@@ -139,7 +141,8 @@
       <div class="card" id="f-result" style="display:none"><h2>Your rig</h2><div id="f-resbody"></div></div>
       <div class="card" id="f-survey" style="display:none"><h2 id="f-survhead">Your frame on the sky</h2>
         <div class="survchooser" id="survchooser"></div>
-        <div class="survey"><img id="surveyimg" alt="survey"><div class="fovbox" id="fovbox"><span class="fovtag" id="fovtag"></span><div class="draghandle" id="draghandle">✛</div></div></div>
+        <div class="survey"><img id="surveyimg" alt="survey"><div class="fovbox actual" id="fovbox2"></div><div class="fovbox" id="fovbox"><span class="fovtag" id="fovtag"></span><div class="draghandle" id="draghandle">✛</div></div></div>
+        <div class="boxlegend"><span><b style="color:#5db1ff">▭</b> camera now</span><span><b style="color:#ff6b6b">▭</b> target</span><span><b style="color:#48d18b">▭</b> matched</span></div>
         <div class="ctrlrow"><span class="cl">Rotate</span><button class="stp" onclick="nudgeRot(-1)">−</button><input type="range" id="rotslider" min="0" max="180" step="1" value="0"><button class="stp" onclick="nudgeRot(1)">+</button><span class="cv" id="rotval">0°</span></div>
         <div class="ctrlrow"><span class="cl">Bright</span><button class="stp" onclick="nudgeBr(-5)">−</button><input type="range" id="brslider" min="50" max="200" step="2" value="115"><button class="stp" onclick="nudgeBr(5)">+</button><span class="cv" id="brval">1.15</span></div>
         <div class="ctrlrow"><span class="cl">Contr</span><button class="stp" onclick="nudgeCt(-5)">−</button><input type="range" id="ctslider" min="80" max="260" step="2" value="140"><button class="stp" onclick="nudgeCt(5)">+</button><span class="cv" id="ctval">1.40</span></div>
@@ -166,7 +169,7 @@
 
 <script>
 "use strict";
-var VERSION = "0.7.2";   // ← bumped every deploy
+var VERSION = "0.8.0";   // ← bumped every deploy
 var A = window.Astronomy;
 var CATALOG = [
  {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
@@ -190,6 +193,7 @@ var SURVEYS = [ {id:"CDS/P/DSS2/color",label:"DSS"}, {id:"CDS/P/DSS2/red",label:
 var survey = 0, imgBright = 1.15, imgContrast = 1.40, lastSurvFov = 2;
 var NOVA_PROXY = "https://astro-dust-up-nova.bizpfw.workers.dev";  // shared proxy (swappable backend)
 var userFile = null, userPixels = null, pendingSolve = null, solvedCal = null;
+var actualPA = null, rigSavedAt = null, lastWx = null;   // camera's current position angle (persists across targets)
 var weatherCloud = null;        // function(date)->cloud% or null
 var weatherHorizonDays = 7;
 
@@ -278,7 +282,7 @@ function renderTonight(){
   // weather badge
   var wxEl=document.getElementById('t-wx');
   if(dateOffset>weatherHorizonDays){ wxEl.textContent="weather: too far"; wxEl.style.color="var(--dim)"; }
-  else if(weatherCloud){ wxEl.textContent="● live"; wxEl.style.color="var(--good)"; }
+  else if(weatherCloud){ wxEl.textContent="● "+(lastWx?hm(new Date(lastWx)):"live"); wxEl.style.color="var(--good)"; }
   else { wxEl.textContent="● weather…"; wxEl.style.color="var(--dim)"; }
 
   // verdict
@@ -365,16 +369,27 @@ function renderSurvey(){
   document.getElementById('f-survhead').textContent=t.name+" — your frame";
   boxDims={ w:Math.min(99,rigFOV.w/survFov*100), h:Math.min(99,rigFOV.h/survFov*100) };
   document.getElementById('fovtag').textContent=rigFOV.w.toFixed(1)+'×'+rigFOV.h.toFixed(1)+'°';
-  layoutBox();
+  layoutBoxes();
 }
-function layoutBox(){
-  var box=document.getElementById('fovbox'); if(!box) return;
-  box.style.width=boxDims.w.toFixed(1)+'%'; box.style.height=boxDims.h.toFixed(1)+'%';
-  box.style.left=((100-boxDims.w)/2 + boxOff.x).toFixed(1)+'%';
-  box.style.top =((100-boxDims.h)/2 + boxOff.y).toFixed(1)+'%';
-  box.style.transform='rotate('+rotAngle+'deg)';
+function layoutBoxes(){
+  var t=document.getElementById('fovbox'), a=document.getElementById('fovbox2');
+  var matched=false;
+  if(actualPA!=null){ var m=((rotAngle-actualPA)%180+180)%180; matched=(m<3||m>177); }
+  if(t){
+    t.style.width=boxDims.w.toFixed(1)+'%'; t.style.height=boxDims.h.toFixed(1)+'%';
+    t.style.left=((100-boxDims.w)/2 + boxOff.x).toFixed(1)+'%'; t.style.top=((100-boxDims.h)/2 + boxOff.y).toFixed(1)+'%';
+    t.style.transform='rotate('+rotAngle+'deg)'; t.style.borderColor=matched?'var(--good)':'var(--bad)';
+  }
+  if(a){
+    if(actualPA==null){ a.style.display='none'; }
+    else { a.style.display='block';
+      a.style.width=boxDims.w.toFixed(1)+'%'; a.style.height=boxDims.h.toFixed(1)+'%';
+      a.style.left=((100-boxDims.w)/2).toFixed(1)+'%'; a.style.top=((100-boxDims.h)/2).toFixed(1)+'%';
+      a.style.transform='rotate('+actualPA+'deg)'; a.style.borderColor=matched?'var(--good)':'var(--acc)';
+    }
+  }
 }
-function setRot(a){ rotAngle=a; layoutBox(); var v=document.getElementById('rotval'); if(v) v.textContent=a+'°'; }
+function setRot(a){ rotAngle=a; layoutBoxes(); var v=document.getElementById('rotval'); if(v) v.textContent=a+'°'; }
 function lockPager(lock){ var p=document.getElementById('pager'); if(p) p.style.overflowX=lock?'hidden':'auto'; }
 function setupDrag(){
   var h=document.getElementById('draghandle'); if(!h) return;
@@ -384,7 +399,7 @@ function setupDrag(){
   h.addEventListener('pointermove',function(e){ if(!drag) return;
     var s=document.querySelector('.survey'); if(!s) return; var r=s.getBoundingClientRect();
     boxOff.x=Math.max(-45,Math.min(45, ox+(e.clientX-sx)/r.width*100));
-    boxOff.y=Math.max(-45,Math.min(45, oy+(e.clientY-sy)/r.height*100)); layoutBox(); });
+    boxOff.y=Math.max(-45,Math.min(45, oy+(e.clientY-sy)/r.height*100)); layoutBoxes(); });
   h.addEventListener('pointerup',function(){ drag=false; });
   h.addEventListener('pointercancel',function(){ drag=false; });
 }
@@ -419,7 +434,7 @@ function loadWeather(){
     weatherCloud=function(date){ var tt=date.getTime();
       var best=0,bd=1e15; for(var i=0;i<times.length;i++){ var dd=Math.abs(times[i]-tt); if(dd<bd){bd=dd;best=i;} }
       return bd<3600000*1.5? cc[best]:null; };
-    renderTonight();
+    lastWx=Date.now(); renderTonight();
   }).catch(function(e){ /* weather optional */ });
 }
 // ---------- location ----------
@@ -549,9 +564,15 @@ function showSolveResult(cal){
     +rowHTML("Field of view",fovw.toFixed(2)+"° × "+fovh.toFixed(2)+"°")
     +rowHTML("Center",raStr(((cal.ra%360)+360)%360)+" "+decStr(cal.dec))
     +rowHTML("Parity",par)+rowHTML("Pixel scale",cal.pixscale.toFixed(2)+"″/px");
-  solveStatus("✓ Solved — <b>your camera is at "+ori.toFixed(1)+"°.</b> To reach your planned <b>"+desired+"°</b>, rotate ≈ <b>"+delta+"°</b>, then re-solve to confirm. (The *change* between solves is exact; the zero-point is nova's convention.)");
-  rigFOV={w:fovw,h:fovh}; renderSurvey();
+  solveStatus("✓ Solved — <b>your camera (blue box) is at "+ori.toFixed(1)+"°.</b> To reach your target (red, "+desired+"°), rotate ≈ <b>"+delta+"°</b>, then re-solve. (Re-solve only when you rotate or change gear.)");
+  rigFOV={w:fovw,h:fovh}; actualPA=ori; rigSavedAt=Date.now(); saveRig(); renderSurvey();
 }
+function saveRig(){ try{ localStorage.setItem("ddRig", JSON.stringify({w:rigFOV.w,h:rigFOV.h,pa:actualPA,t:rigSavedAt})); }catch(e){} }
+function loadRig(){ try{ var r=JSON.parse(localStorage.getItem("ddRig")||"null");
+  if(r&&r.w){ rigFOV={w:r.w,h:r.h}; actualPA=(r.pa!=null?r.pa:null); rigSavedAt=r.t||null; return true; } }catch(e){} return false; }
+function camStamp(){ if(!rigFOV) return "";
+  var when=rigSavedAt? new Date(rigSavedAt).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):"—";
+  return "📷 <b>Camera saved</b>: "+rigFOV.w.toFixed(2)+"°×"+rigFOV.h.toFixed(2)+"°"+(actualPA!=null?(" · angle "+actualPA.toFixed(1)+"°"):"")+" · as of "+when+". Re-solve only if you rotate or change gear."; }
 function boot(){
   if(!window.Astronomy){ document.getElementById('t-verdict').textContent="astronomy library failed to load (need internet)"; return; }
   var sf=document.getElementById('subfile'); if(sf) sf.addEventListener('change',handleSub);
@@ -570,6 +591,13 @@ function boot(){
     document.getElementById('keyrow').style.display='block'; document.getElementById('keysaved').style.display='none';
     var k=document.getElementById('novakey'); if(k){ k.value=''; k.focus(); } });
   refreshKeyUI();
+  // restore saved camera (rig FOV + angle) so it persists across reloads — no re-solve needed
+  if(loadRig()){ var fn=document.getElementById('f-note'); if(fn) fn.innerHTML=camStamp();
+    document.getElementById('f-result').style.display='block';
+    document.getElementById('f-resbody').innerHTML=rowHTML("Field of view",rigFOV.w.toFixed(2)+"° × "+rigFOV.h.toFixed(2)+"°","var(--good)")+(actualPA!=null?rowHTML("Camera angle",actualPA.toFixed(1)+"°","var(--acc)"):""); }
+  // weather: refresh on foreground + every 45 min
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden && lastWx && Date.now()-lastWx>1200000) loadWeather(); });
+  setInterval(function(){ if(!document.hidden) loadWeather(); }, 2700000);
   document.getElementById('ver').textContent="v"+VERSION;
   document.getElementById('vercred').textContent="DSO DOSSIER · v"+VERSION;
   A=window.Astronomy;
