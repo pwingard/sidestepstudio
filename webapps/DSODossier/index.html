@@ -78,7 +78,8 @@
   .survpill.on{background:var(--acc);color:#06101f;border-color:var(--acc)}
   .fovbox{position:absolute;border:2px solid var(--acc);box-shadow:0 0 0 9999px rgba(5,8,15,.4);transform-origin:center;pointer-events:none}
   .fovtag{position:absolute;top:2px;left:3px;background:rgba(93,177,255,.92);color:#06101f;font-size:9px;font-weight:700;padding:0 5px;border-radius:4px;white-space:nowrap}
-  .draghandle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:rgba(93,177,255,.95);color:#06101f;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;pointer-events:auto;cursor:move;touch-action:none;box-shadow:0 0 0 3px rgba(5,8,15,.45)}
+  .draghandle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:rgba(93,177,255,.95);color:#06101f;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;pointer-events:auto;cursor:move;touch-action:none;box-shadow:0 0 0 3px rgba(5,8,15,.45)}
+  .survey,.survey img,.fovbox,.fovtag,.draghandle{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
   .ctrlrow{display:flex;align-items:center;gap:8px;padding:8px 14px 0}
   .ctrlrow .cl{font-size:11.5px;color:var(--dim);width:44px;flex:0 0 auto}
   .ctrlrow input{flex:1;accent-color:var(--acc);touch-action:none}
@@ -165,7 +166,7 @@
 
 <script>
 "use strict";
-var VERSION = "0.7.1";   // ← bumped every deploy
+var VERSION = "0.7.2";   // ← bumped every deploy
 var A = window.Astronomy;
 var CATALOG = [
  {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
