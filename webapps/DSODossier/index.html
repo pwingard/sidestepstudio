@@ -169,7 +169,7 @@
 
 <script>
 "use strict";
-var VERSION = "0.8.1";   // ← bumped every deploy
+var VERSION = "0.8.2";   // ← bumped every deploy
 var A = window.Astronomy;
 var CATALOG = [
  {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
@@ -483,8 +483,9 @@ function handleSub(e){
       if(fl&&px&&nx&&ny){ var sc=206.265*px/fl, fw=nx*sc/3600, fh=ny*sc/3600;
         out+=rowHTML("Focal length",fl+" mm")+rowHTML("Pixel scale",sc.toFixed(2)+"″/px")
             +rowHTML("Field of view",fw.toFixed(2)+"° × "+fh.toFixed(2)+"°","var(--good)");
-        note.innerHTML="✓ FOV read straight from the FITS header — no solving, crop-proof. Drag the slider below to plan your rotation.";
-        rigFOV={w:fw,h:fh}; rigName=(cam||"your rig"); renderSurvey();
+        rigFOV={w:fw,h:fh}; rigName=(cam||"your rig"); rigSavedAt=Date.now(); saveRig();
+        note.innerHTML=camStamp()+" <i>(angle still needs a plate-solve.)</i>";
+        renderSurvey();
       } else { out+=rowHTML("FOV","header missing focal length / pixel size","var(--warn)");
         note.innerHTML="This FITS has no focal-length/pixel-size in its header — that one needs plate-solving (next build)."; }
       body.innerHTML=out;
