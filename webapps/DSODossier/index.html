@@ -79,6 +79,13 @@
   .fovbox{position:absolute;border:2px solid var(--bad);transform-origin:center;pointer-events:none}
   .fovbox.actual{border:2px dashed var(--acc)}
   .boxlegend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:7px 14px 0;color:var(--dim);font-size:10.5px}.boxlegend b{font-style:normal}
+  .steps{display:flex;gap:6px;padding:4px 12px 2px}
+  .stepind{flex:1;text-align:center;padding:7px 0;border-radius:9px;background:var(--card);border:1px solid var(--line);color:var(--dim);font-size:12px;font-weight:700;cursor:pointer}
+  .stepind b{display:inline-flex;width:17px;height:17px;border-radius:50%;background:#33405d;color:#fff;align-items:center;justify-content:center;font-size:10px;margin-right:4px;vertical-align:middle}
+  .stepind.on{background:var(--acc);color:#06101f;border-color:var(--acc)}.stepind.on b{background:#06101f;color:var(--acc)}
+  .wnav{display:flex;gap:8px;margin:10px 12px}
+  .wbtn{flex:1;text-align:center;padding:11px;border-radius:11px;background:var(--card2);border:1px solid var(--line);color:var(--ink);font-weight:700;font-size:13px;cursor:pointer}
+  .wbtn.primary{background:var(--acc);color:#06101f;border-color:var(--acc);flex:2}
   .fovtag{position:absolute;top:2px;left:3px;background:rgba(93,177,255,.92);color:#06101f;font-size:9px;font-weight:700;padding:0 5px;border-radius:4px;white-space:nowrap}
   .draghandle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:rgba(93,177,255,.95);color:#06101f;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;pointer-events:auto;cursor:move;touch-action:none;box-shadow:0 0 0 3px rgba(5,8,15,.45)}
   .survey,.survey img,.fovbox,.fovtag,.draghandle{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
@@ -124,33 +131,61 @@
     </section>
 
     <section class="pg" id="fov">
-      <div class="top"><h1>Framing</h1><span class="chip" id="f-size">—</span></div>
-      <div class="card"><div class="row"><span class="k">Center on</span><span class="v" id="f-coord">—</span></div>
-        <div class="row"><span class="k">Target size</span><span class="v" id="f-tsize">—</span></div></div>
-      <div class="solvebox">
-        <div class="sb-ico">🎯</div>
-        <div class="sb-body">
-          <div class="sb-t">Read / plate-solve a sub</div>
-          <div class="sb-d"><b>FITS</b> → FOV from header instantly. <b>Plate-solve</b> any sub → your camera's actual <b>angle + center</b> (the rotate loop).</div>
-          <div class="keyrow" id="keyrow"><input type="password" id="novakey" placeholder="astrometry.net API key" autocomplete="off" spellcheck="false"></div>
-          <div class="keysaved" id="keysaved" style="display:none">🔑 key saved · <span class="lnk" id="keychange">change</span></div>
-          <div class="sbbtns"><label class="sb-cta2">Choose sub<input type="file" id="subfile" style="display:none"></label><span class="sb-cta" id="solvebtn">🎯 Plate-solve</span></div>
-          <div class="sstat" id="solvestatus"></div>
+      <div class="top"><h1>Frame It</h1><span class="chip" id="f-size">—</span></div>
+      <div class="steps">
+        <div class="stepind on" id="si1" onclick="goStep(1)"><b>1</b> Rig</div>
+        <div class="stepind" id="si2" onclick="goStep(2)"><b>2</b> Target</div>
+        <div class="stepind" id="si3" onclick="goStep(3)"><b>3</b> Align</div>
+      </div>
+
+      <div class="wpane" id="w1">
+        <div class="card"><h2>Step 1 · Your camera</h2><div class="story" id="rigSummary">No camera yet — load a sub or plate-solve below to set your field of view.</div></div>
+        <div id="slot1"></div>
+        <div class="wnav"><span class="wbtn primary" onclick="goStep(2)">Camera's current → Pick target</span></div>
+      </div>
+
+      <div class="wpane" id="w2" hidden>
+        <div class="card"><div class="row"><span class="k">Target</span><span class="v" id="w2tgt">—</span></div>
+          <div class="row"><span class="k">Center</span><span class="v" id="f-coord">—</span></div>
+          <div class="row"><span class="k">Size</span><span class="v" id="f-tsize">—</span></div></div>
+        <div id="slot2"></div>
+        <div class="wnav"><span class="wbtn" onclick="goStep(1)">← Rig</span><span class="wbtn primary" onclick="useFraming();goStep(3)">🔒 Lock framing → Align</span></div>
+      </div>
+
+      <div class="wpane" id="w3" hidden>
+        <div class="card"><h2>Step 3 · Line it up</h2><div class="story" id="alignReadout">Lock a framing in step 2 first.</div></div>
+        <div id="slot3survey"></div>
+        <div id="slot3solve"></div>
+        <div class="wnav"><span class="wbtn" onclick="goStep(2)">← Target</span><span class="wbtn primary" onclick="goStep(1)">Done ✓</span></div>
+      </div>
+
+      <div id="park" style="display:none">
+        <div id="solveWrap">
+          <div class="solvebox">
+            <div class="sb-ico">🎯</div>
+            <div class="sb-body">
+              <div class="sb-t">Load / plate-solve a sub</div>
+              <div class="sb-d"><b>FITS</b> → FOV from header. <b>Plate-solve</b> → your camera's actual <b>angle + center</b>.</div>
+              <div class="keyrow" id="keyrow"><input type="password" id="novakey" placeholder="astrometry.net API key" autocomplete="off" spellcheck="false"></div>
+              <div class="keysaved" id="keysaved" style="display:none">🔑 key saved · <span class="lnk" id="keychange">change</span></div>
+              <div class="sbbtns"><label class="sb-cta2">Choose sub<input type="file" id="subfile" style="display:none"></label><span class="sb-cta" id="solvebtn">🎯 Plate-solve</span></div>
+              <div class="sstat" id="solvestatus"></div>
+            </div>
+          </div>
+          <div class="card" id="f-result" style="display:none"><h2>Your rig</h2><div id="f-resbody"></div></div>
         </div>
+        <div id="surveyWrap">
+          <div class="card" id="f-survey"><h2 id="f-survhead">Your frame on the sky</h2>
+            <div class="survchooser" id="survchooser"></div>
+            <div class="survey"><img id="surveyimg" alt="survey"><div class="fovbox actual" id="fovbox2"></div><div class="fovbox" id="fovbox"><span class="fovtag" id="fovtag"></span><div class="draghandle" id="draghandle">✛</div></div></div>
+            <div class="boxlegend"><span><b style="color:#5db1ff">▭</b> camera now</span><span><b style="color:#ff6b6b">▭</b> target</span><span><b style="color:#48d18b">▭</b> matched</span></div>
+            <div class="ctrlrow"><span class="cl">Rotate</span><button class="stp" onclick="nudgeRot(-1)">−</button><input type="range" id="rotslider" min="0" max="180" step="1" value="0"><button class="stp" onclick="nudgeRot(1)">+</button><span class="cv" id="rotval">0°</span></div>
+            <div class="ctrlrow"><span class="cl">Bright</span><button class="stp" onclick="nudgeBr(-5)">−</button><input type="range" id="brslider" min="50" max="200" step="2" value="115"><button class="stp" onclick="nudgeBr(5)">+</button><span class="cv" id="brval">1.15</span></div>
+            <div class="ctrlrow"><span class="cl">Contr</span><button class="stp" onclick="nudgeCt(-5)">−</button><input type="range" id="ctslider" min="80" max="260" step="2" value="140"><button class="stp" onclick="nudgeCt(5)">+</button><span class="cv" id="ctval">1.40</span></div>
+          </div>
+        </div>
+        <div id="f-note"></div><div id="f-lock"><div id="f-lockbody"></div></div>
       </div>
-      <div class="card" id="f-result" style="display:none"><h2>Your rig</h2><div id="f-resbody"></div></div>
-      <div class="card" id="f-survey" style="display:none"><h2 id="f-survhead">Your frame on the sky</h2>
-        <div class="survchooser" id="survchooser"></div>
-        <div class="survey"><img id="surveyimg" alt="survey"><div class="fovbox actual" id="fovbox2"></div><div class="fovbox" id="fovbox"><span class="fovtag" id="fovtag"></span><div class="draghandle" id="draghandle">✛</div></div></div>
-        <div class="boxlegend"><span><b style="color:#5db1ff">▭</b> camera now</span><span><b style="color:#ff6b6b">▭</b> target</span><span><b style="color:#48d18b">▭</b> matched</span></div>
-        <div class="ctrlrow"><span class="cl">Rotate</span><button class="stp" onclick="nudgeRot(-1)">−</button><input type="range" id="rotslider" min="0" max="180" step="1" value="0"><button class="stp" onclick="nudgeRot(1)">+</button><span class="cv" id="rotval">0°</span></div>
-        <div class="ctrlrow"><span class="cl">Bright</span><button class="stp" onclick="nudgeBr(-5)">−</button><input type="range" id="brslider" min="50" max="200" step="2" value="115"><button class="stp" onclick="nudgeBr(5)">+</button><span class="cv" id="brval">1.15</span></div>
-        <div class="ctrlrow"><span class="cl">Contr</span><button class="stp" onclick="nudgeCt(-5)">−</button><input type="range" id="ctslider" min="80" max="260" step="2" value="140"><button class="stp" onclick="nudgeCt(5)">+</button><span class="cv" id="ctval">1.40</span></div>
-        <div class="usebtn" id="usebtn" onclick="useFraming()">📍 Use this framing</div>
-        <div class="story" style="padding:6px 0 0"><b>Drag the ✛</b> to move · slider/± to rotate · pick a survey + tune brightness/contrast.</div>
-      </div>
-      <div class="card" id="f-lock" style="display:none"><h2>Set this at the scope</h2><div id="f-lockbody"></div></div>
-      <div class="story" id="f-note">FITS headers carry focal length + pixel size — the app reads your field of view directly, no solving, crop-proof. Load a sub to draw your frame on the survey below.</div>
     </section>
 
     <section class="pg" id="about">
@@ -169,7 +204,7 @@
 
 <script>
 "use strict";
-var VERSION = "0.8.3";   // ← bumped every deploy
+var VERSION = "0.9.0";   // ← bumped every deploy
 var A = window.Astronomy;
 var CATALOG = [
  {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
@@ -194,6 +229,7 @@ var survey = 0, imgBright = 1.15, imgContrast = 1.40, lastSurvFov = 2;
 var NOVA_PROXY = "https://astro-dust-up-nova.bizpfw.workers.dev";  // shared proxy (swappable backend)
 var userFile = null, userPixels = null, pendingSolve = null, solvedCal = null;
 var actualPA = null, rigSavedAt = null, lastWx = null;   // camera's current position angle (persists across targets)
+var wizStep = 1, lockRA = null, lockDec = null, lockAngle = 0;   // Frame-It wizard state
 var weatherCloud = null;        // function(date)->cloud% or null
 var weatherHorizonDays = 7;
 
@@ -407,16 +443,32 @@ function nudgeRot(d){ var s=document.getElementById('rotslider'); var v=Math.max
 function nudgeBr(d){ var s=document.getElementById('brslider'); var v=Math.max(50,Math.min(200,+s.value+d)); s.value=v; imgBright=v/100; document.getElementById('brval').textContent=imgBright.toFixed(2); applyFilter(); }
 function nudgeCt(d){ var s=document.getElementById('ctslider'); var v=Math.max(80,Math.min(260,+s.value+d)); s.value=v; imgContrast=v/100; document.getElementById('ctval').textContent=imgContrast.toFixed(2); applyFilter(); }
 function useFraming(){
-  if(!rigFOV) return; var t=CATALOG[sel];
+  if(!rigFOV){ alert("Set your camera first (Step 1)."); return; }
+  var t=CATALOG[sel];
   var dRA=-(boxOff.x/100)*lastSurvFov/Math.cos(t.dec*Math.PI/180);
   var dDec=-(boxOff.y/100)*lastSurvFov;
-  var nRA=((t.ra+dRA)%360+360)%360, nDec=t.dec+dDec;
-  var lc=document.getElementById('f-lock'); lc.style.display='block';
-  document.getElementById('f-lockbody').innerHTML=
-    rowHTML("GoTo RA",raStr(nRA),"var(--good)")+rowHTML("GoTo Dec",decStr(nDec),"var(--good)")+
-    rowHTML("Camera angle",rotAngle+"° (target)","var(--good)")+
-    '<div class="story" style="padding:10px 14px 4px">GoTo these coords — your Origin/ASIAIR plate-solves right to them. The angle is your <b>desired</b> camera rotation: match it by eye, or wire the plate-solve to read your <b>current</b> angle and rotate the difference.</div>';
-  lc.scrollIntoView({behavior:'smooth',block:'nearest'});
+  lockRA=((t.ra+dRA)%360+360)%360; lockDec=t.dec+dDec; lockAngle=rotAngle;
+  updateAlignReadout();
+}
+// ---------- Frame-It wizard ----------
+function updateRigSummary(){ var el=document.getElementById('rigSummary'); if(el) el.innerHTML = rigFOV? camStamp() : "No camera yet — load a sub or plate-solve below to set your field of view."; }
+function updateAlignReadout(){ var el=document.getElementById('alignReadout'); if(!el) return;
+  if(lockRA==null){ el.innerHTML="Lock a framing in step 2 first."; return; }
+  var s="<b>GoTo</b> "+raStr(lockRA)+" "+decStr(lockDec)+" · target angle <b>"+lockAngle+"°</b>.<br>"+
+    "Take a sub at the target → <b>Plate-solve</b> below. I'll tell you how far to rotate; re-solve after each turn until the boxes go <b style='color:var(--good)'>green</b>.";
+  if(actualPA!=null){ var d=Math.round(((lockAngle-actualPA)%360+540)%360-180);
+    var m=Math.abs(((lockAngle-actualPA)%180+180)%180); var ok=(m<3||m>177);
+    s+= ok? "<br><b style='color:var(--good)'>✓ Matched — camera at "+actualPA.toFixed(1)+"°.</b>"
+          : "<br><b>Camera now "+actualPA.toFixed(1)+"° → rotate "+d+"°</b>, then re-solve."; }
+  el.innerHTML=s; }
+function goStep(n){ wizStep=n;
+  [1,2,3].forEach(function(i){ var p=document.getElementById('w'+i); if(p) p.hidden=(i!==n);
+    var s=document.getElementById('si'+i); if(s) s.classList.toggle('on',i===n); });
+  var park=document.getElementById('park'), sw=document.getElementById('solveWrap'), su=document.getElementById('surveyWrap');
+  park.appendChild(sw); park.appendChild(su);            // reset both to hidden park
+  if(n===1){ document.getElementById('slot1').appendChild(sw); updateRigSummary(); }
+  else if(n===2){ document.getElementById('slot2').appendChild(su); document.getElementById('w2tgt').textContent=CATALOG[sel].name; if(rigFOV) renderSurvey(); }
+  else if(n===3){ document.getElementById('slot3survey').appendChild(su); document.getElementById('slot3solve').appendChild(sw); if(rigFOV) renderSurvey(); updateAlignReadout(); }
 }
 function applyFilter(){ var im=document.getElementById('surveyimg'); if(im) im.style.filter="brightness("+imgBright+") contrast("+imgContrast+") saturate(1.1)"; }
 function renderChooser(){ var c=document.getElementById('survchooser'); if(!c) return;
@@ -484,8 +536,7 @@ function handleSub(e){
         out+=rowHTML("Focal length",fl+" mm")+rowHTML("Pixel scale",sc.toFixed(2)+"″/px")
             +rowHTML("Field of view",fw.toFixed(2)+"° × "+fh.toFixed(2)+"°","var(--good)");
         rigFOV={w:fw,h:fh}; rigName=(cam||"your rig"); rigSavedAt=Date.now(); saveRig();
-        note.innerHTML=camStamp()+" <i>(angle still needs a plate-solve.)</i>";
-        renderSurvey();
+        updateRigSummary(); renderSurvey();
       } else { out+=rowHTML("FOV","header missing focal length / pixel size","var(--warn)");
         note.innerHTML="This FITS has no focal-length/pixel-size in its header — that one needs plate-solving (next build)."; }
       body.innerHTML=out;
@@ -567,8 +618,7 @@ function showSolveResult(cal){
     +rowHTML("Parity",par)+rowHTML("Pixel scale",cal.pixscale.toFixed(2)+"″/px");
   solveStatus("✓ Solved — <b>your camera (blue box) is at "+ori.toFixed(1)+"°.</b> To reach your target (red, "+desired+"°), rotate ≈ <b>"+delta+"°</b>, then re-solve. (Re-solve only when you rotate or change gear.)");
   rigFOV={w:fovw,h:fovh}; actualPA=ori; rigSavedAt=Date.now(); saveRig();
-  var fn=document.getElementById('f-note'); if(fn) fn.innerHTML=camStamp();
-  renderSurvey();
+  updateRigSummary(); updateAlignReadout(); renderSurvey();
 }
 function saveRig(){ try{ localStorage.setItem("ddRig", JSON.stringify({w:rigFOV.w,h:rigFOV.h,pa:actualPA,t:rigSavedAt})); }catch(e){} }
 function loadRig(){ try{ var r=JSON.parse(localStorage.getItem("ddRig")||"null");
@@ -595,7 +645,7 @@ function boot(){
     var k=document.getElementById('novakey'); if(k){ k.value=''; k.focus(); } });
   refreshKeyUI();
   // restore saved camera (rig FOV + angle) so it persists across reloads — no re-solve needed
-  if(loadRig()){ var fn=document.getElementById('f-note'); if(fn) fn.innerHTML=camStamp();
+  if(loadRig()){
     document.getElementById('f-result').style.display='block';
     document.getElementById('f-resbody').innerHTML=rowHTML("Field of view",rigFOV.w.toFixed(2)+"° × "+rigFOV.h.toFixed(2)+"°","var(--good)")+(actualPA!=null?rowHTML("Camera angle",actualPA.toFixed(1)+"°","var(--acc)"):""); }
   // weather: refresh on foreground + every 45 min
@@ -605,6 +655,7 @@ function boot(){
   document.getElementById('vercred').textContent="DSO DOSSIER · v"+VERSION;
   A=window.Astronomy;
   renderTonight();
+  goStep(1);
   pages[1].scrollIntoView({inline:'start'});
   startLoc();
 }
