@@ -1,5 +1,5 @@
 // Astro Dust Up
-const APP_VERSION = "v23";
+const APP_VERSION = "v24";
 
 // Cloudflare Worker that relays nova.astrometry.net (CORS). Set after deploying
 // nova-proxy/ (see its README). Empty = plate-solve disabled, manual align only.
@@ -468,7 +468,21 @@ async function runSolve() {
 // nova's convention; Flip + Rotate let the user correct if a frame lands mirrored.)
 async function autoAlign(cal) {
   const natW = els.user.naturalWidth, natH = els.user.naturalHeight;
-  const fovDeg = (Math.max(natW, natH) * cal.pixscale) / 3600; // larger image dim → field width
+  // Field of view of the image's WIDTH, in degrees.
+  // BUG FIX: nova downsamples large uploads before solving and returns the pixscale of the
+  // *downsampled* image, so (pixels × pixscale) overestimates the true field by the downsample
+  // factor — the dust/star layers then get fetched zoomed-OUT and only line up dead-centre.
+  // cal.radius is the true field radius (degrees) regardless of downsampling; derive the FoV
+  // from it + the image's aspect ratio instead. (Scale-based stays as a fallback.)
+  const longPx = Math.max(natW, natH), diagPx = Math.hypot(natW, natH);
+  const fovFromRadius = cal.radius ? 2 * cal.radius * (longPx / diagPx) : null;
+  const fovFromScale  = (longPx * cal.pixscale) / 3600;
+  const fovDeg = fovFromRadius || fovFromScale;
+  if (fovFromRadius && fovFromScale) {
+    const f = fovFromScale / fovFromRadius;
+    if (f > 1.2 || f < 0.83)
+      console.log(`[dustup] nova downsample ≈ ${f.toFixed(2)}× — using radius FoV ${fovDeg.toFixed(3)}° (scale-based would have been ${fovFromScale.toFixed(3)}°)`);
+  }
   solvedView = { ra: cal.ra, dec: cal.dec, fov: fovDeg };
   current = solvedView;
   // both images: fit whole frame (contain) so their angular scales match
