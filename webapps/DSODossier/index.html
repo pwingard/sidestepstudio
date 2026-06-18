@@ -7,7 +7,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DSO Dossier">
 <meta name="theme-color" content="#0a0e17">
-<link rel="manifest" href="manifest.webmanifest">
 <title>DSO Dossier</title>
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
 <style>
@@ -162,7 +161,7 @@
           <div class="sb-d" id="solvehint">Rotated the camera? Load a screenshot/sub and solve — the <b style="color:#5db1ff">blue</b> box jumps to your real angle.</div>
           <div class="keyrow" id="keyrow"><input type="password" id="novakey" placeholder="astrometry.net API key" autocomplete="off" spellcheck="false"></div>
           <div class="keysaved" id="keysaved" style="display:none">🔑 key saved · <span class="lnk" id="keychange">change</span></div>
-          <div class="sbbtns"><label class="sb-cta2">Choose sub<input type="file" id="subfile" style="display:none"></label><span class="sb-cta" id="solvebtn">🎯 Plate-solve</span></div>
+          <div class="sbbtns"><label class="sb-cta2">Choose sub<input type="file" id="subfile" style="display:none"></label><span class="sb-cta" id="solvebtn">🎯 Plate-solve</span><label class="sb-cta2" id="matchbtn" style="display:none;margin-left:6px">📐 Match (local)<input type="file" id="matchfile" style="display:none"></label></div>
           <div class="sstat" id="solvestatus"></div>
         </div>
       </div>
@@ -188,7 +187,7 @@
 
 <script>
 "use strict";
-var VERSION = "0.10.0";   // ← bumped every deploy
+var VERSION = "0.11.0";   // ← bumped every deploy
 var A = window.Astronomy;
 var CATALOG = [
  {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
@@ -627,6 +626,8 @@ function showSolveResult(cal){
     solveStatus(ok? "✓ Solved — <b style='color:#5db1ff'>blue</b> camera now "+ori.toFixed(1)+"°, on target. 🎯"
       : "✓ Solved — <b style='color:#5db1ff'>blue</b> now "+ori.toFixed(1)+"°. To hit <b style='color:#ff6b6b'>red</b> ("+rotAngle+"°), rotate <b>"+d+"°</b> and re-solve.");
   }
+  if(userFile) captureReference(userFile);
+  var mb=document.getElementById('matchbtn'); if(mb) mb.style.display='inline-flex';
   renderSurvey();
 }
 function saveRigs(){ try{ localStorage.setItem("ddRigs", JSON.stringify(rigs)); localStorage.setItem("ddActiveRig", String(activeRig)); }catch(e){} }
@@ -640,9 +641,52 @@ function loadRigs(){ try{
 function camStamp(){ if(!rigFOV) return "";
   var when=rigSavedAt? new Date(rigSavedAt).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):"—";
   return "📷 <b>Camera saved</b>: "+rigFOV.w.toFixed(2)+"°×"+rigFOV.h.toFixed(2)+"°"+(actualPA!=null?(" · angle "+actualPA.toFixed(1)+"°"):"")+" · as of "+when+". Re-solve only if you rotate or change gear."; }
+// ---------- LOCAL rotation match (no server): compare new frame to the reference ----------
+var refStars=null, refAngle=null;   // reference star centroids (polar from center) + solved angle
+function _imgToData(file, maxW, cb){
+  var img=new Image();
+  img.onload=function(){ var sc=Math.min(1,maxW/img.width), w=Math.round(img.width*sc), h=Math.round(img.height*sc);
+    var c=document.createElement('canvas'); c.width=w; c.height=h; var x=c.getContext('2d'); x.drawImage(img,0,0,w,h);
+    var im=x.getImageData(0,0,w,h); URL.revokeObjectURL(img.src); cb(im); };
+  img.onerror=function(){ cb(null); }; img.src=URL.createObjectURL(file);
+}
+function _detectStars(im, topN){
+  var w=im.width,h=im.height,d=im.data,n=w*h,lum=new Float32Array(n),i,mean=0;
+  for(i=0;i<n;i++){ lum[i]=0.3*d[i*4]+0.59*d[i*4+1]+0.11*d[i*4+2]; mean+=lum[i]; } mean/=n;
+  var sd=0; for(i=0;i<n;i++){ var e=lum[i]-mean; sd+=e*e; } sd=Math.sqrt(sd/n);
+  var thr=mean+3*sd, R=2, stars=[];
+  for(var y=R;y<h-R;y++) for(var x=R;x<w-R;x++){ var p=y*w+x, L=lum[p]; if(L<thr) continue;
+    var isMax=true; for(var dy=-R;dy<=R&&isMax;dy++) for(var dx=-R;dx<=R;dx++){ if((dx||dy)&&lum[(y+dy)*w+(x+dx)]>L){isMax=false;break;} }
+    if(!isMax) continue; var sx=0,sy=0,sf=0;
+    for(var a=-R;a<=R;a++) for(var b=-R;b<=R;b++){ var f=lum[(y+a)*w+(x+b)]-mean; if(f>0){ sx+=(x+b)*f; sy+=(y+a)*f; sf+=f; } }
+    if(sf>0) stars.push({x:sx/sf,y:sy/sf,flux:sf}); }
+  stars.sort(function(p,q){return q.flux-p.flux;});
+  return {stars:stars.slice(0,topN), cx:w/2, cy:h/2};
+}
+function _polar(det){ return det.stars.map(function(p){ var dx=p.x-det.cx, dy=p.y-det.cy;
+  return {r:Math.hypot(dx,dy), th:Math.atan2(dy,dx)*180/Math.PI}; }); }
+function _estRot(ref, cur){ var diffs=[];
+  cur.forEach(function(c){ var best=null,bd=1e9; ref.forEach(function(r){ var dr=Math.abs(r.r-c.r);
+    if(dr<bd && dr<Math.max(6,r.r*0.04)){ bd=dr; best=r; } }); if(best){ var d=((c.th-best.th+540)%360)-180; diffs.push(d); } });
+  if(diffs.length<4) return null; diffs.sort(function(a,b){return a-b;}); return diffs[Math.floor(diffs.length/2)]; }
+function captureReference(file){ _imgToData(file,900,function(im){ if(im){ refStars=_polar(_detectStars(im,40)); refAngle=actualPA; } }); }
+function localMatch(file){
+  if(refStars==null||refAngle==null){ solveStatus("Plate-solve once first to set the reference frame."); return; }
+  solveStatus("Matching locally…");
+  _imgToData(file,900,function(im){ if(!im){ solveStatus("Couldn't read that image."); return; }
+    var dRot=_estRot(refStars, _polar(_detectStars(im,40)));
+    if(dRot==null){ solveStatus("Too few matching stars — use a starrier frame, or re-solve on the server."); return; }
+    actualPA=((refAngle+dRot)%360+360)%360;
+    if(rigs[activeRig]) rigs[activeRig].pa=actualPA; rigSavedAt=Date.now(); saveRigs(); renderRigBar();
+    var dd=Math.round(((rotAngle-actualPA)%360+540)%360-180), m=Math.abs(((rotAngle-actualPA)%180+180)%180), ok=(m<3||m>177);
+    solveStatus(ok? "✓ Matched locally — <b style='color:#5db1ff'>blue</b> "+actualPA.toFixed(1)+"° — on target 🎯 (no server)"
+      : "✓ Matched locally — <b style='color:#5db1ff'>blue</b> "+actualPA.toFixed(1)+"°. Rotate <b>"+dd+"°</b> to hit "+rotAngle+"° (no server).");
+    renderSurvey(); });
+}
 function boot(){
   if(!window.Astronomy){ document.getElementById('t-verdict').textContent="astronomy library failed to load (need internet)"; return; }
   var sf=document.getElementById('subfile'); if(sf) sf.addEventListener('change',handleSub);
+  var mf=document.getElementById('matchfile'); if(mf) mf.addEventListener('change',function(e){ if(e.target.files[0]) localMatch(e.target.files[0]); });
   ['rotslider','brslider','ctslider'].forEach(function(id){ var el=document.getElementById(id);
     if(el){ el.addEventListener('pointerdown',function(){ lockPager(true); }); el.addEventListener('touchstart',function(){ lockPager(true); },{passive:true}); } });
   ['pointerup','pointercancel','touchend','touchcancel'].forEach(function(ev){ document.addEventListener(ev,function(){ lockPager(false); }); });
