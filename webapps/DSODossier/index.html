@@ -75,8 +75,7 @@
   .survchooser{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 8px}
   .survpill{font-size:11px;font-weight:600;padding:4px 9px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--dim);cursor:pointer}
   .survpill.on{background:var(--acc);color:#06101f;border-color:var(--acc)}
-  .fovbox{position:absolute;border:2px solid var(--bad);transform-origin:center;pointer-events:none}
-  .fovbox.actual{border:2px dashed var(--acc)}
+  .fovbox{position:absolute;border:2px solid var(--acc);pointer-events:none}
   .boxlegend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:7px 14px 0;color:var(--dim);font-size:10.5px}.boxlegend b{font-style:normal}
   .rigbar{position:relative;margin:6px 12px 0}
   .rigsel{display:flex;align-items:center;gap:8px;padding:10px 13px;background:var(--card);border:1px solid var(--line);border-radius:12px;cursor:pointer}
@@ -86,17 +85,16 @@
   .rigmenu .ri:first-child{border-top:none}.rigmenu .ri.on{color:var(--acc)}.rigmenu .ri.add{color:var(--good)}
   .rigmenu .ri:active{background:var(--line)}
   .fovtag{position:absolute;top:2px;left:3px;background:rgba(93,177,255,.92);color:#06101f;font-size:9px;font-weight:700;padding:0 5px;border-radius:4px;white-space:nowrap}
-  .draghandle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:rgba(93,177,255,.95);color:#06101f;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;pointer-events:auto;cursor:move;touch-action:none;box-shadow:0 0 0 3px rgba(5,8,15,.45)}
-  .survey,.survey img,.fovbox,.fovtag,.draghandle{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  .survey,.survey img,.fovbox,.fovtag{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
   .ctrlrow{display:flex;align-items:center;gap:8px;padding:8px 14px 0}
   .ctrlrow .cl{font-size:11.5px;color:var(--dim);width:44px;flex:0 0 auto}
   .ctrlrow input{flex:1;accent-color:var(--acc);touch-action:none}
   .ctrlrow .cv{font-weight:700;color:#cfe0ff;font-size:12px;min-width:40px;text-align:right;flex:0 0 auto}
   .stp{width:28px;height:28px;border-radius:7px;border:1px solid var(--line);background:var(--card2);color:var(--acc);font-size:17px;font-weight:700;line-height:1;cursor:pointer;flex:0 0 auto}
-  .usebtn{margin:12px 14px 2px;padding:11px;text-align:center;background:var(--acc);color:#06101f;font-weight:700;border-radius:10px;cursor:pointer}
-  .keyrow input{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#0c1422;color:var(--ink);font-size:12.5px}
-  .keysaved{font-size:12px;color:var(--good)} .keysaved .lnk{color:var(--acc);cursor:pointer;text-decoration:underline}
-  .sbbtns{display:flex;gap:8px;margin-top:9px}
+  .manualrow{display:flex;align-items:center;gap:8px;padding:7px 14px 0}
+  .manualrow label{font-size:11.5px;color:var(--dim);flex:1}
+  .manualrow input{width:84px;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:#0c1422;color:var(--ink);font-size:12.5px;text-align:right}
+  .sbbtns{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
   .sb-cta2{display:inline-block;background:var(--card2);border:1px solid var(--line);color:var(--ink);font-weight:700;font-size:12.5px;padding:7px 13px;border-radius:8px;cursor:pointer}
   .sstat{font-size:12px;color:var(--dim);margin-top:8px;line-height:1.4}.sstat b{color:#cfe0ff}
 </style>
@@ -112,7 +110,7 @@
       <div class="loc" id="locline">📍 locating…</div>
       <div id="tgtlist"></div>
       <div class="setrow"><span class="ic">⚙</span><div><div class="st-t">Settings</div>
-        <div class="st-s">Location · Imaging type · Astrometry key · Rig</div></div><span class="ar">›</span></div>
+        <div class="st-s">Location · Imaging type · Rig</div></div><span class="ar">›</span></div>
       <div class="credits"><span id="vercred">DSO DOSSIER</span><br>© 2026 P Wingard · @See_theShow<br>astronomy-engine · open-meteo</div>
     </section>
 
@@ -130,14 +128,14 @@
     </section>
 
     <section class="pg" id="fov">
-      <div class="top"><h1>Frame It</h1></div>
+      <div class="top"><h1>Does it fit?</h1></div>
       <div class="rigbar">
         <div class="rigsel" onclick="toggleRigMenu()"><span class="ric">📷</span><span id="rigselname">No rig yet</span><span class="caret">▾</span></div>
         <div class="rigmenu" id="rigmenu" style="display:none"></div>
       </div>
 
       <div class="card" id="setupcard"><h2>Set up this rig</h2>
-        <div class="story">Load <b>one uncropped sub</b> from this equipment combo and <b>plate-solve</b> it — that sets your field of view <i>and</i> your camera's starting orientation (the <b style="color:#5db1ff">blue</b> box). Just once per rig.</div></div>
+        <div class="story">Tell DSO Dossier your <b>field of view</b> so it can draw your frame on the sky. Either load <b>one uncropped sub</b> (its FITS header sets the FOV), or type your focal length, pixel size and sensor below. Just once per rig.</div></div>
 
       <div class="card" id="tgtcard" style="display:none">
         <div class="row"><span class="k">Target</span><span class="v" id="w2tgt">—</span></div>
@@ -146,28 +144,27 @@
 
       <div class="card" id="f-survey" style="display:none"><h2 id="f-survhead">Your frame on the sky</h2>
         <div class="survchooser" id="survchooser"></div>
-        <div class="survey"><img id="surveyimg" alt="survey"><div class="fovbox actual" id="fovbox2"></div><div class="fovbox" id="fovbox"><span class="fovtag" id="fovtag"></span><div class="draghandle" id="draghandle">✛</div></div></div>
-        <div class="boxlegend"><span><b style="color:#5db1ff">▭</b> camera now</span><span><b style="color:#ff6b6b">▭</b> target</span><span><b style="color:#48d18b">▭</b> matched</span></div>
-        <div class="ctrlrow"><span class="cl">Rotate</span><button class="stp" onclick="nudgeRot(-1)">−</button><input type="range" id="rotslider" min="0" max="180" step="1" value="0"><button class="stp" onclick="nudgeRot(1)">+</button><span class="cv" id="rotval">0°</span></div>
+        <div class="survey"><img id="surveyimg" alt="survey"><div class="fovbox" id="fovbox"><span class="fovtag" id="fovtag"></span></div></div>
+        <div class="boxlegend"><span><b style="color:#5db1ff">▭</b> your frame (north up)</span></div>
         <div class="ctrlrow"><span class="cl">Bright</span><button class="stp" onclick="nudgeBr(-5)">−</button><input type="range" id="brslider" min="50" max="200" step="2" value="115"><button class="stp" onclick="nudgeBr(5)">+</button><span class="cv" id="brval">1.15</span></div>
         <div class="ctrlrow"><span class="cl">Contr</span><button class="stp" onclick="nudgeCt(-5)">−</button><input type="range" id="ctslider" min="80" max="260" step="2" value="140"><button class="stp" onclick="nudgeCt(5)">+</button><span class="cv" id="ctval">1.40</span></div>
-        <div class="usebtn" onclick="useFraming()">📍 Point-to: coords + angle</div>
       </div>
 
       <div class="solvebox">
-        <div class="sb-ico">🎯</div>
+        <div class="sb-ico">📐</div>
         <div class="sb-body">
-          <div class="sb-t" id="solvetitle">Plate-solve a frame</div>
-          <div class="sb-d" id="solvehint">Rotated the camera? Load a screenshot/sub and solve — the <b style="color:#5db1ff">blue</b> box jumps to your real angle.</div>
-          <div class="keyrow" id="keyrow"><input type="password" id="novakey" placeholder="astrometry.net API key" autocomplete="off" spellcheck="false"></div>
-          <div class="keysaved" id="keysaved" style="display:none">🔑 key saved · <span class="lnk" id="keychange">change</span></div>
-          <div class="sbbtns"><label class="sb-cta2">Choose sub<input type="file" id="subfile" style="display:none"></label><span class="sb-cta" id="solvebtn">🎯 Plate-solve</span><label class="sb-cta2" id="matchbtn" style="display:none;margin-left:6px">📐 Match (local)<input type="file" id="matchfile" style="display:none"></label></div>
+          <div class="sb-t" id="solvetitle">Set your field of view</div>
+          <div class="sb-d" id="solvehint">Load one <b>uncropped</b> sub — DSO Dossier reads its FITS header (focal length + pixel size + sensor) and sizes your frame. Or type it in below.</div>
+          <div class="sbbtns"><label class="sb-cta2">Choose sub<input type="file" id="subfile" style="display:none"></label></div>
+          <div class="manualrow"><label>Focal length (mm)</label><input type="number" id="m-fl" inputmode="decimal" placeholder="384"></div>
+          <div class="manualrow"><label>Pixel size (µm)</label><input type="number" id="m-px" inputmode="decimal" placeholder="3.76"></div>
+          <div class="manualrow"><label>Sensor width (px)</label><input type="number" id="m-nx" inputmode="numeric" placeholder="6248"></div>
+          <div class="manualrow"><label>Sensor height (px)</label><input type="number" id="m-ny" inputmode="numeric" placeholder="4176"></div>
+          <div class="sbbtns"><span class="sb-cta" id="manualbtn">Use these numbers</span></div>
           <div class="sstat" id="solvestatus"></div>
         </div>
       </div>
-      <div class="card" id="f-result" style="display:none"><h2>Solve result</h2><div id="f-resbody"></div></div>
-      <div class="card" id="f-lock" style="display:none"><h2>Set this at the scope</h2><div id="f-lockbody"></div></div>
-      <div class="story" id="f-note" style="display:none"></div>
+      <div class="card" id="f-result" style="display:none"><h2>Field of view</h2><div id="f-resbody"></div></div>
       <span id="f-size" style="display:none"></span>
     </section>
 
@@ -187,7 +184,7 @@
 
 <script>
 "use strict";
-var VERSION = "0.11.0";   // ← bumped every deploy
+var VERSION = "0.12.0";   // ← bumped every deploy (0.12.0: removed plate-solve + camera-rotation; FOV preview is static north-up)
 var A = window.Astronomy;
 var CATALOG = [
  {name:"Barnard's E", type:"Dark Nebula", ra:295.2, dec:11.0, con:"Aquila", size:0.5, dist:"~2,000 ly", light:"broadband (RGB/OSC)",
@@ -204,15 +201,13 @@ var CATALOG = [
 
 var LOC = {lat:34.25, lon:-80.61, name:"Camden, SC (default)"};
 var sel = 0, dateOffset = 0;
-var rigFOV = null, rigName = "your rig", rotAngle = 0;   // rigFOV = {w,h} in degrees
-var boxOff = {x:0, y:0}, boxDims = {w:50, h:30};         // box pan offset + size, in survey-%
+var rigFOV = null, rigName = "your rig";   // rigFOV = {w,h} in degrees
+var boxDims = {w:50, h:30};                 // box size, in survey-%
 var SURVEYS = [ {id:"CDS/P/DSS2/color",label:"DSS"}, {id:"CDS/P/DSS2/red",label:"DSS red"},
                 {id:"CDS/P/WISE/WSSA/12um",label:"Dust (IR)"}, {id:"CDS/P/unWISE/color",label:"unWISE"} ];
 var survey = 0, imgBright = 1.15, imgContrast = 1.40, lastSurvFov = 2;
-var NOVA_PROXY = "https://astro-dust-up-nova.bizpfw.workers.dev";  // shared proxy (swappable backend)
-var userFile = null, userPixels = null, pendingSolve = null, solvedCal = null;
-var actualPA = null, rigSavedAt = null, lastWx = null;   // camera's current position angle (persists across targets)
-var rigs = [], activeRig = -1, addingRig = false, lockRA = null, lockDec = null, lockAngle = 0;   // multi-rig state
+var userFile = null, lastWx = null;
+var rigs = [], activeRig = -1, addingRig = false;   // multi-rig state
 var weatherCloud = null;        // function(date)->cloud% or null
 var weatherHorizonDays = 7;
 
@@ -392,56 +387,16 @@ function renderSurvey(){
   layoutBoxes();
 }
 function layoutBoxes(){
-  var t=document.getElementById('fovbox'), a=document.getElementById('fovbox2');
-  var matched=false;
-  if(actualPA!=null){ var m=((rotAngle-actualPA)%180+180)%180; matched=(m<3||m>177); }
-  if(t){
-    t.style.width=boxDims.w.toFixed(1)+'%'; t.style.height=boxDims.h.toFixed(1)+'%';
-    t.style.left=((100-boxDims.w)/2 + boxOff.x).toFixed(1)+'%'; t.style.top=((100-boxDims.h)/2 + boxOff.y).toFixed(1)+'%';
-    t.style.transform='rotate('+rotAngle+'deg)'; t.style.borderColor=matched?'var(--good)':'var(--bad)';
-  }
-  if(a){
-    if(actualPA==null){ a.style.display='none'; }
-    else { a.style.display='block';
-      a.style.width=boxDims.w.toFixed(1)+'%'; a.style.height=boxDims.h.toFixed(1)+'%';
-      a.style.left=((100-boxDims.w)/2).toFixed(1)+'%'; a.style.top=((100-boxDims.h)/2).toFixed(1)+'%';
-      a.style.transform='rotate('+actualPA+'deg)'; a.style.borderColor=matched?'var(--good)':'var(--acc)';
-    }
-  }
+  // single, fixed north-up frame centred on the target — a "does it fit" preview
+  var t=document.getElementById('fovbox'); if(!t) return;
+  t.style.width=boxDims.w.toFixed(1)+'%'; t.style.height=boxDims.h.toFixed(1)+'%';
+  t.style.left=((100-boxDims.w)/2).toFixed(1)+'%'; t.style.top=((100-boxDims.h)/2).toFixed(1)+'%';
 }
-function setRot(a){ rotAngle=a; layoutBoxes(); var v=document.getElementById('rotval'); if(v) v.textContent=a+'°'; }
 function lockPager(lock){ var p=document.getElementById('pager'); if(p) p.style.overflowX=lock?'hidden':'auto'; }
-function setupDrag(){
-  var h=document.getElementById('draghandle'); if(!h) return;
-  var drag=false, sx=0, sy=0, ox=0, oy=0;
-  h.addEventListener('pointerdown',function(e){ drag=true; sx=e.clientX; sy=e.clientY; ox=boxOff.x; oy=boxOff.y; lockPager(true);
-    h.setPointerCapture&&h.setPointerCapture(e.pointerId); e.preventDefault(); e.stopPropagation(); });
-  h.addEventListener('pointermove',function(e){ if(!drag) return;
-    var s=document.querySelector('.survey'); if(!s) return; var r=s.getBoundingClientRect();
-    boxOff.x=Math.max(-45,Math.min(45, ox+(e.clientX-sx)/r.width*100));
-    boxOff.y=Math.max(-45,Math.min(45, oy+(e.clientY-sy)/r.height*100)); layoutBoxes(); });
-  h.addEventListener('pointerup',function(){ drag=false; });
-  h.addEventListener('pointercancel',function(){ drag=false; });
-}
-function nudgeRot(d){ var s=document.getElementById('rotslider'); var v=Math.max(0,Math.min(180,+s.value+d)); s.value=v; setRot(v); }
 function nudgeBr(d){ var s=document.getElementById('brslider'); var v=Math.max(50,Math.min(200,+s.value+d)); s.value=v; imgBright=v/100; document.getElementById('brval').textContent=imgBright.toFixed(2); applyFilter(); }
 function nudgeCt(d){ var s=document.getElementById('ctslider'); var v=Math.max(80,Math.min(260,+s.value+d)); s.value=v; imgContrast=v/100; document.getElementById('ctval').textContent=imgContrast.toFixed(2); applyFilter(); }
-function useFraming(){
-  if(!rigFOV){ alert("Add a rig first (solve an uncropped sub)."); return; }
-  var t=CATALOG[sel];
-  var dRA=-(boxOff.x/100)*lastSurvFov/Math.cos(t.dec*Math.PI/180);
-  var dDec=-(boxOff.y/100)*lastSurvFov;
-  lockRA=((t.ra+dRA)%360+360)%360; lockDec=t.dec+dDec; lockAngle=rotAngle;
-  var lc=document.getElementById('f-lock'); lc.style.display='block';
-  document.getElementById('f-lockbody').innerHTML=
-    rowHTML("GoTo RA",raStr(lockRA),"var(--good)")+rowHTML("GoTo Dec",decStr(lockDec),"var(--good)")+
-    rowHTML("Target camera angle",lockAngle+"°","var(--good)")+
-    (actualPA!=null?rowHTML("Rotate from now",Math.round(((lockAngle-actualPA)%360+540)%360-180)+"°","var(--acc)"):"")+
-    '<div class="story" style="padding:10px 14px 4px">GoTo the coords (your rig plate-solves onto them), rotate the camera to the target angle, then re-solve to confirm the <b style="color:#5db1ff">blue</b> box lands on <b style="color:#ff6b6b">red</b>.</div>';
-  lc.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
 // ---------- multi-rig ----------
-function applyActiveRig(){ var r=rigs[activeRig]; if(!r) return; rigFOV={w:r.w,h:r.h}; actualPA=(r.pa!=null?r.pa:null); rigName=r.name; rigSavedAt=r.t||null; }
+function applyActiveRig(){ var r=rigs[activeRig]; if(!r) return; rigFOV={w:r.w,h:r.h}; rigName=r.name; }
 function renderRigBar(){
   var has=(activeRig>=0 && rigs[activeRig]);
   var nm=document.getElementById('rigselname');
@@ -449,10 +404,10 @@ function renderRigBar(){
   document.getElementById('setupcard').style.display = has?'none':'block';
   document.getElementById('tgtcard').style.display = has?'block':'none';
   document.getElementById('f-survey').style.display = has?'block':'none';
-  document.getElementById('solvetitle').textContent = has?"Plate-solve a frame":"Add this rig — solve an uncropped sub";
+  document.getElementById('solvetitle').textContent = has?"Change this rig's field of view":"Set your field of view";
   document.getElementById('solvehint').innerHTML = has
-    ? "Rotated the camera? Load a screenshot/sub and solve — the <b style='color:#5db1ff'>blue</b> box jumps to your real angle."
-    : "Load one <b>uncropped</b> sub from this rig and solve it to set FOV + orientation.";
+    ? "Load a fresh uncropped sub, or re-type the numbers, to update this rig's field of view."
+    : "Load one <b>uncropped</b> sub — DSO Dossier reads its FITS header to size your frame. Or type the numbers below.";
 }
 function toggleRigMenu(){ var m=document.getElementById('rigmenu'); if(m.style.display==='none'){ buildRigMenu(); m.style.display='block'; } else m.style.display='none'; }
 function buildRigMenu(){ var h='';
@@ -463,11 +418,11 @@ function buildRigMenu(){ var h='';
 }
 function pickRig(i){ activeRig=i; addingRig=false; applyActiveRig(); saveRigs(); document.getElementById('rigmenu').style.display='none'; renderRigBar(); renderTonight(); }
 function startAddRig(){ addingRig=true; document.getElementById('rigmenu').style.display='none';
-  document.getElementById('setupcard').style.display='block'; document.getElementById('solvetitle').textContent="Add rig — solve an uncropped sub";
-  solveStatus("Choose an <b>uncropped</b> sub from the new rig, then tap Plate-solve.");
-  document.getElementById('solvebtn').scrollIntoView({behavior:'smooth',block:'center'}); }
+  document.getElementById('setupcard').style.display='block'; document.getElementById('solvetitle').textContent="Add rig — set its field of view";
+  solveStatus("Choose an <b>uncropped</b> sub from the new rig, or type its numbers below.");
+  document.getElementById('subfile').scrollIntoView({behavior:'smooth',block:'center'}); }
 function deleteRig(){ if(activeRig<0) return; if(!confirm("Delete rig “"+rigs[activeRig].name+"”?")) return;
-  rigs.splice(activeRig,1); activeRig=rigs.length?0:-1; if(activeRig>=0) applyActiveRig(); else { rigFOV=null; actualPA=null; }
+  rigs.splice(activeRig,1); activeRig=rigs.length?0:-1; if(activeRig>=0) applyActiveRig(); else { rigFOV=null; }
   saveRigs(); document.getElementById('rigmenu').style.display='none'; renderRigBar(); renderTonight(); }
 function applyFilter(){ var im=document.getElementById('surveyimg'); if(im) im.style.filter="brightness("+imgBright+") contrast("+imgContrast+") saturate(1.1)"; }
 function renderChooser(){ var c=document.getElementById('survchooser'); if(!c) return;
@@ -515,193 +470,81 @@ function parseFitsHeader(buf){
 }
 function fnum(h,k){ return (h&&h[k]!==undefined)? parseFloat(h[k]):null; }
 function rowHTML(k,v,color){ return '<div class="row"><span class="k">'+k+'</span><span class="v"'+(color?' style="color:'+color+'"':'')+'>'+v+'</span></div>'; }
-function handleSub(e){
-  var f=e.target.files&&e.target.files[0]; if(!f) return;
-  userFile=f; userPixels=null; solvedCal=null; pendingSolve=null;
-  var res=document.getElementById('f-result'), body=document.getElementById('f-resbody'), note=document.getElementById('f-note');
-  res.style.display="block"; body.innerHTML='<div class="load">reading…</div>';
-  solveStatus('Loaded <b>'+f.name+'</b> — tap Plate-solve for angle + center.');
-  var isFits=/\.(fit|fits|fts)$/i.test(f.name);
-  if(isFits){
-    var r=new FileReader();
-    r.onload=function(){ var h=parseFitsHeader(r.result);
-      var fl=fnum(h,"FOCALLEN"), px=fnum(h,"XPIXSZ")||fnum(h,"PIXSIZE1")||fnum(h,"PIXSIZE"),
-          nx=fnum(h,"NAXIS1"), ny=fnum(h,"NAXIS2"), cam=h&&h.INSTRUME?h.INSTRUME.replace(/'/g,"").trim():null;
-      if(nx&&ny) userPixels={w:nx,h:ny};
-      var out=rowHTML("File",f.name);
-      if(cam) out+=rowHTML("Camera",cam);
-      if(nx&&ny) out+=rowHTML("Pixels",nx+"×"+ny);
-      if(fl&&px&&nx&&ny){ var sc=206.265*px/fl, fw=nx*sc/3600, fh=ny*sc/3600;
-        out+=rowHTML("Focal length",fl+" mm")+rowHTML("Pixel scale",sc.toFixed(2)+"″/px")
-            +rowHTML("Field of view",fw.toFixed(2)+"° × "+fh.toFixed(2)+"°","var(--good)");
-        solveStatus("Loaded — tap <b>Plate-solve</b> to set orientation"+((addingRig||activeRig<0)?" and save this rig.":" / update the blue box."));
-      } else { out+=rowHTML("FOV","plate-solve for FOV","var(--warn)");
-        solveStatus("Loaded — tap Plate-solve (no FOV in header, the solve will measure it)."); }
-      body.innerHTML=out;
-    };
-    r.onerror=function(){ body.innerHTML=rowHTML("Error","couldn't read file","var(--bad)"); };
-    r.readAsArrayBuffer(f.slice(0,46080));
-  } else {
-    var img=new Image();
-    img.onload=function(){ userPixels={w:img.width,h:img.height};
-      body.innerHTML=rowHTML("File",f.name)+rowHTML("Pixels",img.width+"×"+img.height)
-        +rowHTML("FOV","plate-solve for angle+FOV","var(--acc)");
-      solveStatus("Image loaded. Tap <b>Plate-solve</b> to get angle, FOV and center."); };
-    img.onerror=function(){ body.innerHTML=rowHTML("File",f.name)+rowHTML("FOV","needs plate-solve","var(--warn)"); };
-    img.src=URL.createObjectURL(f);
-  }
-}
-// ---------- plate-solve (nova.astrometry.net via shared proxy) ----------
-function savedKey(){ try{ return (localStorage.getItem("dustNovaKey")||"").trim(); }catch(e){ return ""; } }
-function saveKey(v){ v=(v||"").trim(); if(v){ try{ localStorage.setItem("dustNovaKey",v); }catch(e){} } refreshKeyUI(); }
-function refreshKeyUI(){ var have=!!savedKey();
-  var kr=document.getElementById('keyrow'), ks=document.getElementById('keysaved');
-  if(kr) kr.style.display=have?'none':'block'; if(ks) ks.style.display=have?'block':'none'; }
 function solveStatus(m){ var s=document.getElementById('solvestatus'); if(s) s.innerHTML=m||""; }
-function _sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
-function novaJSON(path,opts){ return fetch(NOVA_PROXY.replace(/\/$/,'')+path,opts).then(function(r){ return r.json(); }); }
-function pollInt(ms){ return ms<60000?5000:ms<300000?10000:15000; }
-function fmtEl(ms){ var s=Math.round(ms/1000); return Math.floor(s/60)+"m "+("0"+(s%60)).slice(-2)+"s"; }
-async function waitForJob(subid){ var st=Date.now();
-  while(Date.now()-st<1200000){ var s=await novaJSON("/api/submissions/"+subid);
-    if(s.jobs&&s.jobs.length&&s.jobs[0]!=null) return s.jobs[0];
-    solveStatus("Queued at astrometry.net (their server's busy)… "+fmtEl(Date.now()-st)+". Leave this open.");
-    await _sleep(pollInt(Date.now()-st)); } return null; }
-async function waitForSolve(jobid){ var st=Date.now();
-  while(Date.now()-st<900000){ var j=await novaJSON("/api/jobs/"+jobid);
-    if(j.status==="success") return "success"; if(j.status==="failure") return "failure";
-    solveStatus("Solving your image… "+fmtEl(Date.now()-st)+".");
-    await _sleep(pollInt(Date.now()-st)); } return "timeout"; }
-async function runSolve(){
-  var nk=document.getElementById('novakey'); var key=((nk&&nk.value)||"").trim()||savedKey();
-  if(!key){ solveStatus("Paste your astrometry.net API key first."); return; }
-  if(!userFile){ solveStatus("Choose a sub first."); return; }
-  saveKey(key);
-  var btn=document.getElementById('solvebtn'); if(btn) btn.style.opacity=.5;
-  try{
-    var subid=pendingSolve&&pendingSolve.subid, jobid=pendingSolve&&pendingSolve.jobid;
-    if(!subid){
-      solveStatus("Signing in to astrometry.net…");
-      var login=await novaJSON("/api/login",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},
-        body:"request-json="+encodeURIComponent(JSON.stringify({apikey:key}))});
-      if(login.status!=="success") throw new Error(login.errormessage||"login failed (check key)");
-      solveStatus("Uploading your image…");
-      var fd=new FormData();
-      fd.append("request-json",JSON.stringify({session:login.session,publicly_visible:"n",allow_modifications:"d",allow_commercial_use:"d"}));
-      fd.append("file",userFile,userFile.name||"image.jpg");
-      var up=await novaJSON("/api/upload",{method:"POST",body:fd});
-      if(up.status!=="success") throw new Error(up.errormessage||"upload failed");
-      subid=up.subid; pendingSolve={subid:subid,jobid:null};
-    }
-    if(jobid==null){ jobid=await waitForJob(subid);
-      if(jobid==null) throw new Error("Still queued — tap Plate-solve again to resume."); pendingSolve={subid:subid,jobid:jobid}; }
-    var r=await waitForSolve(jobid);
-    if(r==="timeout") throw new Error("Still solving — tap Plate-solve again to resume.");
-    if(r==="failure"){ pendingSolve=null; throw new Error("Couldn't solve — try a wider, star-rich frame."); }
-    var cal=await novaJSON("/api/jobs/"+jobid+"/calibration/");
-    if(cal.ra==null) throw new Error("No calibration returned.");
-    pendingSolve=null; solvedCal=cal; showSolveResult(cal);
-  }catch(e){ solveStatus((e&&e.message)||"Plate-solve failed."); }
-  finally{ if(btn) btn.style.opacity=1; }
-}
-function showSolveResult(cal){
-  var ori=cal.orientation, par=(cal.parity<0?"mirrored":"normal");
-  var fovw=userPixels?(userPixels.w*cal.pixscale/3600):cal.radius*2, fovh=userPixels?(userPixels.h*cal.pixscale/3600):cal.radius*2;
+// commit a measured field of view (w×h degrees) to the active rig (or a new one)
+function commitFOV(fw,fh,extraRows){
   document.getElementById('f-result').style.display='block';
   document.getElementById('f-resbody').innerHTML=
-    rowHTML("Orientation",ori.toFixed(1)+"°","var(--good)")
-    +rowHTML("Field of view",fovw.toFixed(2)+"° × "+fovh.toFixed(2)+"°")
-    +rowHTML("Center",raStr(((cal.ra%360)+360)%360)+" "+decStr(cal.dec))
-    +rowHTML("Parity",par)+rowHTML("Pixel scale",cal.pixscale.toFixed(2)+"″/px");
+    rowHTML("Field of view",fw.toFixed(2)+"° × "+fh.toFixed(2)+"°","var(--good)")+(extraRows||"");
   if(addingRig || activeRig<0){
     var nm=prompt("Name this rig (e.g. my Askar 80/384/2600):", "rig "+(rigs.length+1));
     if(nm===null) nm="rig "+(rigs.length+1);
-    rigs.push({name:nm||("rig "+(rigs.length+1)), w:fovw, h:fovh, pa:ori, t:Date.now()});
+    rigs.push({name:nm||("rig "+(rigs.length+1)), w:fw, h:fh, t:Date.now()});
     activeRig=rigs.length-1; addingRig=false; applyActiveRig(); saveRigs(); renderRigBar();
-    solveStatus("✓ Rig <b>“"+rigs[activeRig].name+"”</b> saved — FOV "+fovw.toFixed(2)+"×"+fovh.toFixed(2)+"°, orientation "+ori.toFixed(1)+"°. Now drag the <b style='color:#ff6b6b'>red</b> frame to plan; re-solve after you rotate.");
+    solveStatus("✓ Rig <b>“"+rigs[activeRig].name+"”</b> saved — FOV "+fw.toFixed(2)+"×"+fh.toFixed(2)+"°. Your frame is drawn north-up on the survey below.");
   } else {
-    actualPA=ori; rigFOV={w:fovw,h:fovh};
-    rigs[activeRig].pa=ori; rigs[activeRig].w=fovw; rigs[activeRig].h=fovh; rigs[activeRig].t=Date.now(); rigSavedAt=Date.now(); saveRigs(); renderRigBar();
-    var d=Math.round(((rotAngle-ori)%360+540)%360-180), m=Math.abs(((rotAngle-ori)%180+180)%180), ok=(m<3||m>177);
-    solveStatus(ok? "✓ Solved — <b style='color:#5db1ff'>blue</b> camera now "+ori.toFixed(1)+"°, on target. 🎯"
-      : "✓ Solved — <b style='color:#5db1ff'>blue</b> now "+ori.toFixed(1)+"°. To hit <b style='color:#ff6b6b'>red</b> ("+rotAngle+"°), rotate <b>"+d+"°</b> and re-solve.");
+    rigFOV={w:fw,h:fh};
+    rigs[activeRig].w=fw; rigs[activeRig].h=fh; rigs[activeRig].t=Date.now(); saveRigs(); renderRigBar();
+    solveStatus("✓ Field of view updated — "+fw.toFixed(2)+"×"+fh.toFixed(2)+"°.");
   }
-  if(userFile) captureReference(userFile);
-  var mb=document.getElementById('matchbtn'); if(mb) mb.style.display='inline-flex';
   renderSurvey();
+}
+// read FOV from an uncropped sub's FITS header (FOCALLEN + XPIXSZ + NAXIS); sizes the box only
+function handleSub(e){
+  var f=e.target.files&&e.target.files[0]; if(!f) return;
+  userFile=f;
+  var res=document.getElementById('f-result'), body=document.getElementById('f-resbody');
+  res.style.display="block"; body.innerHTML='<div class="load">reading…</div>';
+  var isFits=/\.(fit|fits|fts)$/i.test(f.name);
+  if(!isFits){
+    body.innerHTML=rowHTML("File",f.name)+rowHTML("FOV","needs a FITS sub","var(--warn)");
+    solveStatus("That's not a FITS sub. Load an uncropped <b>.fit/.fits</b>, or type your numbers below.");
+    return;
+  }
+  var r=new FileReader();
+  r.onload=function(){ var h=parseFitsHeader(r.result);
+    var fl=fnum(h,"FOCALLEN"), px=fnum(h,"XPIXSZ")||fnum(h,"PIXSIZE1")||fnum(h,"PIXSIZE"),
+        nx=fnum(h,"NAXIS1"), ny=fnum(h,"NAXIS2"), cam=h&&h.INSTRUME?h.INSTRUME.replace(/'/g,"").trim():null;
+    if(fl&&px&&nx&&ny){ var sc=206.265*px/fl, fw=nx*sc/3600, fh=ny*sc/3600;
+      var rows=rowHTML("File",f.name)+(cam?rowHTML("Camera",cam):"")+rowHTML("Pixels",nx+"×"+ny)
+             +rowHTML("Focal length",fl+" mm")+rowHTML("Pixel scale",sc.toFixed(2)+"″/px");
+      commitFOV(fw,fh,rows);
+    } else {
+      body.innerHTML=rowHTML("File",f.name)+rowHTML("FOV","header missing FOCALLEN / pixel size","var(--warn)");
+      solveStatus("That header has no focal length / pixel size. Type your numbers below instead.");
+    }
+  };
+  r.onerror=function(){ body.innerHTML=rowHTML("Error","couldn't read file","var(--bad)");
+    solveStatus("Couldn't read that file — type your numbers below."); };
+  r.readAsArrayBuffer(f.slice(0,46080));
+}
+// set FOV from typed focal length + pixel size + sensor pixels
+function manualFOV(){
+  var fl=parseFloat(document.getElementById('m-fl').value),
+      px=parseFloat(document.getElementById('m-px').value),
+      nx=parseFloat(document.getElementById('m-nx').value),
+      ny=parseFloat(document.getElementById('m-ny').value);
+  if(!(fl>0&&px>0&&nx>0&&ny>0)){ solveStatus("Enter focal length, pixel size and both sensor dimensions."); return; }
+  var sc=206.265*px/fl, fw=nx*sc/3600, fh=ny*sc/3600;
+  commitFOV(fw,fh,rowHTML("Focal length",fl+" mm")+rowHTML("Pixel scale",sc.toFixed(2)+"″/px")+rowHTML("Pixels",nx+"×"+ny));
 }
 function saveRigs(){ try{ localStorage.setItem("ddRigs", JSON.stringify(rigs)); localStorage.setItem("ddActiveRig", String(activeRig)); }catch(e){} }
 function loadRigs(){ try{
   var r=JSON.parse(localStorage.getItem("ddRigs")||"null");
   if(r&&r.length){ rigs=r; activeRig=parseInt(localStorage.getItem("ddActiveRig")||"0",10); if(isNaN(activeRig)||activeRig>=rigs.length) activeRig=0; }
   else { var old=JSON.parse(localStorage.getItem("ddRig")||"null");   // migrate single rig
-    if(old&&old.w){ rigs=[{name:"my rig", w:old.w, h:old.h, pa:(old.pa!=null?old.pa:null), t:old.t||null}]; activeRig=0; saveRigs(); } }
+    if(old&&old.w){ rigs=[{name:"my rig", w:old.w, h:old.h, t:old.t||null}]; activeRig=0; saveRigs(); } }
   if(activeRig>=0 && rigs[activeRig]) applyActiveRig();
 }catch(e){} }
-function camStamp(){ if(!rigFOV) return "";
-  var when=rigSavedAt? new Date(rigSavedAt).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):"—";
-  return "📷 <b>Camera saved</b>: "+rigFOV.w.toFixed(2)+"°×"+rigFOV.h.toFixed(2)+"°"+(actualPA!=null?(" · angle "+actualPA.toFixed(1)+"°"):"")+" · as of "+when+". Re-solve only if you rotate or change gear."; }
-// ---------- LOCAL rotation match (no server): compare new frame to the reference ----------
-var refStars=null, refAngle=null;   // reference star centroids (polar from center) + solved angle
-function _imgToData(file, maxW, cb){
-  var img=new Image();
-  img.onload=function(){ var sc=Math.min(1,maxW/img.width), w=Math.round(img.width*sc), h=Math.round(img.height*sc);
-    var c=document.createElement('canvas'); c.width=w; c.height=h; var x=c.getContext('2d'); x.drawImage(img,0,0,w,h);
-    var im=x.getImageData(0,0,w,h); URL.revokeObjectURL(img.src); cb(im); };
-  img.onerror=function(){ cb(null); }; img.src=URL.createObjectURL(file);
-}
-function _detectStars(im, topN){
-  var w=im.width,h=im.height,d=im.data,n=w*h,lum=new Float32Array(n),i,mean=0;
-  for(i=0;i<n;i++){ lum[i]=0.3*d[i*4]+0.59*d[i*4+1]+0.11*d[i*4+2]; mean+=lum[i]; } mean/=n;
-  var sd=0; for(i=0;i<n;i++){ var e=lum[i]-mean; sd+=e*e; } sd=Math.sqrt(sd/n);
-  var thr=mean+3*sd, R=2, stars=[];
-  for(var y=R;y<h-R;y++) for(var x=R;x<w-R;x++){ var p=y*w+x, L=lum[p]; if(L<thr) continue;
-    var isMax=true; for(var dy=-R;dy<=R&&isMax;dy++) for(var dx=-R;dx<=R;dx++){ if((dx||dy)&&lum[(y+dy)*w+(x+dx)]>L){isMax=false;break;} }
-    if(!isMax) continue; var sx=0,sy=0,sf=0;
-    for(var a=-R;a<=R;a++) for(var b=-R;b<=R;b++){ var f=lum[(y+a)*w+(x+b)]-mean; if(f>0){ sx+=(x+b)*f; sy+=(y+a)*f; sf+=f; } }
-    if(sf>0) stars.push({x:sx/sf,y:sy/sf,flux:sf}); }
-  stars.sort(function(p,q){return q.flux-p.flux;});
-  return {stars:stars.slice(0,topN), cx:w/2, cy:h/2};
-}
-function _polar(det){ return det.stars.map(function(p){ var dx=p.x-det.cx, dy=p.y-det.cy;
-  return {r:Math.hypot(dx,dy), th:Math.atan2(dy,dx)*180/Math.PI}; }); }
-function _estRot(ref, cur){ var diffs=[];
-  cur.forEach(function(c){ var best=null,bd=1e9; ref.forEach(function(r){ var dr=Math.abs(r.r-c.r);
-    if(dr<bd && dr<Math.max(6,r.r*0.04)){ bd=dr; best=r; } }); if(best){ var d=((c.th-best.th+540)%360)-180; diffs.push(d); } });
-  if(diffs.length<4) return null; diffs.sort(function(a,b){return a-b;}); return diffs[Math.floor(diffs.length/2)]; }
-function captureReference(file){ _imgToData(file,900,function(im){ if(im){ refStars=_polar(_detectStars(im,40)); refAngle=actualPA; } }); }
-function localMatch(file){
-  if(refStars==null||refAngle==null){ solveStatus("Plate-solve once first to set the reference frame."); return; }
-  solveStatus("Matching locally…");
-  _imgToData(file,900,function(im){ if(!im){ solveStatus("Couldn't read that image."); return; }
-    var dRot=_estRot(refStars, _polar(_detectStars(im,40)));
-    if(dRot==null){ solveStatus("Too few matching stars — use a starrier frame, or re-solve on the server."); return; }
-    actualPA=((refAngle+dRot)%360+360)%360;
-    if(rigs[activeRig]) rigs[activeRig].pa=actualPA; rigSavedAt=Date.now(); saveRigs(); renderRigBar();
-    var dd=Math.round(((rotAngle-actualPA)%360+540)%360-180), m=Math.abs(((rotAngle-actualPA)%180+180)%180), ok=(m<3||m>177);
-    solveStatus(ok? "✓ Matched locally — <b style='color:#5db1ff'>blue</b> "+actualPA.toFixed(1)+"° — on target 🎯 (no server)"
-      : "✓ Matched locally — <b style='color:#5db1ff'>blue</b> "+actualPA.toFixed(1)+"°. Rotate <b>"+dd+"°</b> to hit "+rotAngle+"° (no server).");
-    renderSurvey(); });
-}
 function boot(){
   if(!window.Astronomy){ document.getElementById('t-verdict').textContent="astronomy library failed to load (need internet)"; return; }
   var sf=document.getElementById('subfile'); if(sf) sf.addEventListener('change',handleSub);
-  var mf=document.getElementById('matchfile'); if(mf) mf.addEventListener('change',function(e){ if(e.target.files[0]) localMatch(e.target.files[0]); });
-  ['rotslider','brslider','ctslider'].forEach(function(id){ var el=document.getElementById(id);
+  var mfbtn=document.getElementById('manualbtn'); if(mfbtn) mfbtn.addEventListener('click',manualFOV);
+  ['brslider','ctslider'].forEach(function(id){ var el=document.getElementById(id);
     if(el){ el.addEventListener('pointerdown',function(){ lockPager(true); }); el.addEventListener('touchstart',function(){ lockPager(true); },{passive:true}); } });
   ['pointerup','pointercancel','touchend','touchcancel'].forEach(function(ev){ document.addEventListener(ev,function(){ lockPager(false); }); });
-  var rs=document.getElementById('rotslider'); if(rs) rs.addEventListener('input',function(){ setRot(+rs.value); });
   var br=document.getElementById('brslider'); if(br) br.addEventListener('input',function(){ imgBright=br.value/100; document.getElementById('brval').textContent=imgBright.toFixed(2); applyFilter(); });
   var ct=document.getElementById('ctslider'); if(ct) ct.addEventListener('input',function(){ imgContrast=ct.value/100; document.getElementById('ctval').textContent=imgContrast.toFixed(2); applyFilter(); });
-  setupDrag();
-  var sb=document.getElementById('solvebtn'); if(sb) sb.addEventListener('click',runSolve);
-  var nk=document.getElementById('novakey'); if(nk){ if(savedKey()) nk.value=savedKey();
-    nk.addEventListener('change',function(){ saveKey(nk.value); });
-    nk.addEventListener('paste',function(){ setTimeout(function(){ saveKey(nk.value); },0); }); }
-  var kc=document.getElementById('keychange'); if(kc) kc.addEventListener('click',function(){
-    document.getElementById('keyrow').style.display='block'; document.getElementById('keysaved').style.display='none';
-    var k=document.getElementById('novakey'); if(k){ k.value=''; k.focus(); } });
-  refreshKeyUI();
   loadRigs();   // restore saved rigs (+ migrate any old single rig)
   // weather: refresh on foreground + every 45 min
   document.addEventListener('visibilitychange',function(){ if(!document.hidden && lastWx && Date.now()-lastWx>1200000) loadWeather(); });
