@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>origin-o-gram — Sidestep Studio</title>
+    <meta name="description" content="A free Mac tool for Celestron Origin owners: pull your captures over Wi-Fi and inspect every sub — histogram, stats, exposure, calibration, sub-grading, and a live dither check. From Sidestep Studio.">
+    <meta name="author" content="Peter F Wingard">
+    <meta name="keywords" content="Celestron Origin, astrophotography, sub inspection, histogram, dither check, Mac app, Sidestep Studio, origin-o-gram">
+    <meta property="og:title" content="origin-o-gram — inspect your Celestron Origin subs">
+    <meta property="og:description" content="A free Mac tool: pull Origin captures over Wi-Fi and decide what to keep — histogram, stats, exposure verdict, calibration check, sub-grading, live dither check.">
+    <meta property="og:image" content="https://sidestepstudio.com/images/thumbs/spaghetti.jpg">
+    <meta property="og:url" content="https://sidestepstudio.com/origin-o-gram/">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@SidestepStudio">
+    <meta name="twitter:title" content="origin-o-gram">
+    <meta name="twitter:description" content="A free Mac tool to inspect your Celestron Origin subs.">
+    <meta name="twitter:image" content="https://sidestepstudio.com/images/thumbs/spaghetti.jpg">
+    <link rel="canonical" href="https://sidestepstudio.com/origin-o-gram/">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="stylesheet" href="/css/style.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-898TVSPLGS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-898TVSPLGS');
+    </script>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <a class="logo" href="/">@see_theShow's Sidestep<span>Studio</span></a>
+        <nav>
+            <a href="/#projects">Projects</a>
+            <a href="/#contact">Contact</a>
+            <a href="/origin-o-gram/privacy.html">Privacy</a>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <div class="container">
+
+        <!-- Hero -->
+        <section class="hero" style="border-top:none;">
+            <p class="section-label">Sidestep Studio's origin-o-gram <span class="tag" style="vertical-align:middle; margin-left:8px;">Beta</span></p>
+            <h2 style="font-size:2.2rem;">Inspect Celestron Origin Subs as they Drop.</h2>
+            <p style="color:var(--muted); margin-top:8px; max-width:640px; font-size:1.15rem;">
+                Don’t waste more time on less than perfect images
+            </p>
+        </section>
+
+        <!-- What it does -->
+        <section style="padding-top:0;">
+            <div class="card">
+                <ul class="features">
+                    <li>Browses your Origin's captures over Wi-Fi (FTP)</li>
+                    <li>Downloads a whole session to a folder you choose, with progress shown</li>
+                    <li>Per-channel histogram with linear/log toggle, plus min/max/mean/median, percentiles, and clipping</li>
+                    <li>Reads the FITS header — target, exposure, gain, sensor temp, filter</li>
+                    <li>Exposure and calibration checks</li>
+                    <li>Sub-grading to flag weak frames</li>
+                    <li>Dither check — a pixel-based test (hot-pixel-proof) with a live watcher that notifies you if dithering stops</li>
+                    <li>Drag any FITS from Finder to inspect non-Origin files</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Assurances -->
+        <section>
+            <h2 style="font-weight:700; color:#fff;">What you're getting</h2>
+            <div class="card">
+                <ul class="features">
+                    <li><strong>Signed &amp; notarized by Apple.</strong> Verified malware-free; opens cleanly on macOS, no security warning.</li>
+                    <li><strong>Runs entirely on your Mac.</strong> It talks only to <em>your own</em> Origin over your local network, and inspects files on your own disk.</li>
+                    <li><strong>No account. No cloud. No telemetry.</strong> Your images and data never leave your machine.</li>
+                    <li><strong>Free, and provided as-is.</strong> A tool from one Origin owner to others.</li>
+                </ul>
+                <p style="color:var(--muted); font-size:0.85rem; margin-top:4px;">
+                    Requires macOS and a Celestron Origin on the same network. Not affiliated with or endorsed by Celestron.
+                </p>
+            </div>
+        </section>
+
+        <!-- Download gate -->
+        <section id="download">
+            <h2 style="font-weight:700; color:#fff;">Download</h2>
+            <div class="card">
+                <p style="color:var(--muted); font-size:0.9rem; margin-bottom:18px;">
+                    This is a <strong style="color:var(--accent2);">Beta release</strong> — it works, but expect the
+                    occasional rough edge. Your feedback makes it better.
+                </p>
+
+                <!-- STEP 1: the clickwrap acceptance. The Kit form stays hidden until this is checked. -->
+                <label style="display:flex; gap:12px; align-items:flex-start; cursor:pointer; line-height:1.5;">
+                    <input type="checkbox" id="agree" style="margin-top:4px; width:18px; height:18px; flex:0 0 auto;">
+                    <span style="color:var(--muted); font-size:0.92rem;">
+                        I understand origin-o-gram is provided free and <strong>&ldquo;as is,&rdquo; with no warranty</strong>,
+                        that Sidestep Studio LLC is <strong>not responsible for any data loss, damage, or decisions I make using it</strong>,
+                        and that <strong>I download and use it at my own risk</strong>. I have read and agree to the
+                        <a href="/origin-o-gram/terms.html" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">Terms of Use</a>
+                        and <a href="/origin-o-gram/privacy.html" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">Privacy Policy</a>.
+                    </span>
+                </label>
+
+                <!-- STEP 2: revealed only after the box is checked -->
+                <div id="gate" style="display:none; margin-top:22px; border-top:1px solid var(--border); padding-top:22px;">
+                    <p style="color:var(--muted); font-size:0.92rem; margin-bottom:14px;">
+                        Enter your email and we'll send your download link. You'll also get the occasional note about
+                        Sidestep Studio tools — unsubscribe anytime.
+                    </p>
+
+                    <!-- Kit (ConvertKit) inline form — UID b998d6aacd. Delivers the download via
+                         Kit's Incentive email after the subscriber confirms. -->
+                    <script src="https://f.convertkit.com/ckjs/ck.5.js"></script>
+                    <form action="https://app.kit.com/forms/9596584/subscriptions" class="seva-form formkit-form" method="post" data-sv-form="9596584" data-uid="b998d6aacd" data-format="inline" data-version="5" data-options="{&quot;settings&quot;:{&quot;after_subscribe&quot;:{&quot;action&quot;:&quot;message&quot;,&quot;success_message&quot;:&quot;Success! Now check your email to confirm your subscription — your download link is on its way.&quot;,&quot;redirect_url&quot;:&quot;&quot;},&quot;analytics&quot;:{&quot;google&quot;:null,&quot;fathom&quot;:null,&quot;facebook&quot;:null,&quot;segment&quot;:null,&quot;pinterest&quot;:null,&quot;sparkloop&quot;:null,&quot;googletagmanager&quot;:null},&quot;modal&quot;:{&quot;trigger&quot;:&quot;timer&quot;,&quot;scroll_percentage&quot;:null,&quot;timer&quot;:5,&quot;devices&quot;:&quot;all&quot;,&quot;show_once_every&quot;:15},&quot;powered_by&quot;:{&quot;show&quot;:true,&quot;url&quot;:&quot;https://kit.com/features/forms?utm_campaign=poweredby&amp;utm_content=form&amp;utm_medium=referral&amp;utm_source=dynamic&quot;},&quot;recaptcha&quot;:{&quot;enabled&quot;:false},&quot;return_visitor&quot;:{&quot;action&quot;:&quot;show&quot;,&quot;custom_content&quot;:&quot;&quot;},&quot;slide_in&quot;:{&quot;display_in&quot;:&quot;bottom_right&quot;,&quot;trigger&quot;:&quot;timer&quot;,&quot;scroll_percentage&quot;:null,&quot;timer&quot;:5,&quot;devices&quot;:&quot;all&quot;,&quot;show_once_every&quot;:15},&quot;sticky_bar&quot;:{&quot;display_in&quot;:&quot;top&quot;,&quot;trigger&quot;:&quot;timer&quot;,&quot;scroll_percentage&quot;:null,&quot;timer&quot;:5,&quot;devices&quot;:&quot;all&quot;,&quot;show_once_every&quot;:15}},&quot;version&quot;:&quot;5&quot;}" min-width="400 500 600 700 800">
+                        <div data-style="clean">
+                            <ul class="formkit-alert formkit-alert-error" data-element="errors" data-group="alert"></ul>
+                            <div data-element="fields" data-stacked="false" class="seva-fields formkit-fields">
+                                <div class="formkit-field"><input class="formkit-input" name="email_address" aria-label="Email Address" placeholder="Email Address" required="" type="email"></div>
+                                <button data-element="submit" class="formkit-submit formkit-submit"><div class="formkit-spinner"><div></div><div></div><div></div></div><span>Subscribe &amp; get the download</span></button>
+                            </div>
+                            <div class="formkit-powered-by-convertkit-container"><a href="https://kit.com/features/forms?utm_campaign=poweredby&amp;utm_content=form&amp;utm_medium=referral&amp;utm_source=dynamic" data-element="powered-by" class="formkit-powered-by-convertkit" data-variant="dark" target="_blank" rel="nofollow noopener">Built with Kit</a></div>
+                        </div>
+                    </form>
+
+                    <!-- Match Kit's form to the dark theme (overrides Kit's injected styles) -->
+                    <style>
+                        .formkit-form[data-uid="b998d6aacd"]{background:transparent !important; max-width:100% !important; -webkit-font-smoothing:antialiased;}
+                        .formkit-form[data-uid="b998d6aacd"] [data-style="clean"]{padding:0 !important;}
+                        .formkit-form[data-uid="b998d6aacd"] .formkit-input{background:var(--bg) !important; color:#fff !important; border:1px solid var(--border) !important; border-radius:8px !important; font-size:15px;}
+                        .formkit-form[data-uid="b998d6aacd"] .formkit-input:focus{border-color:var(--accent) !important;}
+                        .formkit-form[data-uid="b998d6aacd"] .formkit-input::placeholder{color:var(--muted) !important; opacity:1;}
+                        .formkit-form[data-uid="b998d6aacd"] .formkit-submit{background-color:var(--accent) !important; border-radius:8px !important;}
+                        .formkit-form[data-uid="b998d6aacd"] .formkit-submit > span{font-weight:600;}
+                        .formkit-form[data-uid="b998d6aacd"] .formkit-alert-error{background:#3a1d16 !important; border-color:#f2643b !important; color:#ffb4a0 !important;}
+                    </style>
+
+                </div>
+            </div>
+            <p style="margin-top:14px;">
+                <a href="/#projects" style="color:var(--accent); text-decoration:none; font-size:0.95rem;">&larr; More from Sidestep Studio</a>
+            </p>
+        </section>
+
+    </div>
+</main>
+
+<script>
+    // Clickwrap gate: the email form is hidden until the user actively accepts the terms.
+    document.getElementById('agree').addEventListener('change', function () {
+        document.getElementById('gate').style.display = this.checked ? 'block' : 'none';
+    });
+</script>
+
+<footer>
+    <div class="container" style="padding:32px 0; color:var(--muted); font-size:0.85rem;">
+        &copy; 2026 Sidestep Studio LLC
+        <span style="margin:0 10px;">·</span>
+        <a href="/origin-o-gram/terms.html" style="color:var(--muted); text-decoration:none;">Terms</a>
+        <span style="margin:0 10px;">·</span>
+        <a href="/origin-o-gram/privacy.html" style="color:var(--muted); text-decoration:none;">Privacy</a>
+        <span style="margin:0 10px;">·</span>
+        <a href="mailto:see_theshow@sidestepstudio.com" style="color:var(--muted); text-decoration:none;">Contact</a>
+    </div>
+</footer>
+
+</body>
+</html>
