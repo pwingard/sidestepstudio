@@ -33,7 +33,7 @@ body::before {
     pointer-events: none;
 }
 
-header, main, footer { position: relative; z-index: 1; }
+header, main, footer, .container { position: relative; z-index: 1; }
 
 /* ── Layout ── */
 
