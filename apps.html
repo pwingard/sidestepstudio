@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apps &amp; Tools — Sidestep Studio</title>
+<meta name="description" content="Astrophotography apps and free web tools from Sidestep Studio.">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+ .app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:32px}
+ .appc{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-decoration:none;display:block;transition:border-color .15s}
+ .appc:hover{border-color:var(--accent)}
+ .appc .k{color:var(--accent);font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+ .appc .n{color:var(--text);font-weight:800;font-size:1.15rem;margin-top:6px}
+ .appc .d{color:var(--muted);font-size:.92rem;margin-top:8px;line-height:1.5}
+</style>
+</head>
+<body>
+<header><div class="container"><a class="logo" href="/">Sidestep<span>Studio</span></a><nav></nav></div></header>
+<div class="container" style="padding-top:56px;padding-bottom:80px;">
+  <p class="section-label">Software</p>
+  <h2 style="font-size:1.9rem;font-weight:800;margin-bottom:6px;">Apps &amp; Tools</h2>
+  <p style="color:var(--muted);max-width:640px;line-height:1.6;">Planning apps and free browser tools for astrophotographers — built by an astrophotographer.</p>
+  <div class="app-grid">
+    <a class="appc" href="/moondance/info.html"><div class="k">iOS App</div><div class="n">Moondance</div><div class="d">A methodical deep-sky session planner for iPhone &amp; iPad.</div></a>
+    <a class="appc" href="/webapps/AstroDustUp/"><div class="k">Free · Web</div><div class="n">Astro Dust Up</div><div class="d">Reveal real dust vs. gradients in your target — WISE/IR survey overlays, blink &amp; blend.</div></a>
+    <a class="appc" href="/FOV/"><div class="k">Free · Web</div><div class="n">FOV Planner</div><div class="d">Frame any target for any scope + camera before you shoot.</div></a>
+    <a class="appc" href="/origin-o-gram/"><div class="k">Free · Web</div><div class="n">Origin-o-gram</div><div class="d">Browse your Celestron Origin captures and check histograms / dither.</div></a>
+  </div>
+</div>
+<script src="/js/site.js" defer></script>
+</body>
+</html>
