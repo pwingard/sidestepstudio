@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Astrophotography — Sidestep Studio</title>
-    <meta name="description" content="Deep-sky astrophotography by Pete Wingard / @see_theShow.">
+    <title>Astrophotography · Sidestep Studio</title>
+    <meta name="description" content="Astrophotography gallery by P. Wingard (@see_theShow). Nebulae, galaxies, comets and more from Decatur, GA and Camden, SC — click any image to zoom in.">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -16,54 +16,265 @@
         gtag('js', new Date());
         gtag('config', 'G-898TVSPLGS');
     </script>
+    <style>
+        .gallery-page { padding: 40px 0 60px; }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .gcard {
+            position: relative;
+            display: block;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            cursor: zoom-in;
+            transition: border-color 0.2s, transform 0.2s;
+            background: #000;
+        }
+        .gcard:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .gcard img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            display: block;
+        }
+        .gcard .cap {
+            position: absolute; left: 0; right: 0; bottom: 0;
+            padding: 18px 10px 8px;
+            font-size: 0.8rem; font-weight: 600; color: #fff;
+            background: linear-gradient(transparent, rgba(0,0,0,0.78));
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .gcard:hover .cap { opacity: 1; }
+        .gcard .badge {
+            position: absolute; top: 8px; left: 8px;
+            font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em;
+            text-transform: uppercase; color: #000; background: var(--accent);
+            padding: 2px 7px; border-radius: 999px;
+        }
+        @media (max-width: 620px) {
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        }
+
+        /* lightbox */
+        .lb { position: fixed; inset: 0; z-index: 1000; display: none;
+              background: rgba(0,0,0,0.94); }
+        .lb.open { display: block; }
+        .lb-stage { position: absolute; inset: 0; overflow: hidden;
+                    touch-action: none; cursor: grab; }
+        .lb-stage.dragging { cursor: grabbing; }
+        .lb-img { position: absolute; top: 50%; left: 50%;
+                  transform-origin: 0 0; will-change: transform;
+                  user-select: none; -webkit-user-drag: none; max-width: none; }
+        .lb-info { position: absolute; left: 0; right: 0; bottom: 0;
+                   padding: 18px 22px 20px; color: #fff;
+                   background: linear-gradient(transparent, rgba(0,0,0,0.85));
+                   pointer-events: none; }
+        .lb-title { font-weight: 700; font-size: 1.05rem; margin: 0 0 4px; }
+        .lb-story { color: #e6e6e6; font-size: 0.9rem; line-height: 1.55;
+                    margin: 0 0 8px; max-width: 760px; }
+        .lb-cap { color: var(--muted); font-size: 0.8rem; line-height: 1.5; max-width: 900px; }
+        .lb-btn { position: absolute; z-index: 2; background: rgba(20,20,20,0.7);
+                  color: #fff; border: 1px solid rgba(255,255,255,0.18);
+                  border-radius: 999px; cursor: pointer; font-size: 1.4rem;
+                  width: 46px; height: 46px; display: flex; align-items: center;
+                  justify-content: center; transition: background 0.15s; }
+        .lb-btn:hover { background: rgba(60,60,60,0.9); }
+        .lb-close { top: 16px; right: 16px; }
+        .lb-prev { top: 50%; left: 16px; transform: translateY(-50%); }
+        .lb-next { top: 50%; right: 16px; transform: translateY(-50%); }
+        .lb-hint { position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+                   color: var(--muted); font-size: 0.78rem; pointer-events: none;
+                   background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 999px; }
+        @media (max-width: 620px) { .lb-story { font-size: 0.85rem; } .lb-info { padding: 14px 16px 16px; } }
+    </style>
 </head>
 <body>
-
 <header>
     <div class="container">
-        <a class="logo" href="/">Sidestep<span>Studio</span></a>
+        <a class="logo" href="/">@see_theShow's Sidestep<span>Studio</span></a>
         <nav>
-            <a href="/#projects">Projects</a>
+            <a href="gallery.html">Gallery</a>
             <a href="/#contact">Contact</a>
             <a href="/moondance/privacy.html">Privacy</a>
         </nav>
     </div>
 </header>
-
 <main>
-    <div class="container" style="padding-top: 60px; padding-bottom: 80px;">
-
-        <p class="section-label">Photography</p>
-        <h2 style="font-size:1.8rem; font-weight:800; margin-bottom:8px;">Astrophotography</h2>
-        <p style="color:var(--muted); margin-bottom:40px;">Deep-sky imaging from dark sites — nebulae, galaxies, and star clusters. Follow <a href="https://x.com/SidestepStudio" style="color:var(--accent);">@SidestepStudio</a> on X or <a href="https://facebook.com/seetheshow87" target="_blank" rel="noopener" style="color:var(--accent);">@seetheshow87</a> on Facebook.</p>
-
-        <!-- Gallery placeholder — replace with real images -->
-        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:16px;">
-            <div style="aspect-ratio:1; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius);"></div>
-            <div style="aspect-ratio:1; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius);"></div>
-            <div style="aspect-ratio:1; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius);"></div>
-            <div style="aspect-ratio:1; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius);"></div>
-            <div style="aspect-ratio:1; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius);"></div>
-            <div style="aspect-ratio:1; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius);"></div>
+    <div class="container">
+        <div class="gallery-page">
+            <h2 style="font-weight:700; color:#fff;">Astrophotography Gallery</h2>
+            <p style="color:var(--muted); margin-top:8px;">by <a href="https://x.com/see_theShow" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">@see_theShow</a> &nbsp;·&nbsp; <a href="https://facebook.com/seetheshow87" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">@seetheshow87</a> &nbsp;·&nbsp; <a href="https://app.astrobin.com/u/see_theShow" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">AstroBin</a> &nbsp;·&nbsp; Decatur, GA and Camden, SC &nbsp;·&nbsp; <span style="color:#888;">click any image to zoom in</span></p>
+            <div class="gallery-grid" id="grid"></div>
         </div>
-
     </div>
 </main>
 
-<footer>
-    <div class="container">
-        <p>
-            &copy; 2026 Sidestep Studio
-            <span class="sep">·</span>
-            <a href="/moondance/privacy.html">Privacy Policy</a>
-            <span class="sep">·</span>
-            <a href="https://x.com/SidestepStudio" target="_blank" rel="noopener">@SidestepStudio</a>
-            <span class="sep">·</span>
-            <a href="https://facebook.com/seetheshow87" target="_blank" rel="noopener">@seetheshow87</a>
-        </p>
+<div class="lb" id="lb">
+    <div class="lb-stage" id="stage"><img class="lb-img" id="lbimg" alt=""></div>
+    <div class="lb-hint" id="hint">scroll / pinch to zoom · drag to pan · double-click to reset</div>
+    <button class="lb-btn lb-close" id="close" aria-label="Close">&times;</button>
+    <button class="lb-btn lb-prev" id="prev" aria-label="Previous">&#8249;</button>
+    <button class="lb-btn lb-next" id="next" aria-label="Next">&#8250;</button>
+    <div class="lb-info">
+        <p class="lb-title" id="lbtitle"></p>
+        <p class="lb-story" id="lbstory"></p>
+        <p class="lb-cap" id="lbcap"></p>
     </div>
-</footer>
+</div>
 
+<script>
+/* === Gallery data ===  add new images at the top. story:'' = no story yet (TBD). */
+const IMAGES = [
+  { slug:'crescent', title:'Crescent Nebula (NGC 6888)', badge:'New',
+    story:`A bubble blown by a dying star. At its heart, the Wolf-Rayet star WR 136 &mdash; a massive star in its final act &mdash; has shed its outer layers and now blasts a 1,700 km/s wind into the shell it exhaled some 400,000 years ago. The red is that gas lit by the star's radiation; the teal is the shock front where the wind slams into it. This 25-light-year bubble sits ~5,000 light-years away in Cygnus, and WR 136 is next in line to explode as a supernova. It looks frozen, but the shell is expanding at 360,000 km/h &mdash; a frozen explosion, still going off.`,
+    cap:`Crescent Nebula &nbsp;&middot;&nbsp; NGC 6888, Cygnus &nbsp;&middot;&nbsp; June 30 &amp; July 3, 2026 &nbsp;&middot;&nbsp; 4.3 hrs (dual-band + broadband) &nbsp;&middot;&nbsp; Celestron Origin (RASA 6&Prime; f/2.2) &nbsp;&middot;&nbsp; IMX678 OSC &nbsp;&middot;&nbsp; Camden, SC &nbsp;&middot;&nbsp; &copy;2026 P Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'bubble', title:'Bubble &amp; Lobster Claw Nebulae',
+    story:`Four cosmic objects sharing one 5&deg; frame of Cassiopeia. The Bubble Nebula (NGC 7635) is a near-perfect sphere of gas ten light-years across, blown by the fierce wind of one hot, massive young star some 45 times the Sun's mass, pushing against the surrounding cloud until the shell glows. Alongside it: the open cluster M52, the Lobster Claw Nebula (Sh2-157), and NGC 7538 &mdash; a stellar nursery where new stars are being born.`,
+    cap:`Bubble, Lobster Claw Nebulae, M52 &nbsp;&middot;&nbsp; NGC 7635 / Sh2-157, Cassiopeia &nbsp;&middot;&nbsp; July 4, 2026 &nbsp;&middot;&nbsp; 4.5 hrs dual-band &nbsp;&middot;&nbsp; Samyang 135mm f/2 &nbsp;&middot;&nbsp; ASI533MC &nbsp;&middot;&nbsp; Camden, SC &nbsp;&middot;&nbsp; &copy;2026 P Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'etn', title:"Elephant's Trunk Nebula",
+    story:`Eleven and a half hours of light over four June nights, mapped to the Hubble palette. The blazing red star at upper right is &mu; Cephei &mdash; Herschel's &ldquo;Garnet Star,&rdquo; one of the reddest stars visible to the naked eye. The dark column is a dense globule of gas and dust ~2,400 light-years away in Cepheus, slowly being sculpted by the radiation of a hot young star.`,
+    cap:`Elephant's Trunk Nebula &nbsp;&middot;&nbsp; IC 1396, Cepheus &nbsp;&middot;&nbsp; June 11&ndash;18, 2026 &nbsp;&middot;&nbsp; 11.5 hrs SHO &nbsp;&middot;&nbsp; Askar V 80mm f/4.8 (384mm) &nbsp;&middot;&nbsp; ASI2600MM Pro &nbsp;&middot;&nbsp; Astronomik 3nm &nbsp;&middot;&nbsp; Camden, SC &nbsp;&middot;&nbsp; &copy;2026 P Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'ngc6760', title:'Hollywood In The Sky (NGC 6760)', story:'',
+    cap:`NGC 6760, &ldquo;Hollywood In The Sky&rdquo; &nbsp;&middot;&nbsp; globular cluster, Aquila &nbsp;&middot;&nbsp; June 18, 2026 &nbsp;&middot;&nbsp; 21 min (28&times;45s) &nbsp;&middot;&nbsp; Celestron Origin (RASA 6&Prime; f/2.2) &nbsp;&middot;&nbsp; Origin678C &nbsp;&middot;&nbsp; gain 500 &nbsp;&middot;&nbsp; Camden, SC &nbsp;&middot;&nbsp; &copy;2026 P Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'wheresyellow', title:'The Cygnus Wall &mdash; "Where’s Yellow"', story:'',
+    cap:`The Cygnus Wall (&ldquo;Where&rsquo;s Yellow&rdquo;) &nbsp;&middot;&nbsp; NGC 7000, Cygnus &nbsp;&middot;&nbsp; &copy;2026 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'redwall', title:'The Cygnus Wall &mdash; "The Red Wall"', story:'',
+    cap:`The Cygnus Wall (&ldquo;The Red Wall&rdquo;) &nbsp;&middot;&nbsp; NGC 7000, Cygnus &nbsp;&middot;&nbsp; &copy;2026 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'rosette', title:'Rosette Nebula', story:'',
+    cap:`Rosette Nebula &nbsp;&middot;&nbsp; Jan 11&ndash;13, 2026 &nbsp;&middot;&nbsp; 9.17 hrs total &nbsp;&middot;&nbsp; AskarV 80mm / 384mm f/l F4.8 &nbsp;&middot;&nbsp; ASI533MC, 300 sec subs, 300 gain, dual band filter &nbsp;&middot;&nbsp; Decatur, GA &nbsp;&middot;&nbsp; &copy;2026 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'spaghetti', title:'Spaghetti Nebula', story:'',
+    cap:`Spaghetti Nebula (SH2-240) &nbsp;&middot;&nbsp; Jan 18&ndash;19, 2026 &nbsp;&middot;&nbsp; 2600/270 &nbsp;&middot;&nbsp; Decatur, GA &nbsp;&middot;&nbsp; &copy;2026 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'witchshead', title:"Witch's Head Nebula", story:'',
+    cap:`Witch's Head Nebula &nbsp;&middot;&nbsp; 533/270 &nbsp;&middot;&nbsp; Decatur, GA &nbsp;&middot;&nbsp; &copy;2026 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'conenebula', title:'Christmas Tree Cluster &amp; Cone Nebula', story:'',
+    cap:`NGC 2264 Christmas Tree Cluster &amp; Cone Nebula &nbsp;&middot;&nbsp; Feb 23&ndash;24, 2026 &nbsp;&middot;&nbsp; Decatur, GA &nbsp;&middot;&nbsp; Origin Telescope &nbsp;&middot;&nbsp; &copy;2026 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'alnitak', title:'Alnitak, Flame &amp; Horsehead', story:'',
+    cap:`Alnitak &nbsp;&middot;&nbsp; Flame Nebula &nbsp;&middot;&nbsp; Horsehead &nbsp;&middot;&nbsp; NGC 2023, IC 434, IC 432 &nbsp;&middot;&nbsp; &copy;2025 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'flamingstar', title:'Flaming Star Nebula', story:'',
+    cap:`The Flaming Star Nebula &nbsp;&middot;&nbsp; &copy;2025 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'redmoon', title:'Red Moon Rising', story:'',
+    cap:`Red Moon Rising &nbsp;&middot;&nbsp; &copy;2025 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'ngc2158', title:'NGC 2158 &amp; M35', story:'',
+    cap:`NGC 2158 &amp; M35 &nbsp;&middot;&nbsp; &copy;2025 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'m31', title:'Andromeda Galaxy (M31)', story:'',
+    cap:`M31, Andromeda Galaxy &nbsp;&middot;&nbsp; &copy;2025 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'lemmon', title:'Comet Lemmon', story:'',
+    cap:`Comet Lemmon (C/2025 A6) &nbsp;&middot;&nbsp; &copy;2025 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'orion', title:'Orion Nebula (M42)', story:'',
+    cap:`M42, the Orion Nebula &nbsp;&middot;&nbsp; &copy;2025 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+  { slug:'veil', title:'Veil Nebula', story:'',
+    cap:`Veil Nebula &nbsp;&middot;&nbsp; &copy;2025 Peter F. Wingard &nbsp;&middot;&nbsp; @see_theShow` },
+];
+
+/* === build grid === */
+const grid = document.getElementById('grid');
+IMAGES.forEach((im, i) => {
+  const a = document.createElement('div');
+  a.className = 'gcard';
+  a.innerHTML = `${im.badge ? `<span class="badge">${im.badge}</span>` : ''}` +
+    `<img loading="lazy" src="images/thumbs/${im.slug}.jpg" alt="${im.title.replace(/<[^>]+>/g,'')}">` +
+    `<span class="cap">${im.title}</span>`;
+  a.addEventListener('click', () => open(i));
+  grid.appendChild(a);
+});
+
+/* === lightbox with zoom + pan === */
+const lb = document.getElementById('lb'), stage = document.getElementById('stage'),
+      lbimg = document.getElementById('lbimg'), hint = document.getElementById('hint');
+let cur = 0, scale = 1, tx = 0, ty = 0, baseW = 0, baseH = 0;
+let drag = false, sx = 0, sy = 0, ptx = 0, pty = 0;
+
+function render() {
+  lbimg.style.transform = `translate(-50%,-50%) translate(${tx}px,${ty}px) scale(${scale})`;
+}
+function fit() {
+  // base = fit image inside viewport
+  const vw = stage.clientWidth, vh = stage.clientHeight;
+  const r = lbimg.naturalWidth / lbimg.naturalHeight;
+  if (vw / vh > r) { baseH = vh; baseW = vh * r; } else { baseW = vw; baseH = vw / r; }
+  lbimg.style.width = baseW + 'px'; lbimg.style.height = baseH + 'px';
+  scale = 1; tx = 0; ty = 0; render();
+}
+function open(i) {
+  cur = i; const im = IMAGES[i];
+  lbimg.src = `images/${im.slug}-full.jpg`; lbimg.alt = im.title.replace(/<[^>]+>/g,'');
+  document.getElementById('lbtitle').innerHTML = im.title;
+  const st = document.getElementById('lbstory');
+  st.innerHTML = im.story || ''; st.style.display = im.story ? 'block' : 'none';
+  document.getElementById('lbcap').innerHTML = im.cap;
+  lb.classList.add('open'); document.body.style.overflow = 'hidden';
+  hint.style.opacity = 1; setTimeout(() => hint.style.opacity = 0, 2600);
+  if (lbimg.complete) fit(); else lbimg.onload = fit;
+}
+function close() { lb.classList.remove('open'); document.body.style.overflow = ''; }
+function go(d) { open((cur + d + IMAGES.length) % IMAGES.length); }
+
+document.getElementById('close').onclick = close;
+document.getElementById('prev').onclick = (e) => { e.stopPropagation(); go(-1); };
+document.getElementById('next').onclick = (e) => { e.stopPropagation(); go(1); };
+lb.addEventListener('click', (e) => { if (e.target === lb) close(); });
+document.addEventListener('keydown', (e) => {
+  if (!lb.classList.contains('open')) return;
+  if (e.key === 'Escape') close();
+  else if (e.key === 'ArrowLeft') go(-1);
+  else if (e.key === 'ArrowRight') go(1);
+});
+window.addEventListener('resize', () => { if (lb.classList.contains('open')) fit(); });
+
+/* wheel zoom toward cursor */
+stage.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const rect = stage.getBoundingClientRect();
+  const cx = e.clientX - rect.left - rect.width / 2 - tx;
+  const cy = e.clientY - rect.top - rect.height / 2 - ty;
+  const ns = Math.min(8, Math.max(1, scale * (e.deltaY < 0 ? 1.15 : 0.87)));
+  const k = ns / scale;
+  tx -= cx * (k - 1); ty -= cy * (k - 1); scale = ns;
+  if (scale === 1) { tx = 0; ty = 0; }
+  render();
+}, { passive: false });
+
+/* double-click toggle */
+stage.addEventListener('dblclick', (e) => {
+  if (scale > 1) { scale = 1; tx = 0; ty = 0; }
+  else {
+    const rect = stage.getBoundingClientRect();
+    const cx = e.clientX - rect.left - rect.width / 2;
+    const cy = e.clientY - rect.top - rect.height / 2;
+    scale = 3; tx = -cx * 2; ty = -cy * 2;
+  }
+  render();
+});
+
+/* drag pan (mouse + touch) */
+function down(x, y) { if (scale <= 1) return; drag = true; sx = x; sy = y; ptx = tx; pty = ty; stage.classList.add('dragging'); }
+function move(x, y) { if (!drag) return; tx = ptx + (x - sx); ty = pty + (y - sy); render(); }
+function up() { drag = false; stage.classList.remove('dragging'); }
+stage.addEventListener('mousedown', (e) => down(e.clientX, e.clientY));
+window.addEventListener('mousemove', (e) => move(e.clientX, e.clientY));
+window.addEventListener('mouseup', up);
+
+/* touch: drag + pinch */
+let pdist = 0;
+stage.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) down(e.touches[0].clientX, e.touches[0].clientY);
+  else if (e.touches.length === 2) pdist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+}, { passive: true });
+stage.addEventListener('touchmove', (e) => {
+  if (e.touches.length === 1) move(e.touches[0].clientX, e.touches[0].clientY);
+  else if (e.touches.length === 2) {
+    e.preventDefault();
+    const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    scale = Math.min(8, Math.max(1, scale * (d / pdist))); pdist = d;
+    if (scale === 1) { tx = 0; ty = 0; } render();
+  }
+}, { passive: false });
+stage.addEventListener('touchend', up);
+</script>
 <script src="/js/site.js" defer></script>
 </body>
 </html>
