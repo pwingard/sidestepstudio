@@ -309,10 +309,26 @@ async function acquireWake(){try{wakeLock=await navigator.wakeLock.request('scre
 document.getElementById('wakeBtn').addEventListener('click',async function(){wakeWant=!wakeWant;this.textContent=wakeWant?'☀️ Staying awake':'☕ Keep awake';this.style.color=wakeWant?'#7bffb0':'';if(wakeWant)await acquireWake();else if(wakeLock){wakeLock.release();wakeLock=null;}});
 document.addEventListener('visibilitychange',()=>{if(wakeWant&&document.visibilityState==='visible'&&!wakeLock)acquireWake();});
 function setDatalist(){document.getElementById('objlist').innerHTML=CAT.map(o=>'<option value="'+o.n.replace(/"/g,'&quot;')+'">').join('');}
-fetch('catalog.json').then(r=>r.json()).then(c=>{CATBASE=c;CAT=CATBASE.concat(PLANET_OBJS,cometObjs());setDatalist();build();winStart=doyToday();render();
+// The catalog ships encrypted (catalog.enc). The decrypt key is served ONLY to sidestepstudio.com by the Cloudflare Worker,
+// so a rehosted copy can't decrypt it → blank. (localhost falls back to plaintext for development.)
+async function loadCatalog(){
+ try{
+  const [kr,er]=await Promise.all([fetch('https://lavalamp-key.bizpfw.workers.dev/'),fetch('catalog.enc')]);
+  if(!kr.ok)throw 0;
+  const kb=Uint8Array.from(atob((await kr.json()).k),c=>c.charCodeAt(0));
+  const key=await crypto.subtle.importKey('raw',kb,{name:'AES-GCM'},false,['decrypt']);
+  const enc=Uint8Array.from(atob(await er.text()),c=>c.charCodeAt(0));
+  const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:enc.slice(0,12)},key,enc.slice(12));
+  return JSON.parse(new TextDecoder().decode(plain));
+ }catch(e){
+  if(/^(localhost|127\.|192\.168\.)/.test(location.hostname))return (await fetch('catalog.json')).json();
+  throw e;
+ }
+}
+loadCatalog().then(c=>{CATBASE=c;CAT=CATBASE.concat(PLANET_OBJS,cometObjs());setDatalist();build();winStart=doyToday();render();
  // then quietly refresh comets from the live MPC feed and rebuild if we got current ones
  loadComets().then(cm=>{if(cm&&cm.length){COMETS=cm;CAT=CATBASE.concat(PLANET_OBJS,cometObjs());setDatalist();const ws=winStart;build();winStart=ws;render();}});
-}).catch(e=>{document.getElementById('cnt').textContent='catalog.json failed to load — serve over http (not file://).';});
+}).catch(e=>{document.getElementById('cnt').textContent='Could not load the catalog for this site.';});
 // PWA: install support (add to home screen). Registration fails harmlessly where sw.js isn't present.
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 // hide the deploy reminder on the live site (keep it while developing locally)
