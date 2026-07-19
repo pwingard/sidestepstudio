@@ -19,6 +19,11 @@ h1{font-size:20px;margin:0 0 2px}a.nav{color:var(--acc);font-size:12px;text-deco
 select,input,button.geo{background:#0a0e15;border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:6px 8px;font:13px inherit}
 .mini{background:var(--line);border:none;color:var(--ink);font-size:10.5px;border-radius:5px;padding:2px 8px;cursor:pointer;margin-left:6px;font-weight:600}
 input[type=number]{width:76px}input[type=range]{width:120px;accent-color:var(--acc)}button.geo{cursor:pointer;color:var(--acc)}
+#hiChips{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;max-width:360px}#hiChips:empty{display:none}
+.chip{display:inline-flex;align-items:center;gap:5px;background:#0a0e15;border:1px solid var(--line);border-radius:12px;padding:2px 3px 2px 8px;font-size:11.5px;line-height:1.4}
+.chip .cd{width:7px;height:7px;border-radius:50%;flex:none}
+.chip button{background:none;border:none;color:var(--mut);cursor:pointer;font-size:14px;line-height:1;padding:0 3px;border-radius:8px}.chip button:hover{color:var(--ink);background:var(--line)}
+.chipclr{background:none;border:none;color:var(--acc);font-size:11px;cursor:pointer;padding:2px 4px;align-self:center}
 .layout{display:flex;gap:14px;align-items:flex-start}@media(max-width:900px){.layout{flex-direction:column}}
 .left{flex:1;min-width:0}.right{width:290px;flex:none}@media(max-width:900px){.right{width:100%}}
 .mix{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:12px}
@@ -65,7 +70,7 @@ body.maxed .right{max-height:calc(100vh - 30px);overflow:hidden}   /* leaderboar
   <div class="ctl"><label>&nbsp;</label><button class="geo" id="geo">📍 My location</button></div>
   <div class="ctl"><label>Screen</label><button class="geo" id="wakeBtn">☕ Keep awake</button></div>
   <div class="ctl"><label>Min alt <span id="thv">20</span>°</label><input type="range" id="thr" min="0" max="60" value="20"></div>
-  <div class="ctl" style="flex:1;min-width:200px"><label>Highlight object</label><input id="hiIn" list="objlist" placeholder="type or pick a name…" autocomplete="off"><datalist id="objlist"></datalist></div>
+  <div class="ctl" style="flex:1;min-width:200px"><label>Highlight objects</label><input id="hiIn" list="objlist" placeholder="type a name, Enter to add…" autocomplete="off"><datalist id="objlist"></datalist><div id="hiChips"></div></div>
 </div>
 <div id="tip"></div>
 <div class="layout">
@@ -151,7 +156,7 @@ function loadComets(){const URL='https://www.minorplanetcenter.net/iau/Ephemerid
 const TYPES={emission:['Emission','#e04a3c'],reflection:['Reflection','#4f7bff'],opencluster:['Open cluster','#2fd4e6'],globular:['Globular','#f0a52e'],galaxy:['Galaxy','#ffe07a'],planetary:['Planetary','#ff5fce'],snr:['Supernova rmnt','#2ad4ac'],darknebula:['Dark nebula','#b07840'],planet:['Planet','#c58cff'],comet:['Comet','#8ef25a']};
 const hexRGB=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
 const APPURL='sidestepstudio.com/webapps/AstroLavaLamp',APPWM='The Astro Lava Lamp · '+APPURL; // on-chart watermark (update path on deploy)
-let CAT=[],CATBASE=[],YDK=[],YGRID=[],SPAN=91,winStart=0,slid={},hi=-1,master=28;
+let CAT=[],CATBASE=[],YDK=[],YGRID=[],SPAN=91,winStart=0,slid={},hiSet=new Set(),master=28;
 let raceDay=-1,pushMode=false;const RN=14,ROWH=21,raceRows={};
 const monthSel=document.getElementById('month'),yearI=document.getElementById('year'),lat_=document.getElementById('lat'),lon_=document.getElementById('lon'),thr_=document.getElementById('thr'),thv=document.getElementById('thv');
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -216,7 +221,7 @@ function render(){const dpr=window.devicePixelRatio||1;const cw=cv.parentElement
    ctx.strokeStyle=G.line;ctx.lineWidth=1.5;ctx.beginPath();for(let k=s;k<=e;k++){const x=xW(k),y=yC(Math.min(90,gv(row,k)));k>s?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();
   }});});
  ctx.globalCompositeOperation='source-over';ctx.restore();
- if(hi>=0&&hi<CAT.length)drawHi(hi,false);
+ hiSet.forEach(i=>{if(i>=0&&i<CAT.length)drawHi(i,false);});
  // selected-day cursor (the day the bar-chart race is showing) — fixed position while racing so the wax scrolls smoothly under it
  if(raceDay>=0){let cx;if(lavaOn&&pushMode){cx=ML+PW*0.28;}else{let d=raceDay;while(d<winStart)d+=365;cx=xW(d);}if(cx>=ML&&cx<=ML+PW){ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(cx,MT);ctx.lineTo(cx,MT+PH);ctx.stroke();ctx.setLineDash([]);}}
  // axis frame
@@ -250,8 +255,18 @@ function drawHover(){const dd=Math.round(winStart+(hover.x-ML)/PW*SPAN),alt=(1-(
   tip.innerHTML=head+list.map(j=>{const o=CAT[j];return '<span style="color:'+TYPES[o.t][1]+'">●</span> '+o.n+' · '+gv(YGRID[j],dd).toFixed(0)+'°';}).join('<br>');
   tip.style.left=Math.min(hover.cx+13,innerWidth-260)+'px';tip.style.top=(hover.cy+13)+'px';tip.style.opacity=1;}
  else tip.style.opacity=0;}
-document.getElementById('hiIn').addEventListener('input',function(){const v=this.value.trim().toLowerCase();hi=v?CAT.findIndex(o=>o.n.toLowerCase().includes(v)):-1;if(raceDay>=0)drawBars();render();});
-function pickObj(i){hi=i;document.getElementById('hiIn').value=CAT[i].n;if(raceDay>=0)drawBars();render();}
+// multi-highlight: hiSet holds any number of object indices; chips show them, × removes, "clear all" wipes
+function hiRefresh(){renderChips();if(raceDay>=0)drawBars();render();}
+function addHi(i){if(i>=0&&i<CAT.length){hiSet.add(i);hiRefresh();}}
+function removeHi(i){hiSet.delete(i);hiRefresh();}
+function clearHi(){hiSet.clear();hiRefresh();}
+function renderChips(){const c=document.getElementById('hiChips');if(!c)return;const arr=[...hiSet].filter(i=>i>=0&&i<CAT.length);
+ c.innerHTML=arr.map(i=>{const col=TYPES[CAT[i].t][1];return '<span class="chip" style="border-color:'+col+'55"><span class="cd" style="background:'+col+'"></span>'+CAT[i].n.split(' / ')[0].split(' - ')[0]+'<button data-i="'+i+'" title="remove">×</button></span>';}).join('')+(arr.length>1?'<button class="chipclr" id="hiClr">clear all</button>':'');}
+// commit on Enter or datalist pick: exact name wins, else first substring match; then clear the box to add another
+document.getElementById('hiIn').addEventListener('change',function(){const v=this.value.trim().toLowerCase();if(!v)return;let i=CAT.findIndex(o=>o.n.toLowerCase()===v);if(i<0)i=CAT.findIndex(o=>o.n.toLowerCase().includes(v));if(i>=0){addHi(i);this.value='';}});
+document.getElementById('hiChips').addEventListener('click',function(e){const b=e.target.closest('button');if(!b)return;if(b.id==='hiClr')clearHi();else if(b.dataset.i!=null)removeHi(+b.dataset.i);});
+// clicking a leaderboard bar toggles that object's highlight
+function pickObj(i){hiSet.has(i)?hiSet.delete(i):hiSet.add(i);hiRefresh();}
 function setAll(v){Object.keys(TYPES).forEach(k=>{slid[k]=v;const el=document.getElementById('sl_'+k);if(el)el.value=v;});render();}
 // max-screen: fullscreen the graph+sliders area and let the canvas grow to fill it
 function toggleFS(){const el=document.querySelector('.layout');if(!document.fullscreenElement){(el.requestFullscreen||el.webkitRequestFullscreen).call(el);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}}
@@ -284,7 +299,7 @@ function showPane(which){const r=document.querySelector('.right');r.classList.to
 function dayList(dd){raceDay=modY(dd);showPane('night');drawBars();render();}
 function drawBars(){const thr=+thr_.value,c=modY(raceDay),night=document.querySelector('.right').classList.contains('night'),showN=night?999:RN;
  const _d=new Date(+yearI.value,0,1+raceDay);document.getElementById('dayh').textContent=MN[_d.getMonth()]+' '+_d.getDate()+' — highest that night';
- const list=CAT.map((o,i)=>({o,i,a:gv(YGRID[i],raceDay)})).filter(r=>r.a>0.5&&(vis(r.o)||r.i===hi)).sort((p,q)=>q.a-p.a).slice(0,showN);
+ const list=CAT.map((o,i)=>({o,i,a:gv(YGRID[i],raceDay)})).filter(r=>r.a>0.5&&(vis(r.o)||hiSet.has(r.i))).sort((p,q)=>q.a-p.a).slice(0,showN);
  const cont=document.getElementById('daylist');cont.classList.add('race');cont.style.height=(list.length*ROWH+2)+'px';cont.style.maxHeight=night?Math.max(240,document.fullscreenElement?window.innerHeight-190:Hgt-64)+'px':'';
  const used={};const maxW=132;
  list.forEach((r,rank)=>{used[r.i]=1;let el=raceRows[r.i];
@@ -293,7 +308,7 @@ function drawBars(){const thr=+thr_.value,c=modY(raceDay),night=document.querySe
    cont.appendChild(el);raceRows[r.i]=el;}
   requestAnimationFrame(()=>{el.style.opacity='1';el.style.transform='translateY('+(rank*ROWH)+'px)';});
   el.querySelector('.rt').style.cssText='background:'+TYPES[r.o.t][1]+';width:'+Math.max(3,r.a/90*maxW)+'px';
-  const nm=el.querySelector('.rn');nm.textContent=r.o.n.split(' / ')[0].split(' - ')[0];nm.style.fontWeight=(r.a>=thr||r.i===hi)?'700':'400';el.classList.toggle('hl',r.i===hi);
+  const nm=el.querySelector('.rn');nm.textContent=r.o.n.split(' / ')[0].split(' - ')[0];nm.style.fontWeight=(r.a>=thr||hiSet.has(r.i))?'700':'400';el.classList.toggle('hl',hiSet.has(r.i));
   el.querySelector('.ra').textContent=r.a.toFixed(0)+'°';});
  for(const k in raceRows){if(!used[k]){const el=raceRows[k];el.style.opacity='0';el.style.transform='translateY('+(RN*ROWH+8)+'px)';delete raceRows[k];setTimeout(()=>{if(el.parentNode)el.parentNode.removeChild(el);},550);}}
  if(!list.length){document.getElementById('dayh').textContent=MN[_d.getMonth()]+' '+_d.getDate()+' — nothing above 3° in the dark';}
