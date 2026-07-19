@@ -154,7 +154,7 @@ let PW,PH,yMax=90,W=760,Hgt=420;const ML=38,MR=12,MT=14,MB=26;
 const MOVEXT=95; // extra days precomputed for movers (planets/comets)
 const yC=a=>MT+PH*(1-a/yMax),modY=d=>((d%365)+365)%365,xW=d=>ML+((d-winStart)/SPAN)*PW;
 // value at day d: movers (row longer than a year) index continuously (clamped); fixed stars wrap yearly
-const gv=(row,d)=>row.length>365?row[d<0?0:d>row.length-1?row.length-1:d]:gv(row,d);
+const gv=(row,d)=>row.length>365?row[d<0?0:d>row.length-1?row.length-1:d]:row[((d%365)+365)%365];
 function render(){const dpr=window.devicePixelRatio||1;const cw=cv.parentElement,maxed=!!document.fullscreenElement;
  W=Math.max(320,(cw.clientWidth||784)-24);Hgt=maxed?Math.max(360,(cw.clientHeight||420)-24):420;
  cv.width=W*dpr;cv.height=Hgt*dpr;cv.style.width=W+'px';cv.style.height=Hgt+'px';ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,Hgt);
@@ -227,7 +227,7 @@ function toggleFS(){const el=document.querySelector('.layout');if(!document.full
 document.addEventListener('fullscreenchange',()=>{const on=!!document.fullscreenElement;document.body.classList.toggle('maxed',on);const b=document.getElementById('maxBtn');if(b)b.textContent=on?'⛶ Exit':'⛶ Max';setTimeout(render,90);});
 addEventListener('resize',()=>{if(CAT.length)render();});
 // ── Astro Lava Lamp: idle "breathing" — after a while of no interaction, drift the type levels on slow out-of-sync waves ──
-let lavaOn=false,lavaRAF=0,lavaBase={},idleTimer=0,lavaBaseWin=0,lavaLastT=-1;
+let lavaOn=false,lavaRAF=0,lavaBase={},lavaLastT=-1;
 const TKEYS=Object.keys(TYPES),lavaW={},lavaP={},DRIFT=3; // DRIFT = days/second the window scrolls through the year
 TKEYS.forEach((k,i)=>{lavaW[k]=0.10+0.05*(i%4);lavaP[k]=i*1.7;}); // period ~16–63s, phases spread → wax never in sync
 function lavaStep(t){const s=t/1000;
@@ -239,16 +239,12 @@ function lavaStep(t){const s=t/1000;
  // push mode: step the leaderboard bars once per calendar day as the cursor crosses it
  if(pushMode){const cur=modY(Math.round(winStart+SPAN*0.28));if(cur!==raceDay){raceDay=cur;drawBars();}}
  render();lavaRAF=requestAnimationFrame(lavaStep);}
-function lavaStart(){if(lavaOn)return;lavaOn=true;TKEYS.forEach(k=>lavaBase[k]=slid[k]||0);lavaBaseWin=winStart;lavaLastT=-1;const b=document.getElementById('lavabadge');if(b)b.style.opacity=1;lavaRAF=requestAnimationFrame(lavaStep);}
+function lavaStart(){if(lavaOn)return;lavaOn=true;TKEYS.forEach(k=>lavaBase[k]=slid[k]||0);lavaLastT=-1;const b=document.getElementById('lavabadge');if(b)b.style.opacity=1;lavaRAF=requestAnimationFrame(lavaStep);}
 function lavaStop(){if(!lavaOn)return;lavaOn=false;cancelAnimationFrame(lavaRAF);TKEYS.forEach(k=>{slid[k]=lavaBase[k];const el=document.getElementById('sl_'+k);if(el)el.value=lavaBase[k];});const b=document.getElementById('lavabadge');if(b)b.style.opacity=0;render();} // freeze at the scrolled date — don't snap back
-let manualPlay=false;
-// ONE contextual play button: on the Sliders pane it runs the lava lamp; on the Leaderboard it runs the lava lamp + the Sisyphus Push (ranking races)
+// ONE simple, robust play button. Sliders pane → lava lamp; Leaderboard pane → lava lamp + the Sisyphus Push.
+// It runs until you press Pause — no auto-start, and no stray control action can stop it unexpectedly.
 function setPlayLabel(){const b=document.getElementById('playBtn');if(!b)return;if(lavaOn){b.textContent='⏸ Pause';return;}b.textContent=document.querySelector('.right').classList.contains('night')?'▶ Push':'▶ Play';}
-function startPlay(sticky){manualPlay=sticky;pushMode=document.querySelector('.right').classList.contains('night');if(pushMode&&raceDay<0)raceDay=modY(Math.round(winStart+SPAN*0.28));clearTimeout(idleTimer);lavaStart();setPlayLabel();}
-function playToggle(){if(lavaOn){manualPlay=false;lavaStop();setPlayLabel();}else startPlay(true);}
-function poke(){if(manualPlay)return;lavaStop();setPlayLabel();clearTimeout(idleTimer);idleTimer=setTimeout(()=>startPlay(false),60000);}
-['mousemove','pointerdown','keydown','wheel','touchstart','input'].forEach(ev=>document.addEventListener(ev,poke,{passive:true}));
-poke();
+function playToggle(){if(lavaOn){lavaStop();}else{pushMode=document.querySelector('.right').classList.contains('night');if(pushMode&&raceDay<0)raceDay=modY(Math.round(winStart+SPAN*0.28));lavaStart();}setPlayLabel();}
 // click a day → menu
 cv.addEventListener('click',e=>{const rect=cv.getBoundingClientRect(),sx=cv.width/(window.devicePixelRatio||1)/rect.width,x=(e.clientX-rect.left)*sx;
  if(x<ML||x>ML+PW)return;const dd=Math.round(winStart+(x-ML)/PW*SPAN);dayList(dd);});
