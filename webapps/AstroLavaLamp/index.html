@@ -124,7 +124,7 @@ function planetRaDec(name,d){const el=PL[name](d),N=rev(el[0]),i=el[1],w=rev(el[
  return{ra:rev(atan2(ye,xg)),dec:asin(ze/Math.sqrt(xg*xg+ye*ye+ze*ze))};}
 const PLANET_OBJS=Object.keys(PL).map(k=>({n:k,t:'planet',planet:k,ra:0,dec:0}));
 // comets — elliptical (e<1) elements → geocentric RA/Dec; mean anomaly from time since perihelion (Td = perihelion, days since 2451543.5)
-const COMETS=[{n:'10P/Tempel 2',e:0.5373871,q:1.4176106,i:12.02720,node:117.79822,w:195.48083,Td:jdOf(new Date(Date.UTC(2026,7,2,3,13)))-2451543.5}];
+let COMETS=[{n:'10P/Tempel 2',e:0.5373871,q:1.4176106,i:12.02720,node:117.79822,w:195.48083,Td:jdOf(new Date(Date.UTC(2026,7,2,3,13)))-2451543.5}]; // fallback; replaced by live MPC data on load
 function cometRaDec(cm,d){const a=cm.q/(1-cm.e),n=0.9856076686/Math.pow(a,1.5),M=rev(n*(d-cm.Td));
  let E=M+Rr*cm.e*sin(M)*(1+cm.e*cos(M));for(let k=0;k<9;k++)E=E-(E-Rr*cm.e*sin(E)-M)/(1-cm.e*cos(E));
  const xv=a*(cos(E)-cm.e),yv=a*Math.sqrt(1-cm.e*cm.e)*sin(E),v=rev(atan2(yv,xv)),r=Math.sqrt(xv*xv+yv*yv),N=cm.node,i=cm.i,w=cm.w;
@@ -133,12 +133,26 @@ function cometRaDec(cm,d){const a=cm.q/(1-cm.e),n=0.9856076686/Math.pow(a,1.5),M
  const xvs=cos(Es)-es,yvs=Math.sqrt(1-es*es)*sin(Es),lonsun=rev(atan2(yvs,xvs)+ws),rs=Math.sqrt(xvs*xvs+yvs*yvs);
  const xs=rs*cos(lonsun),ys=rs*sin(lonsun),xg=xh+xs,yg=yh+ys,zg=zh,ecl=23.4393-3.563e-7*d;
  const ye=yg*cos(ecl)-zg*sin(ecl),ze=yg*sin(ecl)+zg*cos(ecl);
- return{ra:rev(atan2(ye,xg)),dec:asin(ze/Math.sqrt(xg*xg+ye*ye+ze*ze))};}
-const COMET_OBJS=COMETS.map(c=>({n:c.n,t:'comet',comet:c,ra:0,dec:0}));
+ return{ra:rev(atan2(ye,xg)),dec:asin(ze/Math.sqrt(xg*xg+ye*ye+ze*ze)),r,delta:Math.sqrt(xg*xg+yg*yg+zg*zg)};}
+const cometObjs=()=>COMETS.map(c=>({n:c.n,t:'comet',comet:c,ra:0,dec:0}));
+// ── self-updating comets: pull current elements from the Minor Planet Center (CORS-open), keep the few brightest observable ellipticals ──
+function parseMPCComets(txt){const out=[];for(const line of txt.split('\n')){if(line.length<90)continue;const p=line.substring(14).trim().split(/\s+/);if(p.length<11)continue;
+ const yr=+p[0],mo=+p[1],day=parseFloat(p[2]),q=parseFloat(p[3]),e=parseFloat(p[4]),w=parseFloat(p[5]),node=parseFloat(p[6]),i=parseFloat(p[7]),M1=parseFloat(p[9]),K1=parseFloat(p[10]);
+ if(!isFinite(q)||!isFinite(e)||!isFinite(M1))continue;
+ const name=line.substring(102,158).trim()||('Comet '+p.slice(11).join(' '));
+ const jd=(Date.UTC(yr,mo-1,1)+(day-1)*86400000)/86400000+2440587.5,Td=jd-2451543.5;
+ out.push({n:name,e,q,i,node,w,Td,M1,K1});}
+ return out;}
+function loadComets(){const URL='https://www.minorplanetcenter.net/iau/Ephemerides/Comets/Soft00Cmt.txt';
+ let cache=null;try{const raw=localStorage.getItem('all_comets');if(raw){const o=JSON.parse(raw);if(Date.now()-o.t<3*864e5)cache=o.txt;}}catch(e){}
+ const got=cache?Promise.resolve(cache):fetch(URL).then(r=>r.text()).then(t=>{try{localStorage.setItem('all_comets',JSON.stringify({t:Date.now(),txt:t}));}catch(e){}return t;});
+ return got.then(txt=>{const now=jdOf(new Date())-2451543.5;
+  const scored=parseMPCComets(txt).filter(c=>c.e<0.98&&c.q<6).map(c=>{const rd=cometRaDec(c,now),mag=c.M1+5*Math.log10(rd.delta)+c.K1*Math.log10(rd.r);return Object.assign(c,{mag});}).filter(c=>isFinite(c.mag)&&c.mag<11).sort((a,b)=>a.mag-b.mag).slice(0,4);
+  return scored.length?scored:null;}).catch(()=>null);}
 const TYPES={emission:['Emission','#e04a3c'],reflection:['Reflection','#4f7bff'],opencluster:['Open cluster','#2fd4e6'],globular:['Globular','#f0a52e'],galaxy:['Galaxy','#ffe07a'],planetary:['Planetary','#ff5fce'],snr:['Supernova rmnt','#2ad4ac'],darknebula:['Dark nebula','#b07840'],planet:['Planet','#c58cff'],comet:['Comet','#8ef25a']};
 const hexRGB=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
 const APPURL='sidestepstudio.com/webapps/AstroLavaLamp',APPWM='The Astro Lava Lamp · '+APPURL; // on-chart watermark (update path on deploy)
-let CAT=[],YDK=[],YGRID=[],SPAN=91,winStart=0,slid={},hi=-1,master=28;
+let CAT=[],CATBASE=[],YDK=[],YGRID=[],SPAN=91,winStart=0,slid={},hi=-1,master=28;
 let raceDay=-1,pushMode=false;const RN=14,ROWH=21,raceRows={};
 const monthSel=document.getElementById('month'),yearI=document.getElementById('year'),lat_=document.getElementById('lat'),lon_=document.getElementById('lon'),thr_=document.getElementById('thr'),thv=document.getElementById('thv');
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -290,7 +304,11 @@ let wakeLock=null,wakeWant=false;
 async function acquireWake(){try{wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null;});}catch(e){}}
 document.getElementById('wakeBtn').addEventListener('click',async function(){wakeWant=!wakeWant;this.textContent=wakeWant?'☀️ Staying awake':'☕ Keep awake';this.style.color=wakeWant?'#7bffb0':'';if(wakeWant)await acquireWake();else if(wakeLock){wakeLock.release();wakeLock=null;}});
 document.addEventListener('visibilitychange',()=>{if(wakeWant&&document.visibilityState==='visible'&&!wakeLock)acquireWake();});
-fetch('catalog.json').then(r=>r.json()).then(c=>{CAT=c.concat(PLANET_OBJS,COMET_OBJS);document.getElementById('objlist').innerHTML=CAT.map(o=>'<option value="'+o.n.replace(/"/g,'&quot;')+'">').join('');build();winStart=doyToday();render();}).catch(e=>{document.getElementById('cnt').textContent='catalog.json failed to load — serve over http (not file://).';});
+function setDatalist(){document.getElementById('objlist').innerHTML=CAT.map(o=>'<option value="'+o.n.replace(/"/g,'&quot;')+'">').join('');}
+fetch('catalog.json').then(r=>r.json()).then(c=>{CATBASE=c;CAT=CATBASE.concat(PLANET_OBJS,cometObjs());setDatalist();build();winStart=doyToday();render();
+ // then quietly refresh comets from the live MPC feed and rebuild if we got current ones
+ loadComets().then(cm=>{if(cm&&cm.length){COMETS=cm;CAT=CATBASE.concat(PLANET_OBJS,cometObjs());setDatalist();const ws=winStart;build();winStart=ws;render();}});
+}).catch(e=>{document.getElementById('cnt').textContent='catalog.json failed to load — serve over http (not file://).';});
 // PWA: install support (add to home screen). Registration fails harmlessly where sw.js isn't present.
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 // hide the deploy reminder on the live site (keep it while developing locally)
