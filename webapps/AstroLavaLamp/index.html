@@ -225,7 +225,8 @@ function render(){const dpr=window.devicePixelRatio||1;const cw=cv.parentElement
  ctx.textAlign='left';ctx.fillStyle='#7d8797';const _a=new Date(+yearI.value,0,1+Math.round(winStart)),_b=new Date(+yearI.value,0,1+Math.round(winStart+SPAN));ctx.fillText('peak altitude in dark sky (°) — '+MN[_a.getMonth()].slice(0,3)+' '+_a.getDate()+' – '+MN[_b.getMonth()].slice(0,3)+' '+_b.getDate(),ML,MT-2);
  // watermark: chart name + web-apps URL (top-right, faint — clears the Play/Max buttons at the bottom corners)
  ctx.textAlign='right';ctx.textBaseline='top';ctx.font='10px -apple-system,Arial';ctx.lineJoin='round';ctx.lineWidth=2.6;ctx.strokeStyle='rgba(4,6,12,.75)';ctx.strokeText(APPWM,ML+PW-6,MT+4);ctx.fillStyle='rgba(200,208,222,.6)';ctx.fillText(APPWM,ML+PW-6,MT+4);ctx.textBaseline='alphabetic';
- let vis=Object.values(TYPES).length;document.getElementById('cnt').textContent=CAT.length+' objects · '+Object.entries(slid).filter(([k,v])=>v>0).length+' types shown · additive blend';
+ document.getElementById('cnt').textContent=CAT.length+' objects · '+Object.entries(slid).filter(([k,v])=>v>0).length+' types shown · additive blend';
+ if(hover)drawHover();   // redraw hover each frame so it works while the animation plays
 }
 // text with a dark rounded halo so it stays readable over bright additive wax
 function haloText(s,x,y){ctx.lineJoin='round';ctx.miterLimit=2;ctx.lineWidth=3.6;ctx.strokeStyle='rgba(3,5,10,.95)';ctx.strokeText(s,x,y);ctx.fillStyle='#f2f5fa';ctx.fillText(s,x,y);}
@@ -238,15 +239,18 @@ function drawHi(i,hover,label){const o=CAT[i],col=TYPES[o.t][1],row=YGRID[i],dA=
 function vis(o){return (slid[o.t]||0)>0||(slid[o.t2]||0)>0;}
 function nearby(dd,alt){const r=[];for(let i=0;i<CAT.length;i++){if(!vis(CAT[i]))continue;const v=gv(YGRID[i],dd);if(v<=0.6)continue;const d=Math.abs(v-alt);if(d<4)r.push([d,i]);}r.sort((a,b)=>a[0]-b[0]);return r.slice(0,9).map(x=>x[1]);}
 function fmtd(dd){const d=new Date(+yearI.value,0,1+dd);return MN[d.getMonth()].slice(0,3)+' '+d.getDate();}
-const tip=document.getElementById('tip');
+const tip=document.getElementById('tip');let hover=null;
 cv.addEventListener('mousemove',e=>{if(!CAT.length)return;const rect=cv.getBoundingClientRect(),sx=cv.width/(window.devicePixelRatio||1)/rect.width,x=(e.clientX-rect.left)*sx,y=(e.clientY-rect.top)*sx;
- if(x<ML||x>ML+PW||y<MT||y>MT+PH){tip.style.opacity=0;return;}
- const dd=Math.round(winStart+(x-ML)/PW*SPAN),c=modY(dd),alt=(1-(y-MT)/PH)*yMax,list=nearby(dd,alt);
- render();if(list.length){list.forEach((j,idx)=>drawHi(j,true,idx===0));
+ if(x<ML||x>ML+PW||y<MT||y>MT+PH){if(hover){hover=null;tip.style.opacity=0;render();}return;}
+ hover={x,y,cx:e.clientX,cy:e.clientY};render();});
+cv.addEventListener('mouseleave',()=>{hover=null;tip.style.opacity=0;render();});
+// draws the hover highlight + tooltip; called from render() so it survives every animation frame (works during play)
+function drawHover(){const dd=Math.round(winStart+(hover.x-ML)/PW*SPAN),alt=(1-(hover.y-MT)/PH)*yMax,list=nearby(dd,alt);
+ if(list.length){list.forEach((j,idx)=>drawHi(j,true,idx===0));
   const head=list.length>1?('<b>'+list.length+' objects here</b> · '+fmtd(dd)+'<br>'):('<b>'+fmtd(dd)+'</b><br>');
   tip.innerHTML=head+list.map(j=>{const o=CAT[j];return '<span style="color:'+TYPES[o.t][1]+'">●</span> '+o.n+' · '+gv(YGRID[j],dd).toFixed(0)+'°';}).join('<br>');
-  tip.style.left=Math.min(e.clientX+13,innerWidth-260)+'px';tip.style.top=(e.clientY+13)+'px';tip.style.opacity=1;}else tip.style.opacity=0;});
-cv.addEventListener('mouseleave',()=>{tip.style.opacity=0;render();});
+  tip.style.left=Math.min(hover.cx+13,innerWidth-260)+'px';tip.style.top=(hover.cy+13)+'px';tip.style.opacity=1;}
+ else tip.style.opacity=0;}
 document.getElementById('hiIn').addEventListener('input',function(){const v=this.value.trim().toLowerCase();hi=v?CAT.findIndex(o=>o.n.toLowerCase().includes(v)):-1;if(raceDay>=0)drawBars();render();});
 function pickObj(i){hi=i;document.getElementById('hiIn').value=CAT[i].n;if(raceDay>=0)drawBars();render();}
 function setAll(v){Object.keys(TYPES).forEach(k=>{slid[k]=v;const el=document.getElementById('sl_'+k);if(el)el.value=v;});render();}
