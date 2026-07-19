@@ -1,0 +1,288 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080a10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lava Lamp">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>The Astro Lava Lamp by Sidestep Studio</title>
+<style>
+:root{--bg:#080a10;--panel:#11151d;--line:#212936;--ink:#eaeef4;--mut:#7d8797;--acc:#5fd0e6;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,Helvetica,Arial,sans-serif}
+.wrap{max-width:1140px;margin:0 auto;padding:18px}
+h1{font-size:20px;margin:0 0 2px}a.nav{color:var(--acc);font-size:12px;text-decoration:none}.sub{color:var(--mut);font-size:12.5px;margin:2px 0 14px}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin-bottom:12px}
+.ctl{display:flex;flex-direction:column;gap:3px}.ctl label{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+select,input,button.geo{background:#0a0e15;border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:6px 8px;font:13px inherit}
+.mini{background:var(--line);border:none;color:var(--ink);font-size:10.5px;border-radius:5px;padding:2px 8px;cursor:pointer;margin-left:6px;font-weight:600}
+input[type=number]{width:76px}input[type=range]{width:120px;accent-color:var(--acc)}button.geo{cursor:pointer;color:var(--acc)}
+.layout{display:flex;gap:14px;align-items:flex-start}@media(max-width:900px){.layout{flex-direction:column}}
+.left{flex:1;min-width:0}.right{width:290px;flex:none}@media(max-width:900px){.right{width:100%}}
+.mix{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:12px}
+.mix h3{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.srow{display:flex;align-items:center;gap:8px;margin:5px 0}.sw{width:12px;height:12px;border-radius:3px;flex:none}
+.srow span{font-size:12px;width:96px}.srow input{flex:1;width:auto}
+.chartwrap{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}canvas{display:block;max-width:100%;cursor:crosshair}
+.maxbtn{position:absolute;right:16px;bottom:15px;z-index:5;background:rgba(18,22,30,.82);border:1px solid var(--line);color:var(--ink);font-size:12px;font-weight:600;border-radius:8px;padding:6px 12px;cursor:pointer;backdrop-filter:blur(5px)}.maxbtn:hover{background:rgba(40,48,62,.92)}
+.layout:fullscreen{background:var(--bg);height:100vh;padding:14px;box-sizing:border-box;gap:14px}
+body.maxed .chartwrap{height:calc(100vh - 30px)}
+body.maxed .foot{display:none}
+body.maxed .right{max-height:calc(100vh - 30px);overflow:hidden}   /* leaderboard's own inner list is the only scroller */
+.right.night .day{max-height:none;overflow:visible}   /* leaderboard = single (inner) scroller; no outer bar */
+#tip{position:fixed;pointer-events:none;background:#0a0e15f2;border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:12px;opacity:0;transition:opacity .08s;z-index:9;max-width:250px;box-shadow:0 6px 18px #0009}#tip b{color:var(--acc)}
+.day{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;max-height:520px;overflow-y:auto}
+.day h3{margin:0 0 4px;font-size:13px}.day .hint{color:var(--mut);font-size:11.5px;margin:0 0 8px}
+.bar{display:flex;align-items:center;gap:7px;margin:3px 0;font-size:11.5px}
+.bar .track{height:11px;border-radius:3px;flex:none}.bar .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar .al{color:var(--mut);margin-left:auto;flex:none}
+/* bar-chart race: absolutely-positioned rows that slide up/down + grow as ranks change */
+#daylist.race{position:relative;overflow-y:auto}
+/* right column shows ONE pane at a time — Sliders or Tonight's ranking — via the toggle at top */
+.panetoggle{display:flex;gap:6px;margin-bottom:11px}
+.ptab{flex:1;background:var(--line);border:none;color:var(--mut);font-size:12px;font-weight:600;border-radius:7px;padding:6px 4px;cursor:pointer}
+.ptab.active{background:var(--acc);color:#08121a}
+.right .day{display:none}
+.right.night .mix{display:none}
+.right.night .day{display:block}
+#daylist.race .rbar{position:absolute;left:0;right:2px;height:19px;display:flex;align-items:center;gap:6px;font-size:11.5px;cursor:pointer;transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .45s}
+#daylist.race .rbar .rt{height:12px;border-radius:3px;flex:none;transition:width .5s cubic-bezier(.4,0,.2,1)}
+#daylist.race .rbar .rn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#daylist.race .rbar .ra{color:var(--ink);margin-left:auto;flex:none;font-variant-numeric:tabular-nums}
+#daylist.race .rbar.hl{background:rgba(95,208,230,.16);outline:1px solid var(--acc);border-radius:5px}
+#daylist.race .rbar.hl .rn,#daylist.race .rbar.hl .ra{color:var(--acc)}
+.foot{color:var(--mut);font-size:11px;margin-top:10px}
+</style></head><body>
+<div class="wrap">
+<h1>🌋 The Astro Lava Lamp <span style="font-weight:400;opacity:.55;font-size:.62em">by Sidestep Studio</span> <span id="lavabadge" style="opacity:0;transition:opacity 1.4s;font-size:.5em;font-weight:400;color:#ff9a5c;vertical-align:middle">🌋 breathing · drifting through the seasons… (move to wake)</span></h1>
+<p class="sub">Every popular astrophotography object all at once — a three-month span, colored by type and additive-blended so overlaps mix. Slide a type to dial its brightness; click a day for that night's list.</p>
+<div class="controls">
+  <div class="ctl"><label>Month</label><select id="month"></select></div>
+  <div class="ctl"><label>Year</label><input type="number" id="year"></div>
+  <div class="ctl"><label>Latitude</label><input type="number" id="lat" step="0.01" value="34.25"></div>
+  <div class="ctl"><label>Longitude</label><input type="number" id="lon" step="0.01" value="-80.60"></div>
+  <div class="ctl"><label>&nbsp;</label><button class="geo" id="geo">📍 My location</button></div>
+  <div class="ctl"><label>Screen</label><button class="geo" id="wakeBtn">☕ Keep awake</button></div>
+  <div class="ctl"><label>Min alt <span id="thv">20</span>°</label><input type="range" id="thr" min="0" max="60" value="20"></div>
+  <div class="ctl" style="flex:1;min-width:200px"><label>Highlight object</label><input id="hiIn" list="objlist" placeholder="type or pick a name…" autocomplete="off"><datalist id="objlist"></datalist></div>
+</div>
+<div id="tip"></div>
+<div class="layout">
+ <div class="left">
+  <div class="chartwrap"><canvas id="cv"></canvas><button class="maxbtn" id="playBtn" onclick="playToggle()" style="right:auto;left:16px">▶ Play</button><button class="maxbtn" id="maxBtn" onclick="toggleFS()">⛶ Max</button></div>
+  <p class="foot" id="cnt"></p>
+ </div>
+ <div class="right">
+  <div class="panetoggle"><button class="ptab active" id="tgMix" onclick="showPane('mix')">🎚 Sliders</button><button class="ptab" id="tgNight" onclick="showPane('night')">🏆 Leaderboard</button></div>
+  <div class="mix"><h3>Type brightness <button class="mini" onclick="setAll(0)">all off</button><button class="mini" onclick="setAll(60)">reset</button></h3>
+   <div class="srow" style="margin-bottom:9px;padding-bottom:8px;border-bottom:1px solid #2a2f3a"><span class="sw" style="background:linear-gradient(90deg,#555,#fff)"></span><span><b>Overall</b></span><input id="master" type="range" min="0" max="100" value="28" oninput="master=+this.value;render()"></div>
+   <div id="sliders"></div></div>
+  <div class="day"><h3 id="dayh">Pick a day →</h3><p class="hint" id="dayhint">Click a day column on the chart to list that night's highest objects — then hit <b>▶ Push</b> (bottom-left of the chart) to run the Sisyphus Push and watch them climb and set through the seasons.</p><div id="daylist"></div></div>
+ </div>
+ <div id="devnote" style="margin-top:14px;padding:9px 13px;background:#1a1206;border:1px solid #5a3a12;border-radius:9px;color:#e6b878;font-size:12px">⚠️ <b>Reminder — before/at deploy:</b> lock this app with a <b>Cloudflare Worker origin-gated key</b> (catalog encrypted in the page; the key is served only to the real sidestepstudio.com URL, so a rehosted copy renders blank). See request&nbsp;#2. <button class="mini" onclick="this.parentNode.style.display='none'" style="margin-left:8px">dismiss</button></div>
+</div>
+</div>
+<script>
+const D=Math.PI/180,Rr=180/Math.PI,rev=x=>x-Math.floor(x/360)*360;
+const sin=x=>Math.sin(x*D),cos=x=>Math.cos(x*D),atan2=(y,x)=>Rr*Math.atan2(y,x),asin=x=>Rr*Math.asin(Math.max(-1,Math.min(1,x)));
+const jdOf=dt=>dt.getTime()/86400000+2440587.5,gmst=jd=>{const t=(jd-2451545)/36525;return rev(280.46061837+360.98564736629*(jd-2451545)+0.000387933*t*t);};
+function sunpos(d){const w=rev(282.9404+4.70935e-5*d),e=0.016709,M=rev(356.0470+0.9856002585*d),E=M+Rr*e*sin(M)*(1+e*cos(M)),v=atan2(Math.sqrt(1-e*e)*sin(E),cos(E)-e),lon=rev(v+w),ecl=23.4393;return{ra:rev(atan2(sin(lon)*cos(ecl),cos(lon))),dec:asin(sin(lon)*sin(ecl))};}
+const altOf=(ra,dec,lst,lat)=>asin(sin(lat)*sin(dec)+cos(lat)*cos(dec)*cos(rev(lst-ra)));
+// planets — Schlyter orbital elements → geocentric RA/Dec (d = days since 2451543.5); positions move day-to-day
+const PL={
+ Mercury:d=>[48.3313+3.24587e-5*d,7.0047+5.00e-8*d,29.1241+1.01444e-5*d,0.387098,0.205635+5.59e-10*d,168.6562+4.0923344368*d],
+ Venus:d=>[76.6799+2.46590e-5*d,3.3946+2.75e-8*d,54.8910+1.38374e-5*d,0.723330,0.006773-1.302e-9*d,48.0052+1.6021302244*d],
+ Mars:d=>[49.5574+2.11081e-5*d,1.8497-1.78e-8*d,286.5016+2.92961e-5*d,1.523688,0.093405+2.516e-9*d,18.6021+0.5240207766*d],
+ Jupiter:d=>[100.4542+2.76854e-5*d,1.3030-1.557e-7*d,273.8777+1.64505e-5*d,5.20256,0.048498+4.469e-9*d,19.8950+0.0830853001*d],
+ Saturn:d=>[113.6634+2.38980e-5*d,2.4886-1.081e-7*d,339.3939+2.97661e-5*d,9.55475,0.055546-9.499e-9*d,316.9670+0.0334442282*d],
+ Uranus:d=>[74.0005+1.3978e-5*d,0.7733+1.9e-8*d,96.6612+3.0565e-5*d,19.18171-1.55e-8*d,0.047318+7.45e-9*d,142.5905+0.011725806*d],
+ Neptune:d=>[131.7806+3.0173e-5*d,1.7700-2.55e-7*d,272.8461-6.027e-6*d,30.05826+3.313e-8*d,0.008606+2.15e-9*d,260.2471+0.005995147*d]
+};
+function planetRaDec(name,d){const el=PL[name](d),N=rev(el[0]),i=el[1],w=rev(el[2]),a=el[3],e=el[4],M=rev(el[5]);
+ let E=M+Rr*e*sin(M)*(1+e*cos(M));for(let k=0;k<6;k++)E=E-(E-Rr*e*sin(E)-M)/(1-e*cos(E));
+ const xv=a*(cos(E)-e),yv=a*Math.sqrt(1-e*e)*sin(E),v=rev(atan2(yv,xv)),r=Math.sqrt(xv*xv+yv*yv);
+ const xh=r*(cos(N)*cos(v+w)-sin(N)*sin(v+w)*cos(i)),yh=r*(sin(N)*cos(v+w)+cos(N)*sin(v+w)*cos(i)),zh=r*sin(v+w)*sin(i);
+ const ws=rev(282.9404+4.70935e-5*d),Ms=rev(356.0470+0.9856002585*d),es=0.016709,Es=Ms+Rr*es*sin(Ms)*(1+es*cos(Ms));
+ const xvs=cos(Es)-es,yvs=Math.sqrt(1-es*es)*sin(Es),lonsun=rev(atan2(yvs,xvs)+ws),rs=Math.sqrt(xvs*xvs+yvs*yvs);
+ const xs=rs*cos(lonsun),ys=rs*sin(lonsun);
+ const xg=xh+xs,yg=yh+ys,zg=zh,ecl=23.4393-3.563e-7*d;
+ const ye=yg*cos(ecl)-zg*sin(ecl),ze=yg*sin(ecl)+zg*cos(ecl);
+ return{ra:rev(atan2(ye,xg)),dec:asin(ze/Math.sqrt(xg*xg+ye*ye+ze*ze))};}
+const PLANET_OBJS=Object.keys(PL).map(k=>({n:k,t:'planet',planet:k,ra:0,dec:0}));
+// comets — elliptical (e<1) elements → geocentric RA/Dec; mean anomaly from time since perihelion (Td = perihelion, days since 2451543.5)
+const COMETS=[{n:'10P/Tempel 2',e:0.5373871,q:1.4176106,i:12.02720,node:117.79822,w:195.48083,Td:jdOf(new Date(Date.UTC(2026,7,2,3,13)))-2451543.5}];
+function cometRaDec(cm,d){const a=cm.q/(1-cm.e),n=0.9856076686/Math.pow(a,1.5),M=rev(n*(d-cm.Td));
+ let E=M+Rr*cm.e*sin(M)*(1+cm.e*cos(M));for(let k=0;k<9;k++)E=E-(E-Rr*cm.e*sin(E)-M)/(1-cm.e*cos(E));
+ const xv=a*(cos(E)-cm.e),yv=a*Math.sqrt(1-cm.e*cm.e)*sin(E),v=rev(atan2(yv,xv)),r=Math.sqrt(xv*xv+yv*yv),N=cm.node,i=cm.i,w=cm.w;
+ const xh=r*(cos(N)*cos(v+w)-sin(N)*sin(v+w)*cos(i)),yh=r*(sin(N)*cos(v+w)+cos(N)*sin(v+w)*cos(i)),zh=r*sin(v+w)*sin(i);
+ const ws=rev(282.9404+4.70935e-5*d),Ms=rev(356.0470+0.9856002585*d),es=0.016709,Es=Ms+Rr*es*sin(Ms)*(1+es*cos(Ms));
+ const xvs=cos(Es)-es,yvs=Math.sqrt(1-es*es)*sin(Es),lonsun=rev(atan2(yvs,xvs)+ws),rs=Math.sqrt(xvs*xvs+yvs*yvs);
+ const xs=rs*cos(lonsun),ys=rs*sin(lonsun),xg=xh+xs,yg=yh+ys,zg=zh,ecl=23.4393-3.563e-7*d;
+ const ye=yg*cos(ecl)-zg*sin(ecl),ze=yg*sin(ecl)+zg*cos(ecl);
+ return{ra:rev(atan2(ye,xg)),dec:asin(ze/Math.sqrt(xg*xg+ye*ye+ze*ze))};}
+const COMET_OBJS=COMETS.map(c=>({n:c.n,t:'comet',comet:c,ra:0,dec:0}));
+const TYPES={emission:['Emission','#e04a3c'],reflection:['Reflection','#4f7bff'],opencluster:['Open cluster','#2fd4e6'],globular:['Globular','#f0a52e'],galaxy:['Galaxy','#ffe07a'],planetary:['Planetary','#ff5fce'],snr:['Supernova rmnt','#2ad4ac'],darknebula:['Dark nebula','#b07840'],planet:['Planet','#c58cff'],comet:['Comet','#8ef25a']};
+const hexRGB=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const APPURL='sidestepstudio.com/webapps/AstroLavaLamp',APPWM='The Astro Lava Lamp · '+APPURL; // on-chart watermark (update path on deploy)
+let CAT=[],YDK=[],YGRID=[],SPAN=91,winStart=0,slid={},hi=-1,master=28;
+let raceDay=-1,pushMode=false;const RN=14,ROWH=21,raceRows={};
+const monthSel=document.getElementById('month'),yearI=document.getElementById('year'),lat_=document.getElementById('lat'),lon_=document.getElementById('lon'),thr_=document.getElementById('thr'),thv=document.getElementById('thv');
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+MN.forEach((m,i)=>{const o=document.createElement('option');o.value=i;o.textContent=MN[i].slice(0,3)+' – '+MN[(i+2)%12].slice(0,3);monthSel.appendChild(o);});
+const now=new Date();monthSel.value=now.getMonth();yearI.value=now.getFullYear();
+// sliders
+Object.entries(TYPES).forEach(([k,v])=>{slid[k]=60;const r=document.createElement('div');r.className='srow';
+ r.innerHTML='<span class="sw" style="background:'+v[1]+'"></span><span>'+v[0]+'</span><input id="sl_'+k+'" type="range" min="0" max="100" value="60" oninput="slid[\''+k+'\']=+this.value;render()">';
+ document.getElementById('sliders').appendChild(r);});
+const daysInMonth=(y,m)=>new Date(y,m+1,0).getDate();
+// Precompute the WHOLE YEAR once (dark-sky LSTs per day + each object's peak altitude per day).
+// The chart is then a window [winStart, winStart+SPAN] over this year that can scroll smoothly, one day at a time.
+function build(){const y=+yearI.value,lat=+lat_.value,lon=+lon_.value;
+ YDK=[];for(let d=0;d<365;d++){const lst=[];for(let r=0;r<80;r++){const dt=new Date(y,0,1+d,16,r*12),jd=jdOf(dt),s=sunpos(jd-2451543.5),ls=gmst(jd)+lon;if(altOf(s.ra,s.dec,ls,lat)<-15)lst.push(rev(ls));}YDK.push(lst);}
+ // movers (planets/comets) get MOVEXT extra continuous days so a window straddling year-end shows smooth motion (fixed stars just repeat yearly)
+ YGRID=CAT.map(o=>{const mover=o.planet||o.comet,LEN=mover?365+MOVEXT:365,row=new Float32Array(LEN);
+  for(let d=0;d<LEN;d++){let ra=o.ra,dec=o.dec;
+   if(o.planet){const pp=planetRaDec(o.planet,jdOf(new Date(y,0,1+d,6,0))-2451543.5);ra=pp.ra;dec=pp.dec;}
+   else if(o.comet){const cc=cometRaDec(o.comet,jdOf(new Date(y,0,1+d,6,0))-2451543.5);ra=cc.ra;dec=cc.dec;}
+   let p=0;for(const ls of YDK[modY(d)]){const a=altOf(ra,dec,ls,lat);if(a>p)p=a;}row[d]=p;}
+  return row;});
+ setWin();render();}
+function setWin(){const y=+yearI.value,m=+monthSel.value;let d0=0;for(let k=0;k<m;k++)d0+=daysInMonth(y,k);winStart=d0;SPAN=daysInMonth(y,m)+daysInMonth(y,m+1)+daysInMonth(y,m+2);}
+function doyToday(){const n=new Date();return Math.floor((new Date(n.getFullYear(),n.getMonth(),n.getDate())-new Date(n.getFullYear(),0,1))/86400000);}
+let PW,PH,yMax=90,W=760,Hgt=420;const ML=38,MR=12,MT=14,MB=26;
+const MOVEXT=95; // extra days precomputed for movers (planets/comets)
+const yC=a=>MT+PH*(1-a/yMax),modY=d=>((d%365)+365)%365,xW=d=>ML+((d-winStart)/SPAN)*PW;
+// value at day d: movers (row longer than a year) index continuously (clamped); fixed stars wrap yearly
+const gv=(row,d)=>row.length>365?row[d<0?0:d>row.length-1?row.length-1:d]:gv(row,d);
+function render(){const dpr=window.devicePixelRatio||1;const cw=cv.parentElement,maxed=!!document.fullscreenElement;
+ W=Math.max(320,(cw.clientWidth||784)-24);Hgt=maxed?Math.max(360,(cw.clientHeight||420)-24):420;
+ cv.width=W*dpr;cv.height=Hgt*dpr;cv.style.width=W+'px';cv.style.height=Hgt+'px';ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,Hgt);
+ PW=W-ML-MR;PH=Hgt-MT-MB;
+ ctx.font='11px -apple-system,Arial';ctx.textAlign='right';ctx.fillStyle='#7d8797';
+ for(let a=0;a<=90;a+=30){const y=yC(a);ctx.strokeStyle='rgba(255,255,255,.08)';ctx.beginPath();ctx.moveTo(ML,y);ctx.lineTo(ML+PW,y);ctx.stroke();ctx.fillText(a+'°',ML-6,y+3);}
+ const thr=+thr_.value;ctx.strokeStyle='rgba(255,255,255,.25)';ctx.setLineDash([4,3]);const ty=yC(thr);ctx.beginPath();ctx.moveTo(ML,ty);ctx.lineTo(ML+PW,ty);ctx.stroke();ctx.setLineDash([]);
+ // month boundary lines + names, positioned by the scrolling window
+ const dA=Math.floor(winStart),dB=dA+SPAN;
+ ctx.textAlign='left';
+ {const dt=new Date(+yearI.value,0,1+Math.ceil(winStart)+3);ctx.fillStyle='#7d8797';ctx.fillText(MN[dt.getMonth()].slice(0,3),ML+3,MT+PH+15);}
+ for(let d=dA;d<=dB+1;d++){const dt=new Date(+yearI.value,0,1+d);if(dt.getDate()!==1)continue;const x=xW(d);if(x<ML+14||x>ML+PW+1)continue;
+  ctx.strokeStyle='rgba(255,255,255,.11)';ctx.beginPath();ctx.moveTo(x,MT);ctx.lineTo(x,MT+PH);ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.4)';ctx.beginPath();ctx.moveTo(x,MT+PH);ctx.lineTo(x,MT+PH-7);ctx.stroke();
+  ctx.fillStyle='#7d8797';ctx.fillText(MN[dt.getMonth()].slice(0,3),x+4,MT+PH+15);}
+ // additive wax — hugging bands + lines drawn straight to canvas with 'lighter', clipped to the plot.
+ // Faint low objects simply fade out (bottom drops off); dense overlaps add up and mix into colour. Overall = brightness.
+ ctx.save();ctx.beginPath();ctx.rect(ML,MT,PW,PH);ctx.clip();
+ ctx.globalCompositeOperation='lighter';
+ const M=master/100;const grad={};for(const tt in TYPES){const s=slid[tt]||0;if(s<=0){grad[tt]=null;continue;}const rgb=hexRGB(TYPES[tt][1]);grad[tt]={rgb,a:(s/100)*M*0.34,line:'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+((s/100)*M*0.60).toFixed(3)+')'};}
+ const TH=0.6,K=4,DEPTH=Math.min(64,PH*0.34),ST=DEPTH/K,BASE=MT+PH;
+ CAT.forEach((o,i)=>{[o.t].concat(o.t2?[o.t2]:[]).forEach(tt=>{const G=grad[tt];if(!G)return;const rgb=G.rgb;const row=YGRID[i];
+  let d=dA;
+  while(d<=dB+1){
+   if(gv(row,d)<=TH){d++;continue;}
+   const s=d;while(d<=dB+1&&gv(row,d)>TH)d++;const e=d-1; // contiguous run [s..e] in day-of-year
+   for(let j=0;j<K;j++){const a=G.a*(1-j/K);if(a<=0.002)continue;ctx.fillStyle='rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+a.toFixed(3)+')';
+    ctx.beginPath();
+    for(let k=s;k<=e;k++){const x=xW(k),y=Math.min(BASE,yC(Math.min(90,gv(row,k)))+j*ST);k>s?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+    for(let k=e;k>=s;k--){const x=xW(k),y=Math.min(BASE,yC(Math.min(90,gv(row,k)))+(j+1)*ST);ctx.lineTo(x,y);}
+    ctx.closePath();ctx.fill();}
+   ctx.strokeStyle=G.line;ctx.lineWidth=1.5;ctx.beginPath();for(let k=s;k<=e;k++){const x=xW(k),y=yC(Math.min(90,gv(row,k)));k>s?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();
+  }});});
+ ctx.globalCompositeOperation='source-over';ctx.restore();
+ if(hi>=0&&hi<CAT.length)drawHi(hi,false);
+ // selected-day cursor (the day the bar-chart race is showing) — fixed position while racing so the wax scrolls smoothly under it
+ if(raceDay>=0){let cx;if(lavaOn&&pushMode){cx=ML+PW*0.28;}else{let d=raceDay;while(d<winStart)d+=365;cx=xW(d);}if(cx>=ML&&cx<=ML+PW){ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(cx,MT);ctx.lineTo(cx,MT+PH);ctx.stroke();ctx.setLineDash([]);}}
+ // axis frame
+ ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ML,MT+PH);ctx.lineTo(ML+PW,MT+PH);ctx.stroke();
+ ctx.textAlign='left';ctx.fillStyle='#7d8797';const _a=new Date(+yearI.value,0,1+Math.round(winStart)),_b=new Date(+yearI.value,0,1+Math.round(winStart+SPAN));ctx.fillText('peak altitude in dark sky (°) — '+MN[_a.getMonth()].slice(0,3)+' '+_a.getDate()+' – '+MN[_b.getMonth()].slice(0,3)+' '+_b.getDate(),ML,MT-2);
+ // watermark: chart name + web-apps URL (top-right, faint — clears the Play/Max buttons at the bottom corners)
+ ctx.textAlign='right';ctx.textBaseline='top';ctx.font='10px -apple-system,Arial';ctx.lineJoin='round';ctx.lineWidth=2.6;ctx.strokeStyle='rgba(4,6,12,.75)';ctx.strokeText(APPWM,ML+PW-6,MT+4);ctx.fillStyle='rgba(200,208,222,.6)';ctx.fillText(APPWM,ML+PW-6,MT+4);ctx.textBaseline='alphabetic';
+ let vis=Object.values(TYPES).length;document.getElementById('cnt').textContent=CAT.length+' objects · '+Object.entries(slid).filter(([k,v])=>v>0).length+' types shown · additive blend';
+}
+// text with a dark rounded halo so it stays readable over bright additive wax
+function haloText(s,x,y){ctx.lineJoin='round';ctx.miterLimit=2;ctx.lineWidth=3.6;ctx.strokeStyle='rgba(3,5,10,.95)';ctx.strokeText(s,x,y);ctx.fillStyle='#f2f5fa';ctx.fillText(s,x,y);}
+function drawHi(i,hover,label){const o=CAT[i],col=TYPES[o.t][1],row=YGRID[i],dA=Math.floor(winStart),dB=dA+SPAN;
+ ctx.save();ctx.beginPath();ctx.rect(ML,MT,PW,PH);ctx.clip();
+ [[hover?3.4:3.8,'rgba(255,255,255,.85)'],[hover?1.6:2,col]].forEach(p=>{ctx.lineWidth=p[0];ctx.strokeStyle=p[1];ctx.beginPath();let st=false;
+  for(let d=dA;d<=dB+1;d++){const v=gv(row,d);if(v<=0.6){st=false;continue;}const x=xW(d),y=yC(Math.min(90,v));st?ctx.lineTo(x,y):ctx.moveTo(x,y);st=true;}ctx.stroke();});
+ ctx.restore();
+ if(label!==false){const de=dB;const ex=Math.min(xW(de),ML+PW),ey=yC(Math.min(90,gv(row,de)));ctx.font='600 11.5px -apple-system,Arial';ctx.textAlign='right';haloText(o.n.split(' - ')[0].split(' / ')[0],ex-5,ey-4);}}
+function vis(o){return (slid[o.t]||0)>0||(slid[o.t2]||0)>0;}
+function nearby(dd,alt){const r=[];for(let i=0;i<CAT.length;i++){if(!vis(CAT[i]))continue;const v=gv(YGRID[i],dd);if(v<=0.6)continue;const d=Math.abs(v-alt);if(d<4)r.push([d,i]);}r.sort((a,b)=>a[0]-b[0]);return r.slice(0,9).map(x=>x[1]);}
+function fmtd(dd){const d=new Date(+yearI.value,0,1+dd);return MN[d.getMonth()].slice(0,3)+' '+d.getDate();}
+const tip=document.getElementById('tip');
+cv.addEventListener('mousemove',e=>{if(!CAT.length)return;const rect=cv.getBoundingClientRect(),sx=cv.width/(window.devicePixelRatio||1)/rect.width,x=(e.clientX-rect.left)*sx,y=(e.clientY-rect.top)*sx;
+ if(x<ML||x>ML+PW||y<MT||y>MT+PH){tip.style.opacity=0;return;}
+ const dd=Math.round(winStart+(x-ML)/PW*SPAN),c=modY(dd),alt=(1-(y-MT)/PH)*yMax,list=nearby(dd,alt);
+ render();if(list.length){list.forEach((j,idx)=>drawHi(j,true,idx===0));
+  const head=list.length>1?('<b>'+list.length+' objects here</b> · '+fmtd(dd)+'<br>'):('<b>'+fmtd(dd)+'</b><br>');
+  tip.innerHTML=head+list.map(j=>{const o=CAT[j];return '<span style="color:'+TYPES[o.t][1]+'">●</span> '+o.n+' · '+gv(YGRID[j],dd).toFixed(0)+'°';}).join('<br>');
+  tip.style.left=Math.min(e.clientX+13,innerWidth-260)+'px';tip.style.top=(e.clientY+13)+'px';tip.style.opacity=1;}else tip.style.opacity=0;});
+cv.addEventListener('mouseleave',()=>{tip.style.opacity=0;render();});
+document.getElementById('hiIn').addEventListener('input',function(){const v=this.value.trim().toLowerCase();hi=v?CAT.findIndex(o=>o.n.toLowerCase().includes(v)):-1;if(raceDay>=0)drawBars();render();});
+function pickObj(i){hi=i;document.getElementById('hiIn').value=CAT[i].n;if(raceDay>=0)drawBars();render();}
+function setAll(v){Object.keys(TYPES).forEach(k=>{slid[k]=v;const el=document.getElementById('sl_'+k);if(el)el.value=v;});render();}
+// max-screen: fullscreen the graph+sliders area and let the canvas grow to fill it
+function toggleFS(){const el=document.querySelector('.layout');if(!document.fullscreenElement){(el.requestFullscreen||el.webkitRequestFullscreen).call(el);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}}
+document.addEventListener('fullscreenchange',()=>{const on=!!document.fullscreenElement;document.body.classList.toggle('maxed',on);const b=document.getElementById('maxBtn');if(b)b.textContent=on?'⛶ Exit':'⛶ Max';setTimeout(render,90);});
+addEventListener('resize',()=>{if(CAT.length)render();});
+// ── Astro Lava Lamp: idle "breathing" — after a while of no interaction, drift the type levels on slow out-of-sync waves ──
+let lavaOn=false,lavaRAF=0,lavaBase={},idleTimer=0,lavaBaseWin=0,lavaLastT=-1;
+const TKEYS=Object.keys(TYPES),lavaW={},lavaP={},DRIFT=3; // DRIFT = days/second the window scrolls through the year
+TKEYS.forEach((k,i)=>{lavaW[k]=0.10+0.05*(i%4);lavaP[k]=i*1.7;}); // period ~16–63s, phases spread → wax never in sync
+function lavaStep(t){const s=t/1000;
+ // type levels swell on slow out-of-sync waves (Overall is left alone — the user's setting stays put)
+ TKEYS.forEach(k=>{const v=Math.max(0,Math.min(100,lavaBase[k]+26*Math.sin(s*lavaW[k]+lavaP[k])));slid[k]=v;const el=document.getElementById('sl_'+k);if(el)el.value=Math.round(v);});
+ // scroll the window through the year; push mode is slower so the ranking is readable
+ if(lavaLastT<0)lavaLastT=t;const dt=Math.min(120,t-lavaLastT);lavaLastT=t;
+ if(YGRID.length){winStart+=(pushMode?1:DRIFT)*dt/1000;if(winStart>=365)winStart-=365;}
+ // push mode: step the leaderboard bars once per calendar day as the cursor crosses it
+ if(pushMode){const cur=modY(Math.round(winStart+SPAN*0.28));if(cur!==raceDay){raceDay=cur;drawBars();}}
+ render();lavaRAF=requestAnimationFrame(lavaStep);}
+function lavaStart(){if(lavaOn)return;lavaOn=true;TKEYS.forEach(k=>lavaBase[k]=slid[k]||0);lavaBaseWin=winStart;lavaLastT=-1;const b=document.getElementById('lavabadge');if(b)b.style.opacity=1;lavaRAF=requestAnimationFrame(lavaStep);}
+function lavaStop(){if(!lavaOn)return;lavaOn=false;cancelAnimationFrame(lavaRAF);TKEYS.forEach(k=>{slid[k]=lavaBase[k];const el=document.getElementById('sl_'+k);if(el)el.value=lavaBase[k];});const b=document.getElementById('lavabadge');if(b)b.style.opacity=0;render();} // freeze at the scrolled date — don't snap back
+let manualPlay=false;
+// ONE contextual play button: on the Sliders pane it runs the lava lamp; on the Leaderboard it runs the lava lamp + the Sisyphus Push (ranking races)
+function setPlayLabel(){const b=document.getElementById('playBtn');if(!b)return;if(lavaOn){b.textContent='⏸ Pause';return;}b.textContent=document.querySelector('.right').classList.contains('night')?'▶ Push':'▶ Play';}
+function startPlay(sticky){manualPlay=sticky;pushMode=document.querySelector('.right').classList.contains('night');if(pushMode&&raceDay<0)raceDay=modY(Math.round(winStart+SPAN*0.28));clearTimeout(idleTimer);lavaStart();setPlayLabel();}
+function playToggle(){if(lavaOn){manualPlay=false;lavaStop();setPlayLabel();}else startPlay(true);}
+function poke(){if(manualPlay)return;lavaStop();setPlayLabel();clearTimeout(idleTimer);idleTimer=setTimeout(()=>startPlay(false),60000);}
+['mousemove','pointerdown','keydown','wheel','touchstart','input'].forEach(ev=>document.addEventListener(ev,poke,{passive:true}));
+poke();
+// click a day → menu
+cv.addEventListener('click',e=>{const rect=cv.getBoundingClientRect(),sx=cv.width/(window.devicePixelRatio||1)/rect.width,x=(e.clientX-rect.left)*sx;
+ if(x<ML||x>ML+PW)return;const dd=Math.round(winStart+(x-ML)/PW*SPAN);dayList(dd);});
+// ── bar-chart race: pick a day, then optionally play it forward day-by-day; bars slide/reorder as objects rise & set ──
+function showPane(which){const r=document.querySelector('.right');r.classList.toggle('night',which==='night');document.getElementById('tgMix').classList.toggle('active',which!=='night');document.getElementById('tgNight').classList.toggle('active',which==='night');setPlayLabel();}
+function dayList(dd){raceDay=modY(dd);showPane('night');drawBars();render();}
+function drawBars(){const thr=+thr_.value,c=modY(raceDay),night=document.querySelector('.right').classList.contains('night'),showN=night?999:RN;
+ const _d=new Date(+yearI.value,0,1+raceDay);document.getElementById('dayh').textContent=MN[_d.getMonth()]+' '+_d.getDate()+' — highest that night';
+ const list=CAT.map((o,i)=>({o,i,a:gv(YGRID[i],raceDay)})).filter(r=>r.a>0.5&&(vis(r.o)||r.i===hi)).sort((p,q)=>q.a-p.a).slice(0,showN);
+ const cont=document.getElementById('daylist');cont.classList.add('race');cont.style.height=(list.length*ROWH+2)+'px';cont.style.maxHeight=night?Math.max(240,document.fullscreenElement?window.innerHeight-190:Hgt-64)+'px':'';
+ const used={};const maxW=132;
+ list.forEach((r,rank)=>{used[r.i]=1;let el=raceRows[r.i];
+  if(!el){el=document.createElement('div');el.className='rbar';el.style.opacity='0';el.style.transform='translateY('+(rank*ROWH)+'px)';
+   el.innerHTML='<span class="rt"></span><span class="rn"></span><span class="ra"></span>';el.onclick=(function(i){return function(){pickObj(i);};})(r.i);
+   cont.appendChild(el);raceRows[r.i]=el;}
+  requestAnimationFrame(()=>{el.style.opacity='1';el.style.transform='translateY('+(rank*ROWH)+'px)';});
+  el.querySelector('.rt').style.cssText='background:'+TYPES[r.o.t][1]+';width:'+Math.max(3,r.a/90*maxW)+'px';
+  const nm=el.querySelector('.rn');nm.textContent=r.o.n.split(' / ')[0].split(' - ')[0];nm.style.fontWeight=(r.a>=thr||r.i===hi)?'700':'400';el.classList.toggle('hl',r.i===hi);
+  el.querySelector('.ra').textContent=r.a.toFixed(0)+'°';});
+ for(const k in raceRows){if(!used[k]){const el=raceRows[k];el.style.opacity='0';el.style.transform='translateY('+(RN*ROWH+8)+'px)';delete raceRows[k];setTimeout(()=>{if(el.parentNode)el.parentNode.removeChild(el);},550);}}
+ if(!list.length){document.getElementById('dayh').textContent=MN[_d.getMonth()]+' '+_d.getDate()+' — nothing above 3° in the dark';}
+}
+monthSel.addEventListener('change',()=>{setWin();render();}); // month just re-windows the precomputed year (cheap)
+[yearI,lat_,lon_].forEach(el=>el.addEventListener('change',build)); // these need a full-year recompute
+thr_.addEventListener('input',()=>{thv.textContent=thr_.value;render();});
+document.getElementById('geo').addEventListener('click',()=>{if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{lat_.value=p.coords.latitude.toFixed(2);lon_.value=p.coords.longitude.toFixed(2);build();},()=>alert('Location blocked.'));});
+// keep the screen awake (Wake Lock) — survives tab-switches by re-acquiring on return
+let wakeLock=null,wakeWant=false;
+async function acquireWake(){try{wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null;});}catch(e){}}
+document.getElementById('wakeBtn').addEventListener('click',async function(){wakeWant=!wakeWant;this.textContent=wakeWant?'☀️ Staying awake':'☕ Keep awake';this.style.color=wakeWant?'#7bffb0':'';if(wakeWant)await acquireWake();else if(wakeLock){wakeLock.release();wakeLock=null;}});
+document.addEventListener('visibilitychange',()=>{if(wakeWant&&document.visibilityState==='visible'&&!wakeLock)acquireWake();});
+fetch('catalog.json').then(r=>r.json()).then(c=>{CAT=c.concat(PLANET_OBJS,COMET_OBJS);document.getElementById('objlist').innerHTML=CAT.map(o=>'<option value="'+o.n.replace(/"/g,'&quot;')+'">').join('');build();winStart=doyToday();render();}).catch(e=>{document.getElementById('cnt').textContent='catalog.json failed to load — serve over http (not file://).';});
+// PWA: install support (add to home screen). Registration fails harmlessly where sw.js isn't present.
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+// hide the deploy reminder on the live site (keep it while developing locally)
+if(!/^(localhost|127\.|192\.168\.)/.test(location.hostname)){const dn=document.getElementById('devnote');if(dn)dn.style.display='none';}
+</script></body></html>
