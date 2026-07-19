@@ -94,7 +94,6 @@ body.maxed .right{max-height:calc(100vh - 30px);overflow:hidden}   /* leaderboar
   <div class="day"><h3 id="dayh">Pick a day →</h3><p class="hint" id="dayhint">Click a day column on the chart to list that night's highest objects — then hit <b>▶ Push</b> (bottom-left of the chart) to run the Sisyphus Push and watch them climb and set through the seasons.</p><div id="daylist"></div></div>
  </div>
 </div>
-<div id="devnote" style="margin-top:14px;padding:9px 13px;background:#1a1206;border:1px solid #5a3a12;border-radius:9px;color:#e6b878;font-size:12px">⚠️ <b>Reminder — before/at deploy:</b> lock this app with a <b>Cloudflare Worker origin-gated key</b> (catalog encrypted in the page; the key is served only to the real sidestepstudio.com URL, so a rehosted copy renders blank). See request&nbsp;#2. <button class="mini" onclick="this.parentNode.style.display='none'" style="margin-left:8px">dismiss</button></div>
 </div>
 <script>
 const D=Math.PI/180,Rr=180/Math.PI,rev=x=>x-Math.floor(x/360)*360;
