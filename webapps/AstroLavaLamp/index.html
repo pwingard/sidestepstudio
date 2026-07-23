@@ -275,8 +275,10 @@ function drawComet(cm,row,s,e){
  ctx.fillStyle='rgba(255,255,255,'+(0.92*(0.5+0.5*act)).toFixed(3)+')'; // nucleus
  ctx.beginPath();ctx.arc(hx,hy,Math.max(1,R*0.17),0,6.2832);ctx.fill();}
 function render(){const amb=document.body.classList.contains('ambient');
- // ambient draws at 1× on purpose: it's a decorative full-bleed view, and Retina 2× costs 4× the fill for no real gain
- const dpr=amb?1:(window.devicePixelRatio||1);const cw=cv.parentElement,maxed=!!document.fullscreenElement||amb;
+ // NOTE: ambient briefly drew at dpr 1 to save fill. It saved a lot, but on a Retina screen the compositor
+ // upscales that 2x, and the antialiased edges of a few hundred slowly-scrolling additive shapes shimmer
+ // as they cross subpixel boundaries — the whole field appears to jitter. Not worth it; back to native dpr.
+ const dpr=window.devicePixelRatio||1;const cw=cv.parentElement,maxed=!!document.fullscreenElement||amb;
  W=Math.max(320,(cw.clientWidth||784)-24);Hgt=maxed?Math.max(360,(cw.clientHeight||420)-24):420;
  // only re-size when the size actually changed — assigning canvas.width reallocates the whole backing store,
  // which at 60fps on a fullscreen Retina canvas was the single biggest cost in the animation loop
@@ -300,13 +302,16 @@ function render(){const amb=document.body.classList.contains('ambient');
  ctx.save();ctx.beginPath();ctx.rect(ML,MT,PW,PH);ctx.clip();
  ctx.globalCompositeOperation='lighter';
  const M=master/100;const grad={};for(const tt in TYPES){const s=slid[tt]||0;if(s<=0){grad[tt]=null;continue;}const rgb=hexRGB(TYPES[tt][1]);grad[tt]={rgb,a:(s/100)*M*0.34,line:'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+((s/100)*M*0.60).toFixed(3)+')'};}
- const TH=0.6,K=4,DEPTH=Math.min(64,PH*0.34),ST=DEPTH/K,BASE=MT+PH;
+ // Fill rate is the bottleneck (proof: turning brightness down cools the machine, because low alpha makes
+ // layers fall under the skip threshold below and never get drawn). So ambient halves the band layers and
+ // skips faint ones sooner. Same silhouette, roughly half the filled polygons.
+ const TH=0.6,K=amb?2:4,DEPTH=Math.min(64,PH*0.34),ST=DEPTH/K,BASE=MT+PH,AMIN=amb?0.008:0.002;
  CAT.forEach((o,i)=>{[o.t].concat(o.t2?[o.t2]:[]).forEach(tt=>{if(MOVER[tt])return;const G=grad[tt];if(!G)return;const rgb=G.rgb;const row=YGRID[i];
   let d=dA;
   while(d<=dB+1){
    if(gv(row,d)<=TH){d++;continue;}
    const s=d;while(d<=dB+1&&gv(row,d)>TH)d++;const e=d-1; // contiguous run [s..e] in day-of-year
-   for(let j=0;j<K;j++){const a=G.a*(1-j/K);if(a<=0.002)continue;ctx.fillStyle='rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+a.toFixed(3)+')';
+   for(let j=0;j<K;j++){const a=G.a*(1-j/K);if(a<=AMIN)continue;ctx.fillStyle='rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+a.toFixed(3)+')';
     ctx.beginPath();
     for(let k=s;k<=e;k++){const x=xW(k),y=Math.min(BASE,yC(Math.min(90,gv(row,k)))+j*ST);k>s?ctx.lineTo(x,y):ctx.moveTo(x,y);}
     for(let k=e;k>=s;k--){const x=xW(k),y=Math.min(BASE,yC(Math.min(90,gv(row,k)))+(j+1)*ST);ctx.lineTo(x,y);}
@@ -392,7 +397,11 @@ let lavaHidden=false;
 document.addEventListener('visibilitychange',()=>{
  if(document.hidden){if(lavaOn){lavaHidden=true;lavaStop();}}
  else if(lavaHidden){lavaHidden=false;lavaStart();setPlayLabel();}});
-const TKEYS=Object.keys(TYPES),lavaW={},lavaP={},DRIFT=3; // DRIFT = days/second the window scrolls through the year
+// DRIFT = days/second the window scrolls through the year.
+// Ambient drifts much slower ON PURPOSE, and it's a smoothness fix, not a heat one: at 12fps and 3 days/s
+// the chart jumps ~2px per frame, which reads as stepping. At 1 day/s it's ~0.7px per frame and looks
+// continuous. Frame cost is identical either way — the redraw is per frame, not per pixel moved.
+const TKEYS=Object.keys(TYPES),lavaW={},lavaP={},DRIFT=3,DRIFT_AMB=0.6; // ambient = a full year in ~10 min
 TKEYS.forEach((k,i)=>{lavaW[k]=0.10+0.05*(i%4);lavaP[k]=i*1.7;}); // period ~16–63s, phases spread → wax never in sync
 function lavaStep(t){
  // skip early in ambient — returning before lavaLastT is touched means the next drawn frame gets the FULL
@@ -405,7 +414,8 @@ function lavaStep(t){
  TKEYS.forEach(k=>{const v=Math.max(0,Math.min(100,lavaBase[k]+26*Math.sin(s*lavaW[k]+lavaP[k])));slid[k]=v;const el=document.getElementById('sl_'+k);if(el)el.value=Math.round(v);});
  // scroll the window through the year; push mode is slower so the ranking is readable
  if(lavaLastT<0)lavaLastT=t;const dt=Math.min(120,t-lavaLastT);lavaLastT=t;
- if(YGRID.length){winStart+=(pushMode?1:DRIFT)*dt/1000;if(winStart>=365)winStart-=365;}
+ if(YGRID.length){const spd=pushMode?1:(document.body.classList.contains('ambient')?DRIFT_AMB:DRIFT);
+  winStart+=spd*dt/1000;if(winStart>=365)winStart-=365;}
  // push mode: step the leaderboard bars once per calendar day as the cursor crosses it
  if(pushMode){const cur=modY(Math.round(winStart+SPAN*0.28));if(cur!==raceDay){raceDay=cur;drawBars();}}
  render();lavaRAF=requestAnimationFrame(lavaStep);}
