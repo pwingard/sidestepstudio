@@ -31,7 +31,9 @@ input[type=number]{width:76px}input[type=range]{width:120px;accent-color:var(--a
 .left{flex:1;min-width:0}.right{width:290px;flex:none}@media(max-width:900px){.right{width:100%}}
 .mix{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:12px}
 .mix h3{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
-.srow{display:flex;align-items:center;gap:8px;margin:5px 0}.sw{width:12px;height:12px;border-radius:3px;flex:none}
+.srow{display:flex;align-items:center;gap:8px;margin:5px 0}.sw{width:12px;height:12px;border-radius:3px;flex:none;cursor:pointer}
+.srow.off{opacity:.42}.srow.off .sw{background:transparent!important;box-shadow:inset 0 0 0 1.5px var(--mut)}
+.srow.off input{filter:grayscale(1)}
 .srow span{font-size:12px;width:96px}.srow input{flex:1;width:auto}
 .chartwrap{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}canvas{display:block;max-width:100%;cursor:crosshair}
 .chartbtns{position:absolute;right:16px;bottom:15px;z-index:5;display:flex;gap:8px}
@@ -186,9 +188,18 @@ const MN=['January','February','March','April','May','June','July','August','Sep
 MN.forEach((m,i)=>{const o=document.createElement('option');o.value=i;o.textContent=MN[i].slice(0,3)+' – '+MN[(i+2)%12].slice(0,3);monthSel.appendChild(o);});
 const now=new Date();monthSel.value=now.getMonth();yearI.value=now.getFullYear();
 // sliders
-Object.entries(TYPES).forEach(([k,v])=>{slid[k]=60;const r=document.createElement('div');r.className='srow';
- r.innerHTML='<span class="sw" style="background:'+v[1]+'"></span><span>'+v[0]+'</span><input id="sl_'+k+'" type="range" min="0" max="100" value="60" oninput="slid[\''+k+'\']=+this.value;render()">';
+Object.entries(TYPES).forEach(([k,v])=>{slid[k]=60;const r=document.createElement('div');r.className='srow';r.id='row_'+k;
+ r.innerHTML='<span class="sw" style="background:'+v[1]+'" onclick="toggleType(\''+k+'\')" title="Click to switch this type off"></span><span onclick="toggleType(\''+k+'\')" style="cursor:pointer">'+v[0]+'</span><input id="sl_'+k+'" type="range" min="0" max="100" value="60" oninput="slid[\''+k+'\']=+this.value;render()">';
  document.getElementById('sliders').appendChild(r);});
+// A type switched OFF here stays off — unlike dragging its slider to 0, which the lava breathing would
+// just push back up on the next frame (lavaStep rewrites every slider from lavaBase + a sine).
+// typeOff is checked both in the breathing and in the render, so off means off.
+const typeOff={};
+function toggleType(k){typeOff[k]=!typeOff[k];
+ const r=document.getElementById('row_'+k),s=document.getElementById('sl_'+k);
+ if(r)r.classList.toggle('off',!!typeOff[k]);
+ if(s)s.disabled=!!typeOff[k];
+ render();}
 const daysInMonth=(y,m)=>new Date(y,m+1,0).getDate();
 // Precompute the WHOLE YEAR once (dark-sky LSTs per day + each object's peak altitude per day).
 // The chart is then a window [winStart, winStart+SPAN] over this year that can scroll smoothly, one day at a time.
@@ -301,7 +312,7 @@ function render(){const amb=document.body.classList.contains('ambient');
  // Faint low objects simply fade out (bottom drops off); dense overlaps add up and mix into colour. Overall = brightness.
  ctx.save();ctx.beginPath();ctx.rect(ML,MT,PW,PH);ctx.clip();
  ctx.globalCompositeOperation='lighter';
- const M=master/100;const grad={};for(const tt in TYPES){const s=slid[tt]||0;if(s<=0){grad[tt]=null;continue;}const rgb=hexRGB(TYPES[tt][1]);grad[tt]={rgb,a:(s/100)*M*0.34,line:'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+((s/100)*M*0.60).toFixed(3)+')'};}
+ const M=master/100;const grad={};for(const tt in TYPES){const s=typeOff[tt]?0:(slid[tt]||0);if(s<=0){grad[tt]=null;continue;}const rgb=hexRGB(TYPES[tt][1]);grad[tt]={rgb,a:(s/100)*M*0.34,line:'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+((s/100)*M*0.60).toFixed(3)+')'};}
  // Fill rate is the bottleneck (proof: turning brightness down cools the machine, because low alpha makes
  // layers fall under the skip threshold below and never get drawn). So ambient halves the band layers and
  // skips faint ones sooner. Same silhouette, roughly half the filled polygons.
@@ -419,7 +430,8 @@ function lavaStep(t){
   lavaLastDraw=t;}
  const s=t/1000;
  // type levels swell on slow out-of-sync waves (Overall is left alone — the user's setting stays put)
- TKEYS.forEach(k=>{const v=Math.max(0,Math.min(100,lavaBase[k]+26*Math.sin(s*lavaW[k]+lavaP[k])));slid[k]=v;const el=document.getElementById('sl_'+k);if(el)el.value=Math.round(v);});
+ TKEYS.forEach(k=>{if(typeOff[k])return; // switched-off types are not breathed back to life
+  const v=Math.max(0,Math.min(100,lavaBase[k]+26*Math.sin(s*lavaW[k]+lavaP[k])));slid[k]=v;const el=document.getElementById('sl_'+k);if(el)el.value=Math.round(v);});
  // scroll the window through the year; push mode is slower so the ranking is readable
  if(lavaLastT<0)lavaLastT=t;const dt=Math.min(120,t-lavaLastT);lavaLastT=t;
  if(YGRID.length){const spd=pushMode?1:(document.body.classList.contains('ambient')?DRIFT_AMB:DRIFT);
@@ -428,7 +440,7 @@ function lavaStep(t){
  if(pushMode){const cur=modY(Math.round(winStart+SPAN*0.28));if(cur!==raceDay){raceDay=cur;drawBars();}}
  render();lavaRAF=requestAnimationFrame(lavaStep);}
 function lavaStart(){if(lavaOn)return;lavaOn=true;TKEYS.forEach(k=>lavaBase[k]=slid[k]||0);lavaLastT=-1;lavaLastDraw=-1;const b=document.getElementById('lavabadge');if(b)b.style.opacity=1;lavaRAF=requestAnimationFrame(lavaStep);}
-function lavaStop(){if(!lavaOn)return;lavaOn=false;cancelAnimationFrame(lavaRAF);TKEYS.forEach(k=>{slid[k]=lavaBase[k];const el=document.getElementById('sl_'+k);if(el)el.value=lavaBase[k];});const b=document.getElementById('lavabadge');if(b)b.style.opacity=0;render();} // freeze at the scrolled date — don't snap back
+function lavaStop(){if(!lavaOn)return;lavaOn=false;cancelAnimationFrame(lavaRAF);TKEYS.forEach(k=>{if(typeOff[k])return;slid[k]=lavaBase[k];const el=document.getElementById('sl_'+k);if(el)el.value=lavaBase[k];});const b=document.getElementById('lavabadge');if(b)b.style.opacity=0;render();} // freeze at the scrolled date — don't snap back
 // ONE simple, robust play button. Sliders pane → lava lamp; Leaderboard pane → lava lamp + the Sisyphus Push.
 // It runs until you press Pause — no auto-start, and no stray control action can stop it unexpectedly.
 function setPlayLabel(){const b=document.getElementById('playBtn');if(!b)return;if(lavaOn){b.textContent='⏸ Pause';return;}b.textContent=document.querySelector('.right').classList.contains('night')?'▶ Push':'▶ Play';}
