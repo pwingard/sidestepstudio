@@ -33,8 +33,11 @@ input[type=number]{width:76px}input[type=range]{width:120px;accent-color:var(--a
 .chartwrap{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}canvas{display:block;max-width:100%;cursor:crosshair}
 .chartbtns{position:absolute;right:16px;bottom:15px;z-index:5;display:flex;gap:8px}
 .maxbtn{background:rgba(18,22,30,.82);border:1px solid var(--line);color:var(--ink);font-size:12px;font-weight:600;border-radius:8px;padding:6px 12px;cursor:pointer;backdrop-filter:blur(5px)}.maxbtn:hover{background:rgba(40,48,62,.92)}
-.layout:fullscreen{background:var(--bg);height:100vh;padding:14px;box-sizing:border-box;gap:14px}
-body.maxed .chartwrap{height:calc(100vh - 30px)}
+.layout:fullscreen{background:var(--bg);height:100vh;padding:14px;box-sizing:border-box;gap:14px;align-items:stretch}
+/* let flex measure the height instead of hard-coding 100vh minus a guess — the old calc() didn't allow for
+   .layout's own 28px of padding, so the chart panel overflowed the bottom of the screen in Max */
+body.maxed .left{display:flex;flex-direction:column;min-height:0}
+body.maxed .chartwrap{flex:1;min-height:0}
 body.maxed .foot{display:none}
 body.maxed .right{max-height:calc(100vh - 30px);overflow:hidden}   /* leaderboard's own inner list is the only scroller */
 .right.night .day{max-height:none;overflow:visible}   /* leaderboard = single (inner) scroller; no outer bar */
@@ -203,6 +206,39 @@ const MOVEXT=95; // extra days precomputed for movers (planets/comets)
 const yC=a=>MT+PH*(1-a/yMax),modY=d=>((d%365)+365)%365,xW=d=>ML+((d-winStart)/SPAN)*PW;
 // value at day d: movers (row longer than a year) index continuously (clamped); fixed stars wrap yearly
 const gv=(row,d)=>row.length>365?row[d<0?0:d>row.length-1?row.length-1:d]:row[((d%365)+365)%365];
+// ── an actual comet riding its own green track: bright head + tail trailing behind it ──
+// What's REAL here: the head's position (the comet's peak altitude that night) and the size/length/brightness
+// of the coma and tail, which are driven by heliocentric distance r straight out of the live MPC elements —
+// so a comet swells as it runs in toward perihelion and shrinks to a bare point out past ~3 AU.
+// What is NOT real, and can't be: the tail's DIRECTION. This chart's axes are date vs altitude, not sky
+// position, so there is no anti-sunward direction on it to point at. The tail trails backward along the
+// track instead, which reads as motion. Don't let anyone "fix" it to point somewhere physical — it can't.
+const _rC={};
+function cometR(cm,d){const y=+yearI.value,key=cm.n+'|'+y+'|'+d;let v=_rC[key];
+ if(v===undefined){v=cometRaDec(cm,jdOf(new Date(y,0,1+d,6,0))-2451543.5).r;_rC[key]=v;}
+ return v;}
+const cometAct=r=>Math.max(0,Math.min(1,(3.0-r)/2.4)); // ~fully active inside 0.6 AU, dead beyond 3 AU
+function drawComet(cm,row,s,e,G){
+ // head rides the day of peak activity inside the visible run — i.e. the day closest to perihelion,
+ // so as the window drifts the head glides along its own line
+ let hd=s,hr=1e9;for(let k=s;k<=e;k++){const r=cometR(cm,k);if(r<hr){hr=r;hd=k;}}
+ const act=cometAct(hr),rgb=G.rgb,px=k=>xW(k),py=k=>yC(Math.min(90,gv(row,k)));
+ const tail=Math.round(3+22*act);
+ ctx.lineCap='round';
+ for(let j=0;j<tail;j++){const k0=hd-j,k1=hd-j-1;if(k1<s)break;
+  const f=1-j/tail,a=0.5*f*f*(0.35+0.65*act);if(a<0.012)continue;
+  ctx.strokeStyle='rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+a.toFixed(3)+')';
+  ctx.lineWidth=(1+3.4*act)*f+0.4;
+  ctx.beginPath();ctx.moveTo(px(k0),py(k0));ctx.lineTo(px(k1),py(k1));ctx.stroke();}
+ ctx.lineCap='butt';ctx.lineWidth=1.5;
+ const hx=px(hd),hy=py(hd),R=(2.2+3.6*act)*2.6; // coma
+ const g=ctx.createRadialGradient(hx,hy,0,hx,hy,R);
+ g.addColorStop(0,'rgba(255,255,255,'+(0.85*(0.4+0.6*act)).toFixed(3)+')');
+ g.addColorStop(0.35,'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0.5)');
+ g.addColorStop(1,'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0)');
+ ctx.fillStyle=g;ctx.beginPath();ctx.arc(hx,hy,R,0,6.2832);ctx.fill();
+ ctx.fillStyle='rgba(255,255,255,'+(0.9*(0.5+0.5*act)).toFixed(3)+')'; // nucleus
+ ctx.beginPath();ctx.arc(hx,hy,Math.max(1.1,R*0.16),0,6.2832);ctx.fill();}
 function render(){const amb=document.body.classList.contains('ambient');
  // ambient draws at 1× on purpose: it's a decorative full-bleed view, and Retina 2× costs 4× the fill for no real gain
  const dpr=amb?1:(window.devicePixelRatio||1);const cw=cv.parentElement,maxed=!!document.fullscreenElement||amb;
@@ -255,6 +291,7 @@ function render(){const amb=document.body.classList.contains('ambient');
    if(gv(row,d)<=TH){d++;continue;}
    const s=d;while(d<=dB+1&&gv(row,d)>TH)d++;const e=d-1;
    ctx.beginPath();for(let k=s;k<=e;k++){const x=xW(k),y=yC(Math.min(90,gv(row,k)));k>s?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();
+   if(tt==='comet'&&o.comet)drawComet(o.comet,row,s,e,G);
   }});});
  ctx.restore();
  hiSet.forEach(i=>{if(i>=0&&i<CAT.length)drawHi(i,false);});
