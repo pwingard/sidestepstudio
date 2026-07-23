@@ -244,11 +244,11 @@ function cometPA(cm,d){const y=+yearI.value,key=cm.n+'|'+y+'|'+d;let v=_paC[key]
   const a2=rev(su.ra+180),d2=-su.dec,da=rev(a2-c.ra); // the anti-sun point: tails point away from the Sun
   v=rev(atan2(sin(da)*cos(d2),cos(c.dec)*sin(d2)-sin(c.dec)*cos(d2)*cos(da)));_paC[key]=v;}
  return v;}
-function drawComet(cm,row,s,e){
- // head rides the HORIZONTAL CENTRE of the comet's visible path, on a fractional day so it glides
- // along the track instead of hopping a whole day at a time
- const hd=(s+e)/2,hi=Math.round(hd),act=cometAct(cometR(cm,hi));
- const hx=xW(hd),hy=yC(Math.min(90,gvf(row,hd)));
+function drawComet(cm,row,s,e,sd,sx){
+ // head rides the HORIZONTAL CENTRE of the comet's visible path, in the same micro-day sample space as
+ // the wax, so it glides continuously instead of hopping
+ const hn=(s+e)/2,hd=sd(hn),act=cometAct(cometR(cm,Math.round(hd)));
+ const hx=sx(hn),hy=yC(Math.min(90,gvf(row,hd)));
  // Tail points along the true anti-solar position angle for that date, drawn North-up / East-left (the
  // naked-eye sky convention). Chart axes are date vs altitude, not sky coordinates, so this is a borrowed
  // direction rather than a physical one — but it swings the way a real tail swings as the comet rounds
@@ -306,17 +306,25 @@ function render(){const amb=document.body.classList.contains('ambient');
  // layers fall under the skip threshold below and never get drawn). So ambient halves the band layers and
  // skips faint ones sooner. Same silhouette, roughly half the filled polygons.
  const TH=0.6,K=amb?2:4,DEPTH=Math.min(64,PH*0.34),ST=DEPTH/K,BASE=MT+PH,AMIN=amb?0.008:0.002;
+ // ── MICRO-DAY SAMPLING ──────────────────────────────────────────────────────────────────────────────
+ // The wax used to be sampled on whole days: as winStart crossed each integer, every run's first and last
+ // vertex popped in or out by a full day-width (~8px) — that was the residual jumpiness, and no frame-rate
+ // or speed change could fix it because it's a geometry problem, not a timing one.
+ // Now the samples are anchored to the FRACTIONAL window start: sample n sits at day winStart+n*SPAN/NS,
+ // which lands on a FIXED screen x. Nothing enters or leaves the polygon as we scroll; the y values just
+ // slide continuously. Same sample count as before, so it costs nothing extra.
+ const NS=Math.max(30,Math.round(SPAN)),sd=n=>winStart+n*SPAN/NS,sx=n=>ML+(n/NS)*PW;
  CAT.forEach((o,i)=>{[o.t].concat(o.t2?[o.t2]:[]).forEach(tt=>{if(MOVER[tt])return;const G=grad[tt];if(!G)return;const rgb=G.rgb;const row=YGRID[i];
-  let d=dA;
-  while(d<=dB+1){
-   if(gv(row,d)<=TH){d++;continue;}
-   const s=d;while(d<=dB+1&&gv(row,d)>TH)d++;const e=d-1; // contiguous run [s..e] in day-of-year
+  let n=0;
+  while(n<=NS){
+   if(gvf(row,sd(n))<=TH){n++;continue;}
+   const s=n;while(n<=NS&&gvf(row,sd(n))>TH)n++;const e=n-1; // contiguous run [s..e] in sample index
    for(let j=0;j<K;j++){const a=G.a*(1-j/K);if(a<=AMIN)continue;ctx.fillStyle='rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+a.toFixed(3)+')';
     ctx.beginPath();
-    for(let k=s;k<=e;k++){const x=xW(k),y=Math.min(BASE,yC(Math.min(90,gv(row,k)))+j*ST);k>s?ctx.lineTo(x,y):ctx.moveTo(x,y);}
-    for(let k=e;k>=s;k--){const x=xW(k),y=Math.min(BASE,yC(Math.min(90,gv(row,k)))+(j+1)*ST);ctx.lineTo(x,y);}
+    for(let k=s;k<=e;k++){const x=sx(k),y=Math.min(BASE,yC(Math.min(90,gvf(row,sd(k))))+j*ST);k>s?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+    for(let k=e;k>=s;k--){const x=sx(k),y=Math.min(BASE,yC(Math.min(90,gvf(row,sd(k))))+(j+1)*ST);ctx.lineTo(x,y);}
     ctx.closePath();ctx.fill();}
-   ctx.strokeStyle=G.line;ctx.lineWidth=1.5;ctx.beginPath();for(let k=s;k<=e;k++){const x=xW(k),y=yC(Math.min(90,gv(row,k)));k>s?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();
+   ctx.strokeStyle=G.line;ctx.lineWidth=1.5;ctx.beginPath();for(let k=s;k<=e;k++){const x=sx(k),y=yC(Math.min(90,gvf(row,sd(k))));k>s?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();
   }});});
  ctx.globalCompositeOperation='source-over';ctx.restore();
  // ── movers (planets + comets) ── drawn line-only, ON TOP of the wax, in source-over rather than 'lighter'.
@@ -327,12 +335,12 @@ function render(){const amb=document.body.classList.contains('ambient');
  // in ambient use the seamless-loop copy so movers don't snap back at the year boundary
  CAT.forEach((o,i)=>{[o.t].concat(o.t2?[o.t2]:[]).forEach(tt=>{if(!MOVER[tt])return;const G=grad[tt];if(!G)return;const row=(amb&&YGRIDC[i])||YGRID[i];
   ctx.strokeStyle=G.line;
-  let d=dA;
-  while(d<=dB+1){
-   if(gv(row,d)<=TH){d++;continue;}
-   const s=d;while(d<=dB+1&&gv(row,d)>TH)d++;const e=d-1;
-   ctx.beginPath();for(let k=s;k<=e;k++){const x=xW(k),y=yC(Math.min(90,gv(row,k)));k>s?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();
-   if(tt==='comet'&&o.comet)drawComet(o.comet,row,s,e);
+  let n=0;
+  while(n<=NS){
+   if(gvf(row,sd(n))<=TH){n++;continue;}
+   const s=n;while(n<=NS&&gvf(row,sd(n))>TH)n++;const e=n-1;
+   ctx.beginPath();for(let k=s;k<=e;k++){const x=sx(k),y=yC(Math.min(90,gvf(row,sd(k))));k>s?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();
+   if(tt==='comet'&&o.comet)drawComet(o.comet,row,s,e,sd,sx);
   }});});
  ctx.restore();
  hiSet.forEach(i=>{if(i>=0&&i<CAT.length)drawHi(i,false);});
