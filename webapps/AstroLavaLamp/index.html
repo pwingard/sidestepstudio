@@ -75,13 +75,12 @@ body.ambient .layout{gap:0;height:100vh}
 body.ambient .left{flex:1;min-width:0}
 body.ambient .chartwrap{border:none;border-radius:0;padding:0;background:var(--bg);height:100vh}
 body.ambient canvas{cursor:none}
-#ambientHint{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(10,14,21,.85);border:1px solid var(--line);border-radius:22px;padding:8px 16px;font-size:12.5px;color:var(--ink);opacity:0;transition:opacity .5s;pointer-events:none;backdrop-filter:blur(6px)}
+#perfhud{position:absolute;top:10px;right:10px;z-index:60;background:rgba(6,10,16,.92);border:1px solid #2a3444;border-radius:8px;padding:8px 11px;font:11.5px/1.5 ui-monospace,Menlo,monospace;color:#cfe3ff;white-space:nowrap}
+#ambientHint{position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(10,14,21,.85);border:1px solid var(--line);border-radius:22px;padding:8px 16px;font-size:12.5px;color:var(--ink);opacity:0;transition:opacity .5s;pointer-events:none;backdrop-filter:blur(6px)}
 body.ambient.wake #ambientHint{opacity:1;pointer-events:auto}
 body.ambient.wake canvas{cursor:default}
 #ambientHint a{color:var(--acc);text-decoration:none;font-weight:600}
 </style></head><body>
-<div id="perfhud" style="display:none;position:fixed;top:10px;right:10px;z-index:60;background:rgba(6,10,16,.92);border:1px solid #2a3444;border-radius:8px;padding:8px 11px;font:11.5px/1.5 ui-monospace,Menlo,monospace;color:#cfe3ff;white-space:nowrap"></div>
-<div id="ambientHint">🌋 Ambient mode — <a href="#" onclick="ambientExit();return false;">exit to full app ↗</a> <span style="opacity:.5">or press Esc</span></div>
 <div class="wrap">
 <h1>🌋 The Astro Lava Lamp <span style="font-weight:400;opacity:.55;font-size:.62em">by Sidestep Studio</span> <span id="lavabadge" style="opacity:0;transition:opacity 1.4s;font-size:.5em;font-weight:400;color:#ff9a5c;vertical-align:middle">🌋 breathing · drifting through the seasons… (move to wake)</span></h1>
 <p class="sub">Every popular astrophotography object all at once — a three-month span, colored by type and additive-blended so overlaps mix. Slide a type to dial its brightness; click a day for that night's list.</p>
@@ -98,7 +97,12 @@ body.ambient.wake canvas{cursor:default}
 <div id="tip"></div>
 <div class="layout">
  <div class="left">
-  <div class="chartwrap"><canvas id="cv"></canvas><div class="chartbtns"><button class="maxbtn" id="ambBtn" onclick="ambientEnter()" title="Chrome-free auto-drifting view — Esc to exit">🌋 Ambient</button><button class="maxbtn" id="maxBtn" onclick="toggleFS()">⛶ Max</button></div></div>
+  <div class="chartwrap"><canvas id="cv"></canvas>
+  <!-- these two MUST live inside .chartwrap: Max fullscreens the .layout element, and anything outside
+       that subtree is simply not rendered while fullscreen — which is why they vanished in Max -->
+  <div id="perfhud" style="display:none"></div>
+  <div id="ambientHint">🌋 Ambient mode — <a href="#" onclick="ambientExit();return false;">exit to full app ↗</a> <span style="opacity:.5">or press Esc</span></div>
+  <div class="chartbtns"><button class="maxbtn" id="ambBtn" onclick="ambientEnter()" title="Chrome-free auto-drifting view — Esc to exit">🌋 Ambient</button><button class="maxbtn" id="maxBtn" onclick="toggleFS()">⛶ Max</button></div></div>
   <p class="foot" style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline"><span id="cnt"></span><a href="#contact" id="contactlink" onclick="var b=document.getElementById('contactbox');b.style.display=b.style.display==='none'?'block':'none';return false;" style="color:var(--acc);text-decoration:none">✉ Contact Sidestep Studio</a></p>
   <div id="contactbox" style="display:none;font-size:12.5px;color:var(--mut);margin-top:2px">
    <form action="https://api.web3forms.com/submit" method="POST" style="margin-top:6px;display:flex;flex-direction:column;gap:7px;max-width:440px">
@@ -182,6 +186,8 @@ const MOVER={planet:1,comet:1};
 // half-res wax buffer (see render). WAXSC 0.5 = quarter the pixels. ?hires=1 turns it off for comparison.
 const WAXSC=0.5,HIRES=/hires=1/.test(location.search);
 let waxBuf=null,waxCtx=null;
+// reusable per-frame sample geometry (see the wax loop): x per sample, curve y per sample, raw value per sample
+let SX=null,SY=null,SV=null;
 // ── ?perf=1 profiler ────────────────────────────────────────────────────────────────────────────────
 // Four rounds of optimising by inference got the easy wins but stopped landing. This measures instead:
 // where the milliseconds actually go, in whatever configuration is on screen. Off unless asked for.
@@ -365,19 +371,29 @@ function render(){const amb=document.body.classList.contains('ambient');
  // which lands on a FIXED screen x. Nothing enters or leaves the polygon as we scroll; the y values just
  // slide continuously. Same sample count as before, so it costs nothing extra.
  const NS=Math.max(30,Math.round(SPAN)),sd=n=>winStart+n*SPAN/NS,sx=n=>ML+(n/NS)*PW;
+ // ── PRECOMPUTED SAMPLE GEOMETRY ─────────────────────────────────────────────────────────────────────
+ // Profiling (?perf=1) put 92% of the frame in the wax, and at ~0.02ms per fill that's JS path-building,
+ // not GPU rasterising. The cause: gvf() and yC() were being recomputed for EVERY sample on EVERY pass —
+ // once scanning for runs, twice per band layer, once more for the identity line. About 10x the work.
+ // Now each sample's x is computed once per frame (shared by all objects) and each object's curve y is
+ // computed once per object, then the inner loops are pure array reads. Identical output.
+ if(!SX||SX.length!==NS+1){SX=new Float64Array(NS+1);SY=new Float64Array(NS+1);SV=new Float64Array(NS+1);}
+ for(let n=0;n<=NS;n++)SX[n]=sx(n);
  CAT.forEach((o,i)=>{[o.t].concat(o.t2?[o.t2]:[]).forEach(tt=>{if(MOVER[tt])return;const G=grad[tt];if(!G)return;const rgb=G.rgb;const row=YGRID[i];
+  for(let n=0;n<=NS;n++){const v=gvf(row,sd(n));SV[n]=v;SY[n]=yC(v<90?v:90);}
   let n=0;
   while(n<=NS){
-   if(gvf(row,sd(n))<=TH){n++;continue;}
-   const s=n;while(n<=NS&&gvf(row,sd(n))>TH)n++;const e=n-1; // contiguous run [s..e] in sample index
+   if(SV[n]<=TH){n++;continue;}
+   const s=n;while(n<=NS&&SV[n]>TH)n++;const e=n-1; // contiguous run [s..e] in sample index
    for(let j=0;j<K;j++){const a=G.a*(1-j/K);if(a<=AMIN)continue;wx.fillStyle='rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+a.toFixed(3)+')';
+    const oj=j*ST,oj1=(j+1)*ST;
     wx.beginPath();
-    for(let k=s;k<=e;k++){const x=sx(k),y=Math.min(BASE,yC(Math.min(90,gvf(row,sd(k))))+j*ST);k>s?wx.lineTo(x,y):wx.moveTo(x,y);}
-    for(let k=e;k>=s;k--){const x=sx(k),y=Math.min(BASE,yC(Math.min(90,gvf(row,sd(k))))+(j+1)*ST);wx.lineTo(x,y);}
+    for(let k=s;k<=e;k++){const y=SY[k]+oj;k>s?wx.lineTo(SX[k],y<BASE?y:BASE):wx.moveTo(SX[k],y<BASE?y:BASE);}
+    for(let k=e;k>=s;k--){const y=SY[k]+oj1;wx.lineTo(SX[k],y<BASE?y:BASE);}
     wx.closePath();wx.fill();if(PERFON)PERF.fills++;}
    // identity lines stay INSIDE the buffer so they keep additively mixing with the wax exactly as before —
    // matching the current look matters more than sharper lines
-   wx.strokeStyle=G.line;wx.lineWidth=1.5;wx.beginPath();for(let k=s;k<=e;k++){const x=sx(k),y=yC(Math.min(90,gvf(row,sd(k))));k>s?wx.lineTo(x,y):wx.moveTo(x,y);}wx.stroke();
+   wx.strokeStyle=G.line;wx.lineWidth=1.5;wx.beginPath();for(let k=s;k<=e;k++){k>s?wx.lineTo(SX[k],SY[k]):wx.moveTo(SX[k],SY[k]);}wx.stroke();
   }});});
  wx.globalCompositeOperation='source-over';wx.restore();
  const _t1=PERFON?performance.now():0;
