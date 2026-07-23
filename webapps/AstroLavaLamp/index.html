@@ -436,7 +436,11 @@ addEventListener('resize',()=>{if(CAT.length)render();});
 let lavaOn=false,lavaRAF=0,lavaBase={},lavaLastT=-1,lavaLastDraw=-1;
 // Ambient runs at a capped frame rate to keep the machine cool. The drift is time-based (advances by elapsed
 // dt, not per frame), so fewer frames = SAME apparent speed, just less work. 20fps is indistinguishable here.
-const AMB_FPS=12,AMB_MIN_DT=1000/AMB_FPS;
+const AMB_FPS=12,AMB_MIN_DT=1000/AMB_FPS,PLAY_FPS=30,PLAY_MIN_DT=1000/PLAY_FPS;
+// While the Sisyphus Push is actually racing, cap how many leaderboard rows exist. Each row is an
+// absolutely-positioned div with 0.5s transform+opacity transitions that gets restyled every day-step,
+// so the uncapped ~150-200 of them cost more than the chart does. Paused, the full list comes back.
+const RACEMAX=50;
 // nothing to draw for a window nobody can see — hard-stop the loop when the tab/window is hidden and
 // pick it back up on return. Browsers throttle hidden tabs, but this also covers being fully covered.
 let lavaHidden=false;
@@ -450,10 +454,12 @@ document.addEventListener('visibilitychange',()=>{
 const TKEYS=Object.keys(TYPES),lavaW={},lavaP={},DRIFT=3,DRIFT_AMB=0.6; // ambient = a full year in ~10 min
 TKEYS.forEach((k,i)=>{lavaW[k]=0.10+0.05*(i%4);lavaP[k]=i*1.7;}); // period ~16–63s, phases spread → wax never in sync
 function lavaStep(t){
- // skip early in ambient — returning before lavaLastT is touched means the next drawn frame gets the FULL
- // elapsed dt, so the window scrolls at exactly the same rate regardless of the cap
- if(document.body.classList.contains('ambient')){
-  if(lavaLastDraw>=0&&t-lavaLastDraw<AMB_MIN_DT){lavaRAF=requestAnimationFrame(lavaStep);return;}
+ // Frame cap applies to ALL animation, not just ambient — the normal Play/Push view was running uncapped
+ // at 60fps with 4 band layers, which made it far more expensive than ambient ever was. Returning before
+ // lavaLastT is touched means the next drawn frame gets the FULL elapsed dt, so the window scrolls at
+ // exactly the same rate regardless of the cap. Micro-day sampling keeps it smooth at 30fps.
+ {const capDT=document.body.classList.contains('ambient')?AMB_MIN_DT:PLAY_MIN_DT;
+  if(lavaLastDraw>=0&&t-lavaLastDraw<capDT){lavaRAF=requestAnimationFrame(lavaStep);return;}
   lavaLastDraw=t;}
  const s=t/1000;
  // type levels swell on slow out-of-sync waves (Overall is left alone — the user's setting stays put)
@@ -478,16 +484,20 @@ cv.addEventListener('click',e=>{if(document.body.classList.contains('ambient'))r
 // ── bar-chart race: pick a day, then optionally play it forward day-by-day; bars slide/reorder as objects rise & set ──
 function showPane(which){const r=document.querySelector('.right');r.classList.toggle('night',which==='night');document.getElementById('tgMix').classList.toggle('active',which!=='night');document.getElementById('tgNight').classList.toggle('active',which==='night');setPlayLabel();}
 function dayList(dd){raceDay=modY(dd);showPane('night');drawBars();render();}
-function drawBars(){const thr=+thr_.value,c=modY(raceDay),night=document.querySelector('.right').classList.contains('night'),showN=night?999:RN;
+function drawBars(){const thr=+thr_.value,c=modY(raceDay),night=document.querySelector('.right').classList.contains('night'),showN=night?(lavaOn&&pushMode?RACEMAX:999):RN;
  const _d=new Date(+yearI.value,0,1+raceDay);document.getElementById('dayh').textContent=MN[_d.getMonth()]+' '+_d.getDate()+' — highest that night';
  const list=CAT.map((o,i)=>({o,i,a:gv(YGRID[i],raceDay)})).filter(r=>r.a>0.5&&(vis(r.o)||hiSet.has(r.i))).sort((p,q)=>q.a-p.a).slice(0,showN);
  const cont=document.getElementById('daylist');cont.classList.add('race');cont.style.height=(list.length*ROWH+2)+'px';cont.style.maxHeight=night?Math.max(240,document.fullscreenElement?window.innerHeight-190:Hgt-64)+'px':'';
  const used={};const maxW=132;
  list.forEach((r,rank)=>{used[r.i]=1;let el=raceRows[r.i];
-  if(!el){el=document.createElement('div');el.className='rbar';el.style.opacity='0';el.style.transform='translateY('+(rank*ROWH)+'px)';
+  let fresh=false;
+  if(!el){fresh=true;el=document.createElement('div');el.className='rbar';el.style.opacity='0';el.style.transform='translateY('+(rank*ROWH)+'px)';
    el.innerHTML='<span class="rt"></span><span class="rn"></span><span class="ra"></span>';el.onclick=(function(i){return function(){pickObj(i);};})(r.i);
    cont.appendChild(el);raceRows[r.i]=el;}
-  requestAnimationFrame(()=>{el.style.opacity='1';el.style.transform='translateY('+(rank*ROWH)+'px)';});
+  // only a brand-new row needs a deferred frame to trigger its fade-in from opacity 0; existing rows can
+  // be moved immediately. This was queueing one rAF per row per day-step — hundreds of callbacks a second.
+  if(fresh)requestAnimationFrame(()=>{el.style.opacity='1';el.style.transform='translateY('+(rank*ROWH)+'px)';});
+  else{el.style.opacity='1';el.style.transform='translateY('+(rank*ROWH)+'px)';}
   el.querySelector('.rt').style.cssText='background:'+TYPES[r.o.t][1]+';width:'+Math.max(3,r.a/90*maxW)+'px';
   const nm=el.querySelector('.rn');nm.textContent=r.o.n.split(' / ')[0].split(' - ')[0];nm.style.fontWeight=(r.a>=thr||hiSet.has(r.i))?'700':'400';el.classList.toggle('hl',hiSet.has(r.i));
   el.querySelector('.ra').textContent=r.a.toFixed(0)+'°';});
