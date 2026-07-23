@@ -219,7 +219,7 @@ function applyTypeUI(k){const r=document.getElementById('row_'+k),s=document.get
  if(t)t.setAttribute('aria-checked',typeOff[k]?'false':'true');}
 function toggleType(k){typeOff[k]=!typeOff[k];
  try{localStorage.setItem('all_typeoff',JSON.stringify(typeOff));}catch(e){}
- applyTypeUI(k);render();}
+ applyTypeUI(k);if(raceDay>=0)drawBars();render();} // drawBars too: the Leaderboard filters on vis(), so it has to be rebuilt or it keeps showing the type you just switched off
 Object.keys(TYPES).forEach(applyTypeUI); // restore any persisted off-state onto the freshly built rows
 const daysInMonth=(y,m)=>new Date(y,m+1,0).getDate();
 // Precompute the WHOLE YEAR once (dark-sky LSTs per day + each object's peak altitude per day).
@@ -423,7 +423,7 @@ function render(){const amb=document.body.classList.contains('ambient');
  ctx.textAlign='left';ctx.fillStyle='#7d8797';const _a=new Date(+yearI.value,0,1+Math.round(winStart)),_b=new Date(+yearI.value,0,1+Math.round(winStart+SPAN));ctx.fillText('peak altitude in dark sky (°) — '+MN[_a.getMonth()].slice(0,3)+' '+_a.getDate()+' – '+MN[_b.getMonth()].slice(0,3)+' '+_b.getDate(),ML,MT-2);
  // watermark: chart name + web-apps URL (top-right, faint — clears the Play/Max buttons at the bottom corners)
  ctx.textAlign='right';ctx.textBaseline='top';ctx.font='10px -apple-system,Arial';ctx.lineJoin='round';ctx.lineWidth=2.6;ctx.strokeStyle='rgba(4,6,12,.75)';ctx.strokeText(APPWM,ML+PW-6,MT+4);ctx.fillStyle='rgba(200,208,222,.6)';ctx.fillText(APPWM,ML+PW-6,MT+4);ctx.textBaseline='alphabetic';
- document.getElementById('cnt').textContent=CAT.length+' objects · '+Object.entries(slid).filter(([k,v])=>v>0).length+' types shown · additive blend';
+ document.getElementById('cnt').textContent=CAT.length+' objects · '+Object.entries(slid).filter(([k,v])=>v>0&&!typeOff[k]).length+' types shown · additive blend';
  if(hover)drawHover();   // redraw hover each frame so it works while the animation plays
 }
 // text with a dark rounded halo so it stays readable over bright additive wax
@@ -434,7 +434,10 @@ function drawHi(i,hover,label){const o=CAT[i],col=TYPES[o.t][1],row=YGRID[i],dA=
   for(let d=dA;d<=dB+1;d++){const v=gv(row,d);if(v<=0.6){st=false;continue;}const x=xW(d),y=yC(Math.min(90,v));st?ctx.lineTo(x,y):ctx.moveTo(x,y);st=true;}ctx.stroke();});
  ctx.restore();
  if(label!==false){const de=dB,ex=Math.min(xW(de),ML+PW),ey=yC(Math.min(90,gv(row,de)));const ly=ey<MT+20?ey+15:ey-10;ctx.font='600 11.5px -apple-system,Arial';ctx.textAlign='right';haloText(o.n.split(' - ')[0].split(' / ')[0],ex-5,ly);}}
-function vis(o){return (slid[o.t]||0)>0||(slid[o.t2]||0)>0;}
+// One definition of "this object counts", used by the Leaderboard and the hover list. A type is out if its
+// switch is off (absolute — survives the breathing) OR its brightness is at 0 (transient — the breathing
+// will bring it back, and the leaderboard should follow it in and out).
+function vis(o){const on=t=>!!t&&!typeOff[t]&&(slid[t]||0)>0;return on(o.t)||on(o.t2);}
 function nearby(dd,alt){const r=[];for(let i=0;i<CAT.length;i++){if(!vis(CAT[i]))continue;const v=gv(YGRID[i],dd);if(v<=0.6)continue;const d=Math.abs(v-alt);if(d<4)r.push([d,i]);}r.sort((a,b)=>a[0]-b[0]);return r.slice(0,9).map(x=>x[1]);}
 function fmtd(dd){const d=new Date(+yearI.value,0,1+dd);return MN[d.getMonth()].slice(0,3)+' '+d.getDate();}
 const tip=document.getElementById('tip');let hover=null;
