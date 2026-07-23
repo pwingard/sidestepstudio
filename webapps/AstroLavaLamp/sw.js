@@ -1,5 +1,5 @@
 // The Astro Lava Lamp — network-first service worker (installable / offline-capable)
-const CACHE_VERSION = "lava-v19";
+const CACHE_VERSION = "lava-v20";
 const ASSETS = ["./", "index.html", "catalog.enc", "favicon-16x16.png", "favicon-32x32.png", "apple-touch-icon.png", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
