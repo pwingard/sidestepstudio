@@ -31,7 +31,8 @@ input[type=number]{width:76px}input[type=range]{width:120px;accent-color:var(--a
 .srow{display:flex;align-items:center;gap:8px;margin:5px 0}.sw{width:12px;height:12px;border-radius:3px;flex:none}
 .srow span{font-size:12px;width:96px}.srow input{flex:1;width:auto}
 .chartwrap{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}canvas{display:block;max-width:100%;cursor:crosshair}
-.maxbtn{position:absolute;right:16px;bottom:15px;z-index:5;background:rgba(18,22,30,.82);border:1px solid var(--line);color:var(--ink);font-size:12px;font-weight:600;border-radius:8px;padding:6px 12px;cursor:pointer;backdrop-filter:blur(5px)}.maxbtn:hover{background:rgba(40,48,62,.92)}
+.chartbtns{position:absolute;right:16px;bottom:15px;z-index:5;display:flex;gap:8px}
+.maxbtn{background:rgba(18,22,30,.82);border:1px solid var(--line);color:var(--ink);font-size:12px;font-weight:600;border-radius:8px;padding:6px 12px;cursor:pointer;backdrop-filter:blur(5px)}.maxbtn:hover{background:rgba(40,48,62,.92)}
 .layout:fullscreen{background:var(--bg);height:100vh;padding:14px;box-sizing:border-box;gap:14px}
 body.maxed .chartwrap{height:calc(100vh - 30px)}
 body.maxed .foot{display:none}
@@ -61,7 +62,7 @@ body.maxed .right{max-height:calc(100vh - 30px);overflow:hidden}   /* leaderboar
 /* Ambient / screensaver mode (?screensaver=1 or #ambient): full-bleed auto-drifting canvas, no chrome */
 body.ambient{overflow:hidden;background:var(--bg)}
 body.ambient .wrap{max-width:none;padding:0;margin:0}
-body.ambient h1,body.ambient .sub,body.ambient .controls,body.ambient .right,body.ambient .foot,body.ambient #contactbox,body.ambient .maxbtn,body.ambient #devnote{display:none!important}
+body.ambient h1,body.ambient .sub,body.ambient .controls,body.ambient .right,body.ambient .foot,body.ambient #contactbox,body.ambient .chartbtns,body.ambient #devnote{display:none!important}
 body.ambient .layout{gap:0;height:100vh}
 body.ambient .left{flex:1;min-width:0}
 body.ambient .chartwrap{border:none;border-radius:0;padding:0;background:var(--bg);height:100vh}
@@ -71,7 +72,7 @@ body.ambient.wake #ambientHint{opacity:1;pointer-events:auto}
 body.ambient.wake canvas{cursor:default}
 #ambientHint a{color:var(--acc);text-decoration:none;font-weight:600}
 </style></head><body>
-<div id="ambientHint">🌋 Ambient mode — <a href="./">exit to full app ↗</a></div>
+<div id="ambientHint">🌋 Ambient mode — <a href="#" onclick="ambientExit();return false;">exit to full app ↗</a> <span style="opacity:.5">or press Esc</span></div>
 <div class="wrap">
 <h1>🌋 The Astro Lava Lamp <span style="font-weight:400;opacity:.55;font-size:.62em">by Sidestep Studio</span> <span id="lavabadge" style="opacity:0;transition:opacity 1.4s;font-size:.5em;font-weight:400;color:#ff9a5c;vertical-align:middle">🌋 breathing · drifting through the seasons… (move to wake)</span></h1>
 <p class="sub">Every popular astrophotography object all at once — a three-month span, colored by type and additive-blended so overlaps mix. Slide a type to dial its brightness; click a day for that night's list.</p>
@@ -88,7 +89,7 @@ body.ambient.wake canvas{cursor:default}
 <div id="tip"></div>
 <div class="layout">
  <div class="left">
-  <div class="chartwrap"><canvas id="cv"></canvas><button class="maxbtn" id="maxBtn" onclick="toggleFS()">⛶ Max</button></div>
+  <div class="chartwrap"><canvas id="cv"></canvas><div class="chartbtns"><button class="maxbtn" id="ambBtn" onclick="ambientEnter()" title="Chrome-free auto-drifting view — Esc to exit">🌋 Ambient</button><button class="maxbtn" id="maxBtn" onclick="toggleFS()">⛶ Max</button></div></div>
   <p class="foot" style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline"><span id="cnt"></span><a href="#contact" id="contactlink" onclick="var b=document.getElementById('contactbox');b.style.display=b.style.display==='none'?'block':'none';return false;" style="color:var(--acc);text-decoration:none">✉ Contact Sidestep Studio</a></p>
   <div id="contactbox" style="display:none;font-size:12.5px;color:var(--mut);margin-top:2px">
    <form action="https://api.web3forms.com/submit" method="POST" style="margin-top:6px;display:flex;flex-direction:column;gap:7px;max-width:440px">
@@ -354,11 +355,20 @@ async function loadCatalog(){
 }
 // ── Ambient / screensaver mode: ?screensaver=1 (or #ambient) hides all chrome and auto-runs the lava drift.
 //    Purely presentational — same encrypted, origin-gated catalog load as always; the lock is untouched. ──
+//    Entered two ways: the 🌋 Ambient button (in-page toggle, no reload) or the URL flag (direct link). ──
 const AMBIENT=/screensaver=1/.test(location.search)||/(ambient|screensaver)/.test(location.hash);
-if(AMBIENT){document.body.classList.add('ambient');
- let wakeT=0;const wake=()=>{document.body.classList.add('wake');clearTimeout(wakeT);wakeT=setTimeout(()=>document.body.classList.remove('wake'),2600);};
- ['mousemove','keydown','touchstart','wheel'].forEach(ev=>addEventListener(ev,wake,{passive:true}));}
-loadCatalog().then(c=>{CATBASE=c;CAT=CATBASE.concat(PLANET_OBJS,cometObjs());setDatalist();build();winStart=doyToday();render();if(AMBIENT)playToggle();
+function inAmbient(){return document.body.classList.contains('ambient');}
+let wakeT=0;
+// show the exit hint, then fade it; longer on entry so a first-timer sees the way out
+function ambientWake(ms){document.body.classList.add('wake');clearTimeout(wakeT);wakeT=setTimeout(()=>document.body.classList.remove('wake'),ms||2600);}
+function ambientEnter(){if(inAmbient())return;document.body.classList.add('ambient');if(!lavaOn)playToggle();ambientWake(4200);render();}
+function ambientExit(){if(!inAmbient())return;document.body.classList.remove('ambient','wake');
+ if(location.search||location.hash)history.replaceState(null,'','./'); // so a reload doesn't drop back into ambient
+ render();}
+['mousemove','touchstart','wheel'].forEach(ev=>addEventListener(ev,()=>{if(inAmbient())ambientWake();},{passive:true}));
+addEventListener('keydown',e=>{if(!inAmbient())return;if(e.key==='Escape'){ambientExit();return;}ambientWake();});
+if(AMBIENT)document.body.classList.add('ambient');
+loadCatalog().then(c=>{CATBASE=c;CAT=CATBASE.concat(PLANET_OBJS,cometObjs());setDatalist();build();winStart=doyToday();render();if(AMBIENT){playToggle();ambientWake(4200);}
  // then quietly refresh comets from the live MPC feed and rebuild if we got current ones
  loadComets().then(cm=>{if(cm&&cm.length){COMETS=cm;CAT=CATBASE.concat(PLANET_OBJS,cometObjs());setDatalist();const ws=winStart;build();winStart=ws;render();}});
 }).catch(e=>{document.getElementById('cnt').textContent='Could not load the catalog for this site.';});
