@@ -188,6 +188,21 @@ function loadComets(){const URL='https://www.minorplanetcenter.net/iau/Ephemerid
 const TYPES={emission:['Emission','#e04a3c'],reflection:['Reflection','#4f7bff'],opencluster:['Open cluster','#2fd4e6'],globular:['Globular','#f0a52e'],galaxy:['Galaxy','#ffe07a'],planetary:['Planetary','#ff5fce'],snr:['Supernova rmnt','#2ad4ac'],darknebula:['Dark nebula','#b07840'],planet:['Planet','#c58cff'],comet:['Comet','#8ef25a']};
 // the movers — everything else is fixed and repeats identically every year, so these two get their own look
 const MOVER={planet:1,comet:1};
+// Population balance. Additive blending means a type's presence in the wax is a function of how MANY
+// objects it has, not just its slider: 64 open clusters throw far more light than 14 reflection nebulae,
+// so identical slider positions read as wildly different brightness. TYPEBAL lifts the sparse types.
+// Deliberately one-directional — sparse types go up, populous ones are never dimmed, so the wax you
+// already know doesn't change character. Recomputed from the catalog, so it self-corrects as it grows.
+// Planets get the lift but capped lower (MOVMAX): they're among the sparsest types so the raw formula
+// pins them at the ceiling, and they draw a line with no band — past ~1.8x the track stops reading as a
+// track and starts glaring. They were exempt at first and Pete called them too faint next to the newly
+// lifted sparse types, which is exactly what exempting them did.
+// COMETS ARE EXEMPT (NOBAL) — their TRACK is where Pete wants it, so don't scale it in either direction.
+// The comet head/tail GLYPH is a separate concern entirely and is dimmed inside drawComet via COMETICON,
+// NOT here: TYPEBAL moves the track and the glyph together, and only the glyph was ever too loud.
+const BALREF=30,BALMAX=2.0,MOVMAX=1.8,NOBAL={comet:1};let TYPEBAL={};
+function computeBalance(){const n={};for(const o of CAT)if(o.t)n[o.t]=(n[o.t]||0)+1;
+ TYPEBAL={};for(const t in TYPES)TYPEBAL[t]=NOBAL[t]?1:Math.min(MOVER[t]?MOVMAX:BALMAX,Math.max(1,Math.sqrt(BALREF/Math.max(1,n[t]||1))));}
 // half-res wax buffer (see render). WAXSC 0.5 = quarter the pixels. ?hires=1 turns it off for comparison.
 const WAXSC=0.5,HIRES=/hires=1/.test(location.search);
 let waxBuf=null,waxCtx=null;
@@ -276,6 +291,12 @@ function cometPA(cm,d){const y=+yearI.value,key=cm.n+'|'+y+'|'+d;let v=_paC[key]
   const a2=rev(su.ra+180),d2=-su.dec,da=rev(a2-c.ra); // the anti-sun point: tails point away from the Sun
   v=rev(atan2(sin(da)*cos(d2),cos(c.dec)*sin(d2)-sin(c.dec)*cos(d2)*cos(da)));_paC[key]=v;}
  return v;}
+// Overall opacity of the comet GLYPH only — the little head-and-tail icon riding each comet track.
+// Separate from the comet's identity line, which is type-coloured and left alone: Pete's note was that
+// the lines are fine and only the icons shout. Multiplies every alpha below (tail, coma, nucleus) so the
+// icon keeps its internal shading and just sits back. Geometry (L, R) is untouched — this dims, doesn't
+// shrink. If it needs to go quieter still, turn this one number; don't touch TYPEBAL.
+const COMETICON=0.45;
 function drawComet(cm,row,s,e,sd,sx){
  // head rides the HORIZONTAL CENTRE of the comet's visible path, in the same micro-day sample space as
  // the wax, so it glides continuously instead of hopping
@@ -293,18 +314,18 @@ function drawComet(cm,row,s,e,sd,sx){
  ctx.lineCap='round';
  const SEG=6;
  for(let j=0;j<SEG;j++){const f0=j/SEG,f1=(j+1)/SEG,w=1-f0;
-  const a=0.38*w*w*(0.3+0.7*act);if(a<0.012)continue;
+  const a=COMETICON*0.38*w*w*(0.3+0.7*act);if(a<0.012)continue;
   ctx.strokeStyle='rgba(255,255,255,'+a.toFixed(3)+')'; // comets render white, not type-green
   ctx.lineWidth=(1+2.8*act)*w+0.35;
   ctx.beginPath();ctx.moveTo(hx+ux*L*f0,hy+uy*L*f0);ctx.lineTo(hx+ux*L*f1,hy+uy*L*f1);ctx.stroke();}
  ctx.lineCap='butt';ctx.lineWidth=1.5;
  const R=(1.6+2.4*act)*2.2; // coma
  const g=ctx.createRadialGradient(hx,hy,0,hx,hy,R);
- g.addColorStop(0,'rgba(255,255,255,'+(0.8*(0.4+0.6*act)).toFixed(3)+')');
- g.addColorStop(0.4,'rgba(233,243,255,0.34)');
+ g.addColorStop(0,'rgba(255,255,255,'+(COMETICON*0.8*(0.4+0.6*act)).toFixed(3)+')');
+ g.addColorStop(0.4,'rgba(233,243,255,'+(COMETICON*0.34).toFixed(3)+')');
  g.addColorStop(1,'rgba(210,230,255,0)');
  ctx.fillStyle=g;ctx.beginPath();ctx.arc(hx,hy,R,0,6.2832);ctx.fill();
- ctx.fillStyle='rgba(255,255,255,'+(0.92*(0.5+0.5*act)).toFixed(3)+')'; // nucleus
+ ctx.fillStyle='rgba(255,255,255,'+(COMETICON*0.92*(0.5+0.5*act)).toFixed(3)+')'; // nucleus
  ctx.beginPath();ctx.arc(hx,hy,Math.max(1,R*0.17),0,6.2832);ctx.fill();}
 function render(){const amb=document.body.classList.contains('ambient');
  // NOTE: ambient briefly drew at dpr 1 to save fill. It saved a lot, but on a Retina screen the compositor
@@ -353,7 +374,7 @@ function render(){const amb=document.body.classList.contains('ambient');
   wx.clearRect(0,0,W,Hgt);}
  wx.save();wx.beginPath();wx.rect(ML,MT,PW,PH);wx.clip();
  wx.globalCompositeOperation='lighter';
- const M=master/100;const grad={};for(const tt in TYPES){const s=typeOff[tt]?0:(slid[tt]||0);if(s<=0){grad[tt]=null;continue;}const rgb=hexRGB(TYPES[tt][1]);grad[tt]={rgb,a:(s/100)*M*0.34,line:'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+((s/100)*M*0.60).toFixed(3)+')'};}
+ const M=master/100;const grad={};for(const tt in TYPES){const s=typeOff[tt]?0:(slid[tt]||0);if(s<=0){grad[tt]=null;continue;}const rgb=hexRGB(TYPES[tt][1]),B=TYPEBAL[tt]||1;grad[tt]={rgb,a:(s/100)*M*0.34*B,line:'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+((s/100)*M*0.60*B).toFixed(3)+')'};}
  // Fill rate is the bottleneck (proof: turning brightness down cools the machine, because low alpha makes
  // layers fall under the skip threshold below and never get drawn). So ambient halves the band layers and
  // skips faint ones sooner. Same silhouette, roughly half the filled polygons.
@@ -588,9 +609,9 @@ function ambientExit(){if(!inAmbient())return;document.body.classList.remove('am
 ['mousemove','touchstart','wheel'].forEach(ev=>addEventListener(ev,()=>{if(inAmbient())ambientWake();},{passive:true}));
 addEventListener('keydown',e=>{if(!inAmbient())return;if(e.key==='Escape'){ambientExit();return;}ambientWake();});
 if(AMBIENT)document.body.classList.add('ambient');
-loadCatalog().then(c=>{CATBASE=c;CAT=CATBASE.concat(PLANET_OBJS,cometObjs());setDatalist();build();winStart=doyToday();render();if(AMBIENT){playToggle();ambientWake(4200);}
+loadCatalog().then(c=>{CATBASE=c;CAT=CATBASE.concat(PLANET_OBJS,cometObjs());computeBalance();setDatalist();build();winStart=doyToday();render();if(AMBIENT){playToggle();ambientWake(4200);}
  // then quietly refresh comets from the live MPC feed and rebuild if we got current ones
- loadComets().then(cm=>{if(cm&&cm.length){COMETS=cm;CAT=CATBASE.concat(PLANET_OBJS,cometObjs());setDatalist();const ws=winStart;build();winStart=ws;render();}});
+ loadComets().then(cm=>{if(cm&&cm.length){COMETS=cm;CAT=CATBASE.concat(PLANET_OBJS,cometObjs());computeBalance();setDatalist();const ws=winStart;build();winStart=ws;render();}});
 }).catch(e=>{document.getElementById('cnt').textContent='Could not load the catalog for this site.';});
 // PWA: install support (add to home screen). Registration fails harmlessly where sw.js isn't present.
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
