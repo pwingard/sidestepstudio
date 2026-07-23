@@ -201,9 +201,15 @@ const MOVEXT=95; // extra days precomputed for movers (planets/comets)
 const yC=a=>MT+PH*(1-a/yMax),modY=d=>((d%365)+365)%365,xW=d=>ML+((d-winStart)/SPAN)*PW;
 // value at day d: movers (row longer than a year) index continuously (clamped); fixed stars wrap yearly
 const gv=(row,d)=>row.length>365?row[d<0?0:d>row.length-1?row.length-1:d]:row[((d%365)+365)%365];
-function render(){const dpr=window.devicePixelRatio||1;const cw=cv.parentElement,maxed=!!document.fullscreenElement||document.body.classList.contains('ambient');
+function render(){const amb=document.body.classList.contains('ambient');
+ // ambient draws at 1× on purpose: it's a decorative full-bleed view, and Retina 2× costs 4× the fill for no real gain
+ const dpr=amb?1:(window.devicePixelRatio||1);const cw=cv.parentElement,maxed=!!document.fullscreenElement||amb;
  W=Math.max(320,(cw.clientWidth||784)-24);Hgt=maxed?Math.max(360,(cw.clientHeight||420)-24):420;
- cv.width=W*dpr;cv.height=Hgt*dpr;cv.style.width=W+'px';cv.style.height=Hgt+'px';ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,Hgt);
+ // only re-size when the size actually changed — assigning canvas.width reallocates the whole backing store,
+ // which at 60fps on a fullscreen Retina canvas was the single biggest cost in the animation loop
+ const bw=Math.round(W*dpr),bh=Math.round(Hgt*dpr);
+ if(cv.width!==bw||cv.height!==bh){cv.width=bw;cv.height=bh;cv.style.width=W+'px';cv.style.height=Hgt+'px';}
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,Hgt);
  PW=W-ML-MR;PH=Hgt-MT-MB;
  ctx.font='11px -apple-system,Arial';ctx.textAlign='right';ctx.fillStyle='#7d8797';
  for(let a=0;a<=90;a+=30){const y=yC(a);ctx.strokeStyle='rgba(255,255,255,.08)';ctx.beginPath();ctx.moveTo(ML,y);ctx.lineTo(ML+PW,y);ctx.stroke();ctx.fillText(a+'°',ML-6,y+3);}
@@ -287,10 +293,19 @@ function toggleFS(){const el=document.querySelector('.layout');if(!document.full
 document.addEventListener('fullscreenchange',()=>{const on=!!document.fullscreenElement;document.body.classList.toggle('maxed',on);const b=document.getElementById('maxBtn');if(b)b.textContent=on?'⛶ Exit':'⛶ Max';setTimeout(render,90);});
 addEventListener('resize',()=>{if(CAT.length)render();});
 // ── Astro Lava Lamp: idle "breathing" — after a while of no interaction, drift the type levels on slow out-of-sync waves ──
-let lavaOn=false,lavaRAF=0,lavaBase={},lavaLastT=-1;
+let lavaOn=false,lavaRAF=0,lavaBase={},lavaLastT=-1,lavaLastDraw=-1;
+// Ambient runs at a capped frame rate to keep the machine cool. The drift is time-based (advances by elapsed
+// dt, not per frame), so fewer frames = SAME apparent speed, just less work. 20fps is indistinguishable here.
+const AMB_FPS=20,AMB_MIN_DT=1000/AMB_FPS;
 const TKEYS=Object.keys(TYPES),lavaW={},lavaP={},DRIFT=3; // DRIFT = days/second the window scrolls through the year
 TKEYS.forEach((k,i)=>{lavaW[k]=0.10+0.05*(i%4);lavaP[k]=i*1.7;}); // period ~16–63s, phases spread → wax never in sync
-function lavaStep(t){const s=t/1000;
+function lavaStep(t){
+ // skip early in ambient — returning before lavaLastT is touched means the next drawn frame gets the FULL
+ // elapsed dt, so the window scrolls at exactly the same rate regardless of the cap
+ if(document.body.classList.contains('ambient')){
+  if(lavaLastDraw>=0&&t-lavaLastDraw<AMB_MIN_DT){lavaRAF=requestAnimationFrame(lavaStep);return;}
+  lavaLastDraw=t;}
+ const s=t/1000;
  // type levels swell on slow out-of-sync waves (Overall is left alone — the user's setting stays put)
  TKEYS.forEach(k=>{const v=Math.max(0,Math.min(100,lavaBase[k]+26*Math.sin(s*lavaW[k]+lavaP[k])));slid[k]=v;const el=document.getElementById('sl_'+k);if(el)el.value=Math.round(v);});
  // scroll the window through the year; push mode is slower so the ranking is readable
@@ -299,7 +314,7 @@ function lavaStep(t){const s=t/1000;
  // push mode: step the leaderboard bars once per calendar day as the cursor crosses it
  if(pushMode){const cur=modY(Math.round(winStart+SPAN*0.28));if(cur!==raceDay){raceDay=cur;drawBars();}}
  render();lavaRAF=requestAnimationFrame(lavaStep);}
-function lavaStart(){if(lavaOn)return;lavaOn=true;TKEYS.forEach(k=>lavaBase[k]=slid[k]||0);lavaLastT=-1;const b=document.getElementById('lavabadge');if(b)b.style.opacity=1;lavaRAF=requestAnimationFrame(lavaStep);}
+function lavaStart(){if(lavaOn)return;lavaOn=true;TKEYS.forEach(k=>lavaBase[k]=slid[k]||0);lavaLastT=-1;lavaLastDraw=-1;const b=document.getElementById('lavabadge');if(b)b.style.opacity=1;lavaRAF=requestAnimationFrame(lavaStep);}
 function lavaStop(){if(!lavaOn)return;lavaOn=false;cancelAnimationFrame(lavaRAF);TKEYS.forEach(k=>{slid[k]=lavaBase[k];const el=document.getElementById('sl_'+k);if(el)el.value=lavaBase[k];});const b=document.getElementById('lavabadge');if(b)b.style.opacity=0;render();} // freeze at the scrolled date — don't snap back
 // ONE simple, robust play button. Sliders pane → lava lamp; Leaderboard pane → lava lamp + the Sisyphus Push.
 // It runs until you press Pause — no auto-start, and no stray control action can stop it unexpectedly.
