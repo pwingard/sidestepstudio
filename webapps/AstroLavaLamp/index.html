@@ -178,7 +178,7 @@ const TYPES={emission:['Emission','#e04a3c'],reflection:['Reflection','#4f7bff']
 const MOVER={planet:1,comet:1};
 const hexRGB=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
 const APPURL='sidestepstudio.com/webapps/AstroLavaLamp',APPWM='The Astro Lava Lamp · '+APPURL; // on-chart watermark (update path on deploy)
-let CAT=[],CATBASE=[],YDK=[],YGRID=[],SPAN=91,winStart=0,slid={},hiSet=new Set(),master=28;
+let CAT=[],CATBASE=[],YDK=[],YGRID=[],YGRIDC=[],SPAN=91,winStart=0,slid={},hiSet=new Set(),master=28;
 let raceDay=-1,pushMode=false;const RN=14,ROWH=21,raceRows={};
 const monthSel=document.getElementById('month'),yearI=document.getElementById('year'),lat_=document.getElementById('lat'),lon_=document.getElementById('lon'),thr_=document.getElementById('thr'),thv=document.getElementById('thv');
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -195,11 +195,22 @@ const daysInMonth=(y,m)=>new Date(y,m+1,0).getDate();
 function build(){const y=+yearI.value,lat=+lat_.value,lon=+lon_.value;
  YDK=[];for(let d=0;d<365;d++){const lst=[];for(let r=0;r<240;r++){const dt=new Date(y,0,1+d,16,r*4),jd=jdOf(dt),s=sunpos(jd-2451543.5),ls=gmst(jd)+lon;if(altOf(s.ra,s.dec,ls,lat)<-15)lst.push(rev(ls));}YDK.push(lst);}   // 4-min sampling → smooth curves (no notches)
  // movers (planets/comets) get MOVEXT extra continuous days so a window straddling year-end shows smooth motion (fixed stars just repeat yearly)
+ YGRIDC=[];
  YGRID=CAT.map(o=>{const mover=o.planet||o.comet,LEN=mover?365+MOVEXT:365,row=new Float32Array(LEN);
   for(let d=0;d<LEN;d++){let ra=o.ra,dec=o.dec;
    if(o.planet){const pp=planetRaDec(o.planet,jdOf(new Date(y,0,1+d,6,0))-2451543.5);ra=pp.ra;dec=pp.dec;}
    else if(o.comet){const cc=cometRaDec(o.comet,jdOf(new Date(y,0,1+d,6,0))-2451543.5);ra=cc.ra;dec=cc.dec;}
    let p=0;for(const ls of YDK[modY(d)]){const a=altOf(ra,dec,ls,lat);if(a>p)p=a;}row[d]=p;}
+  // AMBIENT ONLY: a seamless-loop copy of each mover's row. Fixed stars repeat every year so the drift
+  // already loops perfectly; movers don't — at the year seam they snapped from their December position
+  // back to their January one. Here the first MOVEXT days are cross-faded toward the FOLLOWING January
+  // (days 365+), so Dec 31 flows into Jan 1 and the drift can run forever with no jump.
+  // Deliberately NOT used in the normal view: that would put a cosmetic fudge into Jan–Mar planet/comet
+  // altitudes, and the normal view is a planning tool that has to stay true.
+  if(mover){const c=new Float32Array(365);
+   for(let d=0;d<365;d++)c[d]=row[d];
+   for(let j=0;j<MOVEXT;j++){const t=j/MOVEXT;c[j]=(1-t)*row[365+j]+t*row[j];}
+   YGRIDC.push(c);}else YGRIDC.push(null);
   return row;});
  setWin();render();}
 function setWin(){const y=+yearI.value,m=+monthSel.value;let d0=0;for(let k=0;k<m;k++)d0+=daysInMonth(y,k);winStart=d0;SPAN=daysInMonth(y,m)+daysInMonth(y,m+1)+daysInMonth(y,m+2);}
@@ -209,6 +220,9 @@ const MOVEXT=95; // extra days precomputed for movers (planets/comets)
 const yC=a=>MT+PH*(1-a/yMax),modY=d=>((d%365)+365)%365,xW=d=>ML+((d-winStart)/SPAN)*PW;
 // value at day d: movers (row longer than a year) index continuously (clamped); fixed stars wrap yearly
 const gv=(row,d)=>row.length>365?row[d<0?0:d>row.length-1?row.length-1:d]:row[((d%365)+365)%365];
+// same, but for a fractional day — the comet head rides a continuous position, so rounding to whole days
+// made it hop ~8px per day instead of gliding
+const gvf=(row,d)=>{const f=Math.floor(d),t=d-f;return gv(row,f)*(1-t)+gv(row,f+1)*t;};
 // ── an actual comet riding its own green track: bright head + tail trailing behind it ──
 // What's REAL here: the head's position (the comet's peak altitude that night) and the size/length/brightness
 // of the coma and tail, which are driven by heliocentric distance r straight out of the live MPC elements —
@@ -230,33 +244,36 @@ function cometPA(cm,d){const y=+yearI.value,key=cm.n+'|'+y+'|'+d;let v=_paC[key]
   const a2=rev(su.ra+180),d2=-su.dec,da=rev(a2-c.ra); // the anti-sun point: tails point away from the Sun
   v=rev(atan2(sin(da)*cos(d2),cos(c.dec)*sin(d2)-sin(c.dec)*cos(d2)*cos(da)));_paC[key]=v;}
  return v;}
-function drawComet(cm,row,s,e,G){
- // head rides the HORIZONTAL CENTRE of the comet's visible path, so it sits mid-track and slides along
- // as the window drifts past it
- const hd=Math.round((s+e)/2),act=cometAct(cometR(cm,hd)),rgb=G.rgb;
- const px=k=>xW(k),py=k=>yC(Math.min(90,gv(row,k)));
- const hx=px(hd),hy=py(hd);
+function drawComet(cm,row,s,e){
+ // head rides the HORIZONTAL CENTRE of the comet's visible path, on a fractional day so it glides
+ // along the track instead of hopping a whole day at a time
+ const hd=(s+e)/2,hi=Math.round(hd),act=cometAct(cometR(cm,hi));
+ const hx=xW(hd),hy=yC(Math.min(90,gvf(row,hd)));
  // Tail points along the true anti-solar position angle for that date, drawn North-up / East-left (the
  // naked-eye sky convention). Chart axes are date vs altitude, not sky coordinates, so this is a borrowed
  // direction rather than a physical one — but it swings the way a real tail swings as the comet rounds
  // the Sun, which is the point. Pete asked for it knowing it's apples-to-oranges.
- const pa=cometPA(cm,hd),ux=-sin(pa),uy=-cos(pa),L=8+46*act;
+ // Direction is lerped between the two bracketing days so it rotates smoothly rather than ticking.
+ const f=Math.floor(hd),t=hd-f,p0=cometPA(cm,f),p1=cometPA(cm,f+1);
+ let ux=-(sin(p0)*(1-t)+sin(p1)*t),uy=-(cos(p0)*(1-t)+cos(p1)*t);
+ const m=Math.hypot(ux,uy)||1;ux/=m;uy/=m;
+ const L=6+30*act; // calmer than the first pass — it was reading too loud against the wax
  ctx.lineCap='round';
  const SEG=6;
- for(let j=0;j<SEG;j++){const f0=j/SEG,f1=(j+1)/SEG,t=1-f0;
-  const a=0.55*t*t*(0.3+0.7*act);if(a<0.012)continue;
-  ctx.strokeStyle='rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+a.toFixed(3)+')';
-  ctx.lineWidth=(1.2+4.2*act)*t+0.4;
+ for(let j=0;j<SEG;j++){const f0=j/SEG,f1=(j+1)/SEG,w=1-f0;
+  const a=0.38*w*w*(0.3+0.7*act);if(a<0.012)continue;
+  ctx.strokeStyle='rgba(255,255,255,'+a.toFixed(3)+')'; // comets render white, not type-green
+  ctx.lineWidth=(1+2.8*act)*w+0.35;
   ctx.beginPath();ctx.moveTo(hx+ux*L*f0,hy+uy*L*f0);ctx.lineTo(hx+ux*L*f1,hy+uy*L*f1);ctx.stroke();}
  ctx.lineCap='butt';ctx.lineWidth=1.5;
- const R=(2.2+3.6*act)*2.6; // coma
+ const R=(1.6+2.4*act)*2.2; // coma
  const g=ctx.createRadialGradient(hx,hy,0,hx,hy,R);
- g.addColorStop(0,'rgba(255,255,255,'+(0.85*(0.4+0.6*act)).toFixed(3)+')');
- g.addColorStop(0.35,'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0.5)');
- g.addColorStop(1,'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0)');
+ g.addColorStop(0,'rgba(255,255,255,'+(0.8*(0.4+0.6*act)).toFixed(3)+')');
+ g.addColorStop(0.4,'rgba(233,243,255,0.34)');
+ g.addColorStop(1,'rgba(210,230,255,0)');
  ctx.fillStyle=g;ctx.beginPath();ctx.arc(hx,hy,R,0,6.2832);ctx.fill();
- ctx.fillStyle='rgba(255,255,255,'+(0.9*(0.5+0.5*act)).toFixed(3)+')'; // nucleus
- ctx.beginPath();ctx.arc(hx,hy,Math.max(1.1,R*0.16),0,6.2832);ctx.fill();}
+ ctx.fillStyle='rgba(255,255,255,'+(0.92*(0.5+0.5*act)).toFixed(3)+')'; // nucleus
+ ctx.beginPath();ctx.arc(hx,hy,Math.max(1,R*0.17),0,6.2832);ctx.fill();}
 function render(){const amb=document.body.classList.contains('ambient');
  // ambient draws at 1× on purpose: it's a decorative full-bleed view, and Retina 2× costs 4× the fill for no real gain
  const dpr=amb?1:(window.devicePixelRatio||1);const cw=cv.parentElement,maxed=!!document.fullscreenElement||amb;
@@ -302,14 +319,15 @@ function render(){const amb=document.body.classList.contains('ambient');
  // seasonal wax instead of being more of it. source-over keeps them legible where the blobs are brightest —
  // inside the additive pass a thin line just washes out. Still slider-controlled like everything else.
  ctx.save();ctx.beginPath();ctx.rect(ML,MT,PW,PH);ctx.clip();ctx.lineWidth=1.5;
- CAT.forEach((o,i)=>{[o.t].concat(o.t2?[o.t2]:[]).forEach(tt=>{if(!MOVER[tt])return;const G=grad[tt];if(!G)return;const row=YGRID[i];
+ // in ambient use the seamless-loop copy so movers don't snap back at the year boundary
+ CAT.forEach((o,i)=>{[o.t].concat(o.t2?[o.t2]:[]).forEach(tt=>{if(!MOVER[tt])return;const G=grad[tt];if(!G)return;const row=(amb&&YGRIDC[i])||YGRID[i];
   ctx.strokeStyle=G.line;
   let d=dA;
   while(d<=dB+1){
    if(gv(row,d)<=TH){d++;continue;}
    const s=d;while(d<=dB+1&&gv(row,d)>TH)d++;const e=d-1;
    ctx.beginPath();for(let k=s;k<=e;k++){const x=xW(k),y=yC(Math.min(90,gv(row,k)));k>s?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();
-   if(tt==='comet'&&o.comet)drawComet(o.comet,row,s,e,G);
+   if(tt==='comet'&&o.comet)drawComet(o.comet,row,s,e);
   }});});
  ctx.restore();
  hiSet.forEach(i=>{if(i>=0&&i<CAT.length)drawHi(i,false);});
@@ -367,7 +385,13 @@ addEventListener('resize',()=>{if(CAT.length)render();});
 let lavaOn=false,lavaRAF=0,lavaBase={},lavaLastT=-1,lavaLastDraw=-1;
 // Ambient runs at a capped frame rate to keep the machine cool. The drift is time-based (advances by elapsed
 // dt, not per frame), so fewer frames = SAME apparent speed, just less work. 20fps is indistinguishable here.
-const AMB_FPS=20,AMB_MIN_DT=1000/AMB_FPS;
+const AMB_FPS=12,AMB_MIN_DT=1000/AMB_FPS;
+// nothing to draw for a window nobody can see — hard-stop the loop when the tab/window is hidden and
+// pick it back up on return. Browsers throttle hidden tabs, but this also covers being fully covered.
+let lavaHidden=false;
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden){if(lavaOn){lavaHidden=true;lavaStop();}}
+ else if(lavaHidden){lavaHidden=false;lavaStart();setPlayLabel();}});
 const TKEYS=Object.keys(TYPES),lavaW={},lavaP={},DRIFT=3; // DRIFT = days/second the window scrolls through the year
 TKEYS.forEach((k,i)=>{lavaW[k]=0.10+0.05*(i%4);lavaP[k]=i*1.7;}); // period ~16–63s, phases spread → wax never in sync
 function lavaStep(t){
