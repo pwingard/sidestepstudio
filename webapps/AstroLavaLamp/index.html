@@ -81,7 +81,7 @@ body.ambient.wake canvas{cursor:default}
 #ambientHint a{color:var(--acc);text-decoration:none;font-weight:600}
 </style></head><body>
 <div class="wrap">
-<h1>🌋 The Astro Lava Lamp <span style="font-weight:400;opacity:.55;font-size:.62em">by Sidestep Studio</span> <span id="lavabadge" style="opacity:0;transition:opacity 1.4s;font-size:.5em;font-weight:400;color:#ff9a5c;vertical-align:middle">🌋 breathing · drifting through the seasons… (move to wake)</span></h1>
+<h1>🌋 The Astro Lava Lamp <a href="https://sidestepstudio.com" style="font-weight:400;opacity:.55;font-size:.62em;color:inherit;text-decoration:none" onmouseover="this.style.opacity=1;this.style.color='var(--acc)'" onmouseout="this.style.opacity=.55;this.style.color='inherit'">by Sidestep Studio ↗</a> <span id="lavabadge" style="opacity:0;transition:opacity 1.4s;font-size:.5em;font-weight:400;color:#ff9a5c;vertical-align:middle">🌋 breathing · drifting through the seasons… (move to wake)</span></h1>
 <p class="sub">Every popular astrophotography object all at once — a three-month span, colored by type and additive-blended so overlaps mix. Slide a type to dial its brightness; click a day for that night's list.</p>
 <div class="controls">
   <div class="ctl"><label>Month</label><select id="month"></select></div>
@@ -99,7 +99,7 @@ body.ambient.wake canvas{cursor:default}
   <div class="chartwrap"><canvas id="cv"></canvas>
   <!-- these two MUST live inside .chartwrap: Max fullscreens the .layout element, and anything outside
        that subtree is simply not rendered while fullscreen — which is why they vanished in Max -->
-  <div id="ambientHint">🌋 Ambient mode — <a href="#" onclick="ambientExit();return false;">exit to full app ↗</a> <span style="opacity:.5">or press Esc</span></div>
+  <div id="ambientHint">🌋 Ambient mode — <a href="#" onclick="ambientExit();return false;">exit to full app</a> · <a href="https://sidestepstudio.com">Sidestep Studio ↗</a> <span style="opacity:.5">or press Esc</span></div>
   <div class="chartbtns"><button class="maxbtn" id="ambBtn" onclick="ambientEnter()" title="Chrome-free auto-drifting view — Esc to exit">🌋 Ambient</button><button class="maxbtn" id="maxBtn" onclick="toggleFS()">⛶ Max</button></div></div>
   <p class="foot" style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline"><span id="cnt"></span><a href="#contact" id="contactlink" onclick="var b=document.getElementById('contactbox');b.style.display=b.style.display==='none'?'block':'none';return false;" style="color:var(--acc);text-decoration:none">✉ Contact Sidestep Studio</a></p>
   <div id="contactbox" style="display:none;font-size:12.5px;color:var(--mut);margin-top:2px">
@@ -202,12 +202,16 @@ Object.entries(TYPES).forEach(([k,v])=>{slid[k]=60;const r=document.createElemen
 // A type switched OFF here stays off — unlike dragging its slider to 0, which the lava breathing would
 // just push back up on the next frame (lavaStep rewrites every slider from lavaBase + a sine).
 // typeOff is checked both in the breathing and in the render, so off means off.
-const typeOff={};
-function toggleType(k){typeOff[k]=!typeOff[k];
- const r=document.getElementById('row_'+k),s=document.getElementById('sl_'+k);
+// switched-off types persist across visits, so a layout you set up stays put
+let typeOff={};
+try{typeOff=JSON.parse(localStorage.getItem('all_typeoff')||'{}')||{};}catch(e){typeOff={};}
+function applyTypeUI(k){const r=document.getElementById('row_'+k),s=document.getElementById('sl_'+k);
  if(r)r.classList.toggle('off',!!typeOff[k]);
- if(s)s.disabled=!!typeOff[k];
- render();}
+ if(s)s.disabled=!!typeOff[k];}
+function toggleType(k){typeOff[k]=!typeOff[k];
+ try{localStorage.setItem('all_typeoff',JSON.stringify(typeOff));}catch(e){}
+ applyTypeUI(k);render();}
+Object.keys(TYPES).forEach(applyTypeUI); // restore any persisted off-state onto the freshly built rows
 const daysInMonth=(y,m)=>new Date(y,m+1,0).getDate();
 // Precompute the WHOLE YEAR once (dark-sky LSTs per day + each object's peak altitude per day).
 // The chart is then a window [winStart, winStart+SPAN] over this year that can scroll smoothly, one day at a time.
