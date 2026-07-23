@@ -75,7 +75,6 @@ body.ambient .layout{gap:0;height:100vh}
 body.ambient .left{flex:1;min-width:0}
 body.ambient .chartwrap{border:none;border-radius:0;padding:0;background:var(--bg);height:100vh}
 body.ambient canvas{cursor:none}
-#perfhud{position:absolute;top:10px;right:10px;z-index:60;background:rgba(6,10,16,.92);border:1px solid #2a3444;border-radius:8px;padding:8px 11px;font:11.5px/1.5 ui-monospace,Menlo,monospace;color:#cfe3ff;white-space:nowrap}
 #ambientHint{position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(10,14,21,.85);border:1px solid var(--line);border-radius:22px;padding:8px 16px;font-size:12.5px;color:var(--ink);opacity:0;transition:opacity .5s;pointer-events:none;backdrop-filter:blur(6px)}
 body.ambient.wake #ambientHint{opacity:1;pointer-events:auto}
 body.ambient.wake canvas{cursor:default}
@@ -100,7 +99,6 @@ body.ambient.wake canvas{cursor:default}
   <div class="chartwrap"><canvas id="cv"></canvas>
   <!-- these two MUST live inside .chartwrap: Max fullscreens the .layout element, and anything outside
        that subtree is simply not rendered while fullscreen — which is why they vanished in Max -->
-  <div id="perfhud" style="display:none"></div>
   <div id="ambientHint">🌋 Ambient mode — <a href="#" onclick="ambientExit();return false;">exit to full app ↗</a> <span style="opacity:.5">or press Esc</span></div>
   <div class="chartbtns"><button class="maxbtn" id="ambBtn" onclick="ambientEnter()" title="Chrome-free auto-drifting view — Esc to exit">🌋 Ambient</button><button class="maxbtn" id="maxBtn" onclick="toggleFS()">⛶ Max</button></div></div>
   <p class="foot" style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline"><span id="cnt"></span><a href="#contact" id="contactlink" onclick="var b=document.getElementById('contactbox');b.style.display=b.style.display==='none'?'block':'none';return false;" style="color:var(--acc);text-decoration:none">✉ Contact Sidestep Studio</a></p>
@@ -188,21 +186,6 @@ const WAXSC=0.5,HIRES=/hires=1/.test(location.search);
 let waxBuf=null,waxCtx=null;
 // reusable per-frame sample geometry (see the wax loop): x per sample, curve y per sample, raw value per sample
 let SX=null,SY=null,SV=null;
-// ── ?perf=1 profiler ────────────────────────────────────────────────────────────────────────────────
-// Four rounds of optimising by inference got the easy wins but stopped landing. This measures instead:
-// where the milliseconds actually go, in whatever configuration is on screen. Off unless asked for.
-const PERFON=/perf=1/.test(location.search);
-const PERF={wax:0,blit:0,mov:0,bars:0,frames:0,fills:0,barCalls:0,last:0};
-function perfHUD(){
- const el=document.getElementById('perfhud');if(!el)return;
- const n=Math.max(1,PERF.frames),tot=(PERF.wax+PERF.blit+PERF.mov)/n;
- el.innerHTML='<b>'+PERF.frames+' fps</b> · frame '+tot.toFixed(1)+'ms'
-  +'<br>wax '+(PERF.wax/n).toFixed(1)+'ms · blit '+(PERF.blit/n).toFixed(1)+'ms · movers '+(PERF.mov/n).toFixed(1)+'ms'
-  +'<br>fills/frame '+Math.round(PERF.fills/n)
-  +'<br>drawBars '+PERF.barCalls+'/s, '+(PERF.barCalls?(PERF.bars/PERF.barCalls).toFixed(1):'0')+'ms each'
-  +'<br>'+(HIRES?'full-res wax':'half-res wax')+' · '+(document.body.classList.contains('ambient')?'ambient':(document.fullscreenElement?'max':'windowed'));
- PERF.wax=PERF.blit=PERF.mov=PERF.bars=PERF.frames=PERF.fills=PERF.barCalls=0;}
-if(PERFON){addEventListener('DOMContentLoaded',()=>{const el=document.getElementById('perfhud');if(el)el.style.display='block';});setInterval(perfHUD,1000);}
 const hexRGB=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
 const APPURL='sidestepstudio.com/webapps/AstroLavaLamp',APPWM='The Astro Lava Lamp · '+APPURL; // on-chart watermark (update path on deploy)
 let CAT=[],CATBASE=[],YDK=[],YGRID=[],YGRIDC=[],SPAN=91,winStart=0,slid={},hiSet=new Set(),master=28;
@@ -347,7 +330,6 @@ function render(){const amb=document.body.classList.contains('ambient');
  // Static views stay full-res; there's no cost to pay when nothing is moving.
  // ?hires=1 forces it off, for A/B comparison without a redeploy.
  const useBuf=lavaOn&&!HIRES;
- const _t0=PERFON?performance.now():0;
  let wx=ctx;
  if(useBuf){
   const bw=Math.max(1,Math.round(W*dpr*WAXSC)),bh=Math.max(1,Math.round(Hgt*dpr*WAXSC));
@@ -396,16 +378,14 @@ function render(){const amb=document.body.classList.contains('ambient');
     wx.beginPath();
     for(let k=s;k<=e;k++){const y=SY[k]+oj;k>s?wx.lineTo(SX[k],y<BASE?y:BASE):wx.moveTo(SX[k],y<BASE?y:BASE);}
     for(let k=e;k>=s;k--){const y=SY[k]+oj1;wx.lineTo(SX[k],y<BASE?y:BASE);}
-    wx.closePath();wx.fill();if(PERFON)PERF.fills++;}
+    wx.closePath();wx.fill();}
    // identity lines stay INSIDE the buffer so they keep additively mixing with the wax exactly as before —
    // matching the current look matters more than sharper lines
    wx.strokeStyle=G.line;wx.lineWidth=1.5;wx.beginPath();for(let k=s;k<=e;k++){k>s?wx.lineTo(SX[k],SY[k]):wx.moveTo(SX[k],SY[k]);}wx.stroke();
   }});});
  wx.globalCompositeOperation='source-over';wx.restore();
- const _t1=PERFON?performance.now():0;
  // blit the half-res wax up over the visible canvas in one stretched draw
  if(useBuf){ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(waxBuf,0,0,W,Hgt);}
- const _t2=PERFON?performance.now():0;
  // ── movers (planets + comets) ── drawn line-only, ON TOP of the wax, in source-over rather than 'lighter'.
  // They're the only objects that wander instead of repeating every year, so they read as tracks crossing the
  // seasonal wax instead of being more of it. source-over keeps them legible where the blobs are brightest —
@@ -422,7 +402,6 @@ function render(){const amb=document.body.classList.contains('ambient');
    if(tt==='comet'&&o.comet)drawComet(o.comet,row,s,e,sd,sx);
   }});});
  ctx.restore();
- if(PERFON){const _t3=performance.now();PERF.wax+=_t1-_t0;PERF.blit+=_t2-_t1;PERF.mov+=_t3-_t2;PERF.frames++;}
  hiSet.forEach(i=>{if(i>=0&&i<CAT.length)drawHi(i,false);});
  // selected-day cursor (the day the bar-chart race is showing) — fixed position while racing so the wax scrolls smoothly under it
  if(raceDay>=0){let cx;if(lavaOn&&pushMode){cx=ML+PW*0.28;}else{let d=raceDay;while(d<winStart)d+=365;cx=xW(d);}if(cx>=ML&&cx<=ML+PW){ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(cx,MT);ctx.lineTo(cx,MT+PH);ctx.stroke();ctx.setLineDash([]);}}
@@ -532,7 +511,7 @@ cv.addEventListener('click',e=>{if(document.body.classList.contains('ambient'))r
 // ── bar-chart race: pick a day, then optionally play it forward day-by-day; bars slide/reorder as objects rise & set ──
 function showPane(which){const r=document.querySelector('.right');r.classList.toggle('night',which==='night');document.getElementById('tgMix').classList.toggle('active',which!=='night');document.getElementById('tgNight').classList.toggle('active',which==='night');setPlayLabel();}
 function dayList(dd){raceDay=modY(dd);showPane('night');drawBars();render();}
-function drawBars(){const _b0=PERFON?performance.now():0;const thr=+thr_.value,c=modY(raceDay),night=document.querySelector('.right').classList.contains('night'),showN=night?(lavaOn&&pushMode?RACEMAX:999):RN;
+function drawBars(){const thr=+thr_.value,c=modY(raceDay),night=document.querySelector('.right').classList.contains('night'),showN=night?(lavaOn&&pushMode?RACEMAX:999):RN;
  const _d=new Date(+yearI.value,0,1+raceDay);document.getElementById('dayh').textContent=MN[_d.getMonth()]+' '+_d.getDate()+' — highest that night';
  const list=CAT.map((o,i)=>({o,i,a:gv(YGRID[i],raceDay)})).filter(r=>r.a>0.5&&(vis(r.o)||hiSet.has(r.i))).sort((p,q)=>q.a-p.a).slice(0,showN);
  const cont=document.getElementById('daylist');cont.classList.add('race');cont.style.height=(list.length*ROWH+2)+'px';cont.style.maxHeight=night?Math.max(240,document.fullscreenElement?window.innerHeight-190:Hgt-64)+'px':'';
@@ -550,7 +529,6 @@ function drawBars(){const _b0=PERFON?performance.now():0;const thr=+thr_.value,c
   const nm=el.querySelector('.rn');nm.textContent=r.o.n.split(' / ')[0].split(' - ')[0];nm.style.fontWeight=(r.a>=thr||hiSet.has(r.i))?'700':'400';el.classList.toggle('hl',hiSet.has(r.i));
   el.querySelector('.ra').textContent=r.a.toFixed(0)+'°';});
  for(const k in raceRows){if(!used[k]){const el=raceRows[k];el.style.opacity='0';el.style.transform='translateY('+(RN*ROWH+8)+'px)';delete raceRows[k];setTimeout(()=>{if(el.parentNode)el.parentNode.removeChild(el);},550);}}
- if(PERFON){PERF.bars+=performance.now()-_b0;PERF.barCalls++;}
  if(!list.length){document.getElementById('dayh').textContent=MN[_d.getMonth()]+' '+_d.getDate()+' — nothing above 3° in the dark';}
 }
 monthSel.addEventListener('change',()=>{setWin();render();}); // month just re-windows the precomputed year (cheap)
