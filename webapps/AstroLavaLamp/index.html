@@ -478,7 +478,13 @@ addEventListener('resize',()=>{if(CAT.length)render();});
 let lavaOn=false,lavaRAF=0,lavaBase={},lavaLastT=-1,lavaLastDraw=-1;
 // Ambient runs at a capped frame rate to keep the machine cool. The drift is time-based (advances by elapsed
 // dt, not per frame), so fewer frames = SAME apparent speed, just less work. 20fps is indistinguishable here.
-const AMB_FPS=12,AMB_MIN_DT=1000/AMB_FPS,PLAY_FPS=30,PLAY_MIN_DT=1000/PLAY_FPS;
+// The cap thresholds are pulled 4ms BELOW the nominal interval on purpose. rAF ticks every ~16.67ms on a
+// 60Hz display, so a threshold of exactly 33.33ms sits right on the 2-tick boundary: any jitter pushes it
+// to 3 ticks (50ms), and alternating 33/50ms frames average to ~23fps with visibly uneven pacing. That is
+// exactly what profiling showed. The tolerance makes the intended tick win every time.
+// 20fps, not 30: the frame only contains ~4ms of work, so the rest of each interval is idle — the cap IS
+// the frame rate, and a lower cap is straight-line less work per second. 20fps lands cleanly on 3 ticks.
+const AMB_FPS=12,AMB_MIN_DT=1000/AMB_FPS-4,PLAY_FPS=20,PLAY_MIN_DT=1000/PLAY_FPS-4;
 // While the Sisyphus Push is actually racing, cap how many leaderboard rows exist. Each row is an
 // absolutely-positioned div with 0.5s transform+opacity transitions that gets restyled every day-step,
 // so the uncapped ~150-200 of them cost more than the chart does. Paused, the full list comes back.
