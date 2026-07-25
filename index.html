@@ -116,10 +116,15 @@
             <p class="section-label">Astro Lava Lamp</p>
             <h2 style="font-size:1.87rem; font-weight:800; margin:2px 0 18px; line-height:1.2;">Useful enough to plan by<br>Pretty enough to leave on screen.</h2>
             <div class="card">
-                <!-- Demo video goes here once the Lava Lamp demo is produced. -->
-                <a href="/webapps/AstroLavaLamp/" style="display:block;margin-bottom:18px;">
-                    <img src="/images/lavalamp-screenshot.jpg" alt="The Astro Lava Lamp — 217 deep sky objects plotted as altitude curves, blending into pools of color, with the type brightness controls alongside." style="display:block;width:100%;height:auto;border-radius:8px;">
-                </a>
+                <!-- Demo video (vertical 1080x1920) — self-hosted, preload=metadata so the
+                     16MB file only downloads when someone presses play. -->
+                <div style="margin-bottom:18px;">
+                    <video src="/videos/lavalamp/lavalamp-demo.mp4"
+                           poster="/images/lavalamp-demo-poster.jpg"
+                           controls playsinline preload="metadata"
+                           title="The Astro Lava Lamp — demo"
+                           style="display:block;width:100%;max-width:330px;margin:0 auto;height:auto;aspect-ratio:9/16;border-radius:8px;background:#000;"></video>
+                </div>
                 <ul class="features">
                     <li>A real altitude-by-date mapping of 217 deep sky objects that traces them in slow-shifting pools of color &mdash; like a lava lamp</li>
                     <li>Planets and comets too</li>
