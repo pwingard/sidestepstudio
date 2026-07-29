@@ -12,6 +12,7 @@
 <style>
  .series-hero{padding-top:56px;padding-bottom:8px}
  .series-hero p.lede{color:var(--muted);max-width:640px;font-size:1.05rem;line-height:1.6;margin-top:10px}
+ .ep{scroll-margin-top:90px}
  .ep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px;margin-top:34px}
  .ep{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
  .ep .media{position:relative;aspect-ratio:9/16;background:#05070d;overflow:hidden}
@@ -23,7 +24,8 @@
  .ep .epno{color:var(--accent);font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
  .ep .name{color:var(--text);font-weight:800;font-size:1.05rem;margin-top:4px;line-height:1.25}
  .ep .desc{color:var(--muted);font-size:.9rem;margin-top:8px;line-height:1.5}
- .ep.soon .media{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.9rem;letter-spacing:.08em}
+ .ep.soon{background:none;border-style:dashed;opacity:.6}
+ .ep.soon .media{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.9rem;letter-spacing:.08em;background:none;aspect-ratio:16/10}
  .watch{display:inline-block;margin-top:12px;color:var(--accent);text-decoration:none;font-weight:600;font-size:.9rem}
 </style>
 </head>
@@ -49,7 +51,7 @@
          <div class="media"><iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe></div>
          or a self-hosted vertical MP4 (drop the file in this folder's assets/):
          <div class="media"><video src="assets/ep1-wizard.mp4" poster="assets/ep1-wizard.jpg" controls playsinline></video></div> -->
-    <div class="ep">
+    <div class="ep" id="ep1">
       <div class="media">
         <iframe src="https://www.youtube.com/embed/L5BzfSYXDrE" title="What I Found in Your Backyard — The Wizard Nebula" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
       </div>
@@ -61,7 +63,7 @@
       </div>
     </div>
 
-    <div class="ep">
+    <div class="ep" id="ep2">
       <div class="media">
         <iframe src="https://www.youtube.com/embed/q9zLwdDtNuA" title="What I Found in Your Backyard — Summer Tour from the Starfarm" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
       </div>
@@ -74,7 +76,7 @@
     </div>
 
     <!-- EPISODE 3 — Cygnus. Published to YouTube 2026-07-27 as a Short: gaJWj_J2BHw -->
-    <div class="ep">
+    <div class="ep" id="ep3">
       <div class="media">
         <iframe src="https://www.youtube.com/embed/gaJWj_J2BHw" title="What I Found in Your Backyard — A Trip Through Cygnus" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
       </div>

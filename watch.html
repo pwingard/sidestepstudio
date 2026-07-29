@@ -17,8 +17,18 @@
  .wc .body{padding:14px 16px}
  .wc .n{color:var(--text);font-weight:800;font-size:1.1rem}
  .wc .d{color:var(--muted);font-size:.9rem;margin-top:7px;line-height:1.5}
- .wc.soon{cursor:default}
- .wc.soon .media{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.9rem;letter-spacing:.06em}
+ .wc.soon{cursor:default;background:none;border-style:dashed;opacity:.6}
+ .wc.soon:hover{border-color:var(--border)}
+ .wc.soon .media{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.9rem;letter-spacing:.06em;background:none}
+ .ep-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px;margin-top:22px}
+ .ec{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;text-decoration:none;display:block;transition:border-color .15s}
+ .ec:hover{border-color:var(--accent)}
+ .ec .media{position:relative;aspect-ratio:9/16;background:#05070d;overflow:hidden}
+ .ec .media img{width:100%;height:100%;object-fit:cover;display:block}
+ .ec .badge{position:absolute;top:9px;left:9px;background:rgba(10,12,18,.72);color:#fff;font-size:.66rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 8px;border-radius:20px}
+ .ec .body{padding:12px 13px}
+ .ec .n{color:var(--text);font-weight:700;font-size:.95rem;line-height:1.3}
+ .ec .d{color:var(--muted);font-size:.82rem;margin-top:5px}
  .subcta{display:inline-block;margin-top:18px;background:var(--accent);color:#04121f;font-weight:800;text-decoration:none;padding:11px 20px;border-radius:var(--radius)}
 </style>
 </head>
@@ -32,20 +42,38 @@
 
   <div class="w-grid">
     <a class="wc" href="/whatifoundinyourbackyard/">
-      <div class="media"><img src="/whatifoundinyourbackyard/assets/ep1-wizard.jpg" alt="What I Found in Your Backyard"><span class="badge">Series</span></div>
+      <div class="media"><img src="/whatifoundinyourbackyard/assets/ep1-wizard.jpg" alt="What I Found in Your Backyard"><span class="badge">Series &middot; 3 episodes</span></div>
       <div class="body">
         <div class="n">What I Found in Your Backyard</div>
         <div class="d">One deep-sky object per episode, brought back from a backyard — and the story hiding inside it.</div>
       </div>
     </a>
-    <div class="wc soon">
-      <div class="media">More coming</div>
-      <div class="body">
-        <div class="n">More to watch</div>
-        <div class="d">New series and one-off films from See the Show.</div>
-      </div>
-    </div>
   </div>
+
+  <div class="ep-strip">
+    <a class="ec" href="/whatifoundinyourbackyard/#ep1">
+      <div class="media"><img loading="lazy" src="/whatifoundinyourbackyard/assets/ep1-wizard.jpg" alt="The Wizard Nebula"><span class="badge">Ep 1</span></div>
+      <div class="body">
+        <div class="n">The Wizard Nebula — Why Does It Glow?</div>
+        <div class="d">NGC 7380 in Cepheus</div>
+      </div>
+    </a>
+    <a class="ec" href="/whatifoundinyourbackyard/#ep2">
+      <div class="media"><img loading="lazy" src="/whatifoundinyourbackyard/assets/ep2-starfarm.jpg" alt="Summer at the Starfarm"><span class="badge">Ep 2</span></div>
+      <div class="body">
+        <div class="n">5 Objects, 3 Rigs, and Everything That Broke</div>
+        <div class="d">A summer in Camden, SC</div>
+      </div>
+    </a>
+    <a class="ec" href="/whatifoundinyourbackyard/#ep3">
+      <div class="media"><img loading="lazy" src="/whatifoundinyourbackyard/assets/ep3-cygnus.jpg" alt="A Trip Through Cygnus"><span class="badge">Ep 3</span></div>
+      <div class="body">
+        <div class="n">A Trip Through Cygnus</div>
+        <div class="d">Sadr, the Crescent, the Soap Bubble</div>
+      </div>
+    </a>
+  </div>
+  <p style="color:var(--muted);font-size:.88rem;margin-top:16px;">More episodes coming — <a href="https://www.youtube.com/@See_theShow?sub_confirmation=1" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-weight:600;">follow See the Show on YouTube &rarr;</a></p>
 </div>
 
 <!-- ===== SHORTS SHELVES ===== -->
