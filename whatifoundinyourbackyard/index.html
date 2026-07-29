@@ -18,7 +18,7 @@
  .ep .media{position:relative;aspect-ratio:9/16;background:#05070d;overflow:hidden}
  .ep .media img{width:100%;height:100%;object-fit:cover;display:block}
  .ep .media iframe,.ep .media video{position:absolute;inset:0;width:100%;height:100%;border:0}
- .ep .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(5,7,13,.1),rgba(5,7,13,.55));color:#fff}
+ .ep .play{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(5,7,13,.1),rgba(5,7,13,.55));color:#fff}
  .ep .play span{width:66px;height:66px;border-radius:50%;background:rgba(10,12,18,.55);border:2px solid rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;font-size:26px;backdrop-filter:blur(3px)}
  .ep .body{padding:14px 16px}
  .ep .epno{color:var(--accent);font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
@@ -53,7 +53,8 @@
          <div class="media"><video src="assets/ep1-wizard.mp4" poster="assets/ep1-wizard.jpg" controls playsinline></video></div> -->
     <div class="ep" id="ep1">
       <div class="media">
-        <iframe src="https://www.youtube.com/embed/L5BzfSYXDrE" title="What I Found in Your Backyard — The Wizard Nebula" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
+        <img loading="lazy" src="assets/ep1-wizard.jpg" alt="The Wizard Nebula — Why Does It Glow?">
+        <button class="play" data-id="L5BzfSYXDrE" aria-label="Play: The Wizard Nebula — Why Does It Glow?"><span>&#9654;</span></button>
       </div>
       <div class="body">
         <div class="epno">Episode 1</div>
@@ -65,7 +66,8 @@
 
     <div class="ep" id="ep2">
       <div class="media">
-        <iframe src="https://www.youtube.com/embed/q9zLwdDtNuA" title="What I Found in Your Backyard — Summer Tour from the Starfarm" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
+        <img loading="lazy" src="assets/ep2-starfarm.jpg" alt="5 Objects, 3 Rigs, and Everything That Broke">
+        <button class="play" data-id="q9zLwdDtNuA" aria-label="Play: 5 Objects, 3 Rigs, and Everything That Broke"><span>&#9654;</span></button>
       </div>
       <div class="body">
         <div class="epno">Episode 2</div>
@@ -78,7 +80,8 @@
     <!-- EPISODE 3 — Cygnus. Published to YouTube 2026-07-27 as a Short: gaJWj_J2BHw -->
     <div class="ep" id="ep3">
       <div class="media">
-        <iframe src="https://www.youtube.com/embed/gaJWj_J2BHw" title="What I Found in Your Backyard — A Trip Through Cygnus" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
+        <img loading="lazy" src="assets/ep3-cygnus.jpg" alt="A Trip Through Cygnus">
+        <button class="play" data-id="gaJWj_J2BHw" aria-label="Play: A Trip Through Cygnus"><span>&#9654;</span></button>
       </div>
       <div class="body">
         <div class="epno">Episode 3</div>
@@ -101,5 +104,14 @@
 </div>
 
 <script src="/js/site.js" defer></script>
+
+<script>
+  document.querySelectorAll('.ep .play').forEach(function(b){
+    b.addEventListener('click',function(){
+      var id=b.getAttribute('data-id'), m=b.closest('.media');
+      m.innerHTML='<iframe src="https://www.youtube.com/embed/'+id+'?autoplay=1" title="What I Found in Your Backyard" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>';
+    });
+  });
+</script>
 </body>
 </html>
