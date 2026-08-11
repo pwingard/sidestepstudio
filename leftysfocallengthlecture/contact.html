@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact — Lefty's Focal Length Lecture</title>
+<style>
+  html, body { margin: 0; min-height: 100%; background: #f7f5f1; color: #14161a;
+               font: 400 16px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
+  .wrap { max-width: 620px; margin: 0 auto; padding: 40px 22px 56px; }
+  h1 { font: 700 30px/1.15 "Bradley Hand", "Segoe Script", cursive; margin: 0 0 6px; letter-spacing: .5px; }
+  .lede { font: 400 19px/1.4 Georgia, "Times New Roman", serif; color: #14161a;
+          border-left: 3px solid #b9945a; padding: 2px 0 2px 22px; margin: 0 0 26px; }
+  label { display: block; font-size: 13px; font-weight: 700; letter-spacing: .4px;
+          color: #3f4a44; margin: 18px 0 6px; }
+  input[type=text], input[type=email], textarea, select {
+    width: 100%; box-sizing: border-box; font: inherit; color: #14161a;
+    background: #fff; border: 1.5px solid #ccc7bd; border-radius: 10px; padding: 11px 13px; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: #14161a; }
+  textarea { min-height: 150px; resize: vertical; }
+  button { margin-top: 22px; font: 700 15px inherit; cursor: pointer; color: #fff;
+           background: #14161a; border: 1.5px solid #14161a; border-radius: 999px; padding: 12px 26px; }
+  button:hover { background: #3f4a44; border-color: #3f4a44; }
+  .fine { font-size: 12.5px; color: #7b7b86; margin-top: 14px; }
+  .back { display: inline-block; margin-bottom: 22px; font-size: 13.5px; color: #7a5a2e;
+          text-decoration: none; border-bottom: 1px solid #d8c9ae; }
+  .back:hover { color: #14161a; border-bottom-color: #14161a; }
+  .follow { margin-top: 34px; padding-top: 18px; border-top: 1px solid #e2ddd3;
+            font-size: 13.5px; color: #5c6a64; }
+  .follow b { color: #3f4a44; }
+  .follow a { color: #7a5a2e; text-decoration: none; border-bottom: 1px solid #d8c9ae; margin-right: 12px; }
+  .follow a:hover { color: #14161a; border-bottom-color: #14161a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="./">&larr; back to the lecture</a>
+
+  <h1>Contact</h1>
+  <p class="lede">Questions about the lecture, the math behind it, or something it gets wrong &mdash; send it here. Corrections are welcome; that is how it got this far.</p>
+
+  <!-- Same Web3Forms endpoint and access key as sidestepstudio.com's First Contact form,
+       so these arrive in the same inbox. The hidden `subject` and `source` fields are the
+       only difference: they identify the message as coming from Lefty rather than the
+       site's front page, so the two sort themselves apart. -->
+  <form action="https://api.web3forms.com/submit" method="POST">
+    <input type="hidden" name="access_key" value="82d70441-be9a-4f81-a119-607cf1d0f62a">
+    <input type="hidden" name="subject" value="Message from Lefty's Focal Length Lecture">
+    <input type="hidden" name="source" value="leftys-lecture">
+    <input type="hidden" name="redirect" value="https://sidestepstudio.com/leftysfocallengthlecture/">
+
+    <label for="name">Your name</label>
+    <input id="name" type="text" name="name" required>
+
+    <label for="email">Your email</label>
+    <input id="email" type="email" name="email" required>
+
+    <label for="topic">What is this about</label>
+    <select id="topic" name="topic">
+      <option>A question about the demo</option>
+      <option>A question about the math</option>
+      <option>I think something here is wrong</option>
+      <option>Something else</option>
+    </select>
+
+    <label for="message">Your message</label>
+    <textarea id="message" name="message" required></textarea>
+
+    <!-- honeypot: bots fill it, people never see it -->
+    <div style="display:none"><input type="checkbox" name="botcheck"></div>
+
+    <button type="submit">Send</button>
+    <p class="fine">Goes straight to Pete. No list, no newsletter, no forwarding.</p>
+  </form>
+
+  <div class="follow">
+    <b>Free, please follow on:</b>
+    <a href="https://www.instagram.com/see_theshow/" target="_blank" rel="noopener">Instagram</a>
+    <a href="https://x.com/intent/follow?screen_name=see_theshow" target="_blank" rel="noopener">X</a>
+    <a href="https://www.facebook.com/seetheshow87" target="_blank" rel="noopener">Facebook</a>
+    <a href="https://www.youtube.com/@See_theShow?sub_confirmation=1" target="_blank" rel="noopener">YouTube</a>
+    <a href="https://app.astrobin.com/u/see_theShow" target="_blank" rel="noopener">AstroBin</a>
+    <a href="https://sidestepstudio.com" target="_blank" rel="noopener">sidestepstudio.com</a>
+  </div>
+
+</div>
+</body>
+</html>

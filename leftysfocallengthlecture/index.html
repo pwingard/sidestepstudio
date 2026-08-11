@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lefty's Focal Length Lecture</title>
+<!-- Moondance app icon, moon disc only, transparent surround, 64px, inlined -->
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+<style>
+  html, body {
+    margin: 0; height: 100%;
+    background: #f7f5f1;
+    display: flex; flex-direction: column;
+    /* SAFE center, not center. A centred flex column that overflows loses the top
+       of its content OFF the window and it cannot be scrolled back to - which is
+       how the title disappeared. "safe" falls back to flex-start the moment the
+       content is taller than the window, so the title is always reachable. */
+    align-items: center; justify-content: safe center; gap: 10px;
+    font: 14px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #222;
+  }
+  svg { width: min(96vw, 1400px); height: auto; }
+
+  /* Lefty is drawn twice — a background-coloured halo underneath, ink on top —
+     so he stays readable while standing in front of a dark board. */
+  .halo * { stroke: #f7f5f1; stroke-width: 34; fill: none;
+            stroke-linecap: round; stroke-linejoin: round; }
+  .halo .head, .halo .hand, .halo .tagbox, .halo .band, .halo .shoe,
+  .halo .bow, .halo .knot { fill: #f7f5f1; }
+  .halo .eye, .halo .tagtext { fill: #f7f5f1; stroke: none; }
+
+  .ink * { stroke: #14161a; stroke-width: 12; fill: none;
+           stroke-linecap: round; stroke-linejoin: round; }
+  .ink .head { fill: #f7f5f1; }
+  .ink .hand { fill: #f7f5f1; stroke-width: 8; }
+  .ink .shoe { fill: #14161a; stroke-width: 8; }
+  .ink .eye  { fill: #14161a; stroke: none; }
+  .ink .nose, .ink .mouth, .ink .ear, .ink .hair,
+  .ink .finger { stroke-width: 7; }
+  .ink .handchalk { stroke: #14161a; stroke-width: 5; }
+
+  .ink .tagbox  { fill: #fdfdf5; stroke: #14161a; stroke-width: 3.5; }
+  .ink .band    { fill: #b8392e; stroke: #14161a; stroke-width: 3.5; }
+  .ink .tagtext { fill: #14161a; stroke: none;
+                  font: 700 15px "Bradley Hand", "Segoe Script", cursive; }
+  .ink .bow  { fill: #b8392e; stroke: #14161a; stroke-width: 5; }
+  .ink .knot { fill: #8f2a21; stroke: #14161a; stroke-width: 4; }
+
+  /* chalk on a dark board behaves like light — overlapping primaries screen
+     together, so red + green + blue on the same spot goes white. Pure channel
+     colours mean one colour alone never does. */
+  /* LIGHTEN, not screen. Screen keeps nudging the other two channels upward
+     every time another mark lands, so a deep pile of pure red drifted to pale
+     pink and every cluster read as washed out. Lighten takes max() per channel:
+     red on red stays exactly red however deep, red+green is exactly yellow, and
+     white appears only where all three actually overlap. */
+  .dot { opacity: 0; mix-blend-mode: lighten; stroke: none;
+         transition: opacity .12s ease-out, r .16s cubic-bezier(.2,1.6,.4,1); }
+
+  .boardlabel { fill: #cfe0d8; opacity: .5; stroke: none; letter-spacing: 3px;
+                font: 600 20px -apple-system, BlinkMacSystemFont, sans-serif; }
+  .tally { stroke: none; letter-spacing: 1px; font-variant-numeric: tabular-nums;
+           font: 700 27px ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  /* ⚠️ EVERY LABEL BELOW SITS ON THE CREAM PAGE, NOT ON A BOARD. They were all
+     board-coloured (pale green / pale cream), which is why they were unreadable -
+     pale mint on #f7f5f1 is almost no contrast. Board-side text (.boardlabel,
+     .paneltitle, .benchtitle, .panelkey) keeps its pale colours on purpose. */
+  .miss  { stroke: none; letter-spacing: 1px; fill: #5f6b66; opacity: 1;
+           font: 600 19px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .apr  { stroke: none; fill: #3f4a44; letter-spacing: 1.6px;
+          font: 700 17px -apple-system, BlinkMacSystemFont, sans-serif; }
+  .frat { stroke: none; fill: #8a6f42; letter-spacing: .5px;
+          font: 700 46px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .fin  { stroke: none; fill: #8a6a35; letter-spacing: .7px;
+          font: 700 18px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .benchtitle   { fill: #cfe0d8; stroke: none; letter-spacing: 2.4px;
+                  font: 700 13px -apple-system, BlinkMacSystemFont, sans-serif; }
+  .benchverdict { stroke: none; letter-spacing: .3px;
+                  font: 700 15px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .takeaway { stroke: none; fill: #3f4a44; letter-spacing: .4px;
+              font: 700 27px -apple-system, BlinkMacSystemFont, sans-serif; }
+  .benchdata { stroke: none; fill: #3f4a44; letter-spacing: .3px;
+               font: 700 22px -apple-system, BlinkMacSystemFont, sans-serif;
+               font-variant-numeric: tabular-nums; }
+  .fl   { stroke: none; fill: #3f4a44; letter-spacing: 1.4px;
+          font: 700 19px -apple-system, BlinkMacSystemFont, sans-serif; }
+  .rig { stroke: none; fill: #3f4a44; letter-spacing: .6px;
+         font: 700 19px -apple-system, BlinkMacSystemFont, sans-serif; }
+
+  .paneltitle { fill: #cfe0d8; stroke: none; letter-spacing: 2.5px;
+                font: 600 13px -apple-system, BlinkMacSystemFont, sans-serif; }
+  .panelkey   { fill: #8e9a94; stroke: none; letter-spacing: .3px;
+                font: 600 10px -apple-system, BlinkMacSystemFont, sans-serif; }
+
+  /* the header block is deliberately tight: at 1512 x 819 the old 30px title and
+     23px/660px thesis pushed the page to 900px and the TITLE went off the top of
+     the window. Wider thesis measure + smaller type keeps every panel, including
+     the 3-line split-test line, inside one screen. */
+  h1 { font: 700 26px/1.1 "Bradley Hand", "Segoe Script", cursive;
+       color: #14161a; text-align: center; margin: 2px 0 0; letter-spacing: .5px; }
+  .thesis { max-width: 880px; margin: 7px auto 8px; padding: 2px 0 2px 22px;
+            border-left: 3px solid #b9945a; color: #14161a; text-align: left;
+            font: 400 19px/1.35 Georgia, "Times New Roman", serif; }
+  .thesis em { font-style: italic; }
+  .sub  { text-align: center; color: #55555e; font-size: 15px; margin: 0 0 3px;
+          max-width: 720px; margin-left: auto; margin-right: auto; line-height: 1.45; }
+  .sub b { color: #14161a; }
+  .sub2 { text-align: center; color: #7b7b86; font-size: 13.5px; margin: 0 0 2px; }
+  .sub2 b { color: #4a4a52; }
+  .fine { text-align: center; color: #9a9aa4; font-size: 11.5px; line-height: 1.5;
+          max-width: 720px; margin: 0 auto 6px; }
+  .fine b { color: #6f6f78; }
+  .explain { max-width: 900px; margin: 2px auto 14px; text-align: center;
+             color: #4a4a52; font-size: 15.5px; line-height: 1.55; }
+  .explain b { color: #14161a; }
+
+  .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+              justify-content: center; }
+  button { font: inherit; padding: 7px 15px;
+           border: 1.5px solid #14161a; background: #fff; color: #14161a;
+           border-radius: 999px; cursor: pointer; }
+  button.on { background: #14161a; color: #fff; }
+  button:disabled { opacity: .35; cursor: default; }
+  .caption { color: #666; font-variant-numeric: tabular-nums; min-width: 240px; }
+  /* panel 3 (the split test) uses none of the playback controls - dim them out
+     rather than hide them, so the bar doesn't jump when you switch panels */
+  .dimmed { opacity: .28; pointer-events: none; }
+
+  .page { display: flex; gap: 22px; align-items: flex-start; max-width: 1700px; margin: 0 auto; }
+  /* the scene keeps its own aspect until the window gets short, then it gives up
+     height instead of pushing the title off the top. On a tall window the cap is
+     larger than the natural height and does nothing. */
+  #scene { display: block; width: 100%; max-height: calc(100vh - 258px); }
+  .stage { flex: 1; min-width: 0; }
+  /* the sidebar, not the header, is the tallest column: four cards whose height is
+     set by the OTA drawing's aspect at full card width. Capping that drawing keeps
+     all four cards on one screen. */
+  .acts { display: flex; flex-direction: column; gap: 10px; width: 210px; flex: none; }
+  .objcard { display: block; width: 100%; height: auto; }
+  .actcard { display: flex; flex-direction: column; justify-content: center; flex: 1;
+             width: 100%; text-align: left; cursor: pointer; min-height: 118px;
+             background: #fff; border: 1.5px solid #ccc7bd; border-radius: 12px;
+             padding: 14px 15px; font: inherit; color: #14161a; }
+  .actcard:hover { border-color: #14161a; }
+  .actcard.on { background: #14161a; border-color: #14161a; color: #fff; }
+  .actcard .cn { display: block; font: 700 10.5px/1 "Helvetica Neue", Arial, sans-serif;
+                 letter-spacing: 1.6px; opacity: .6; }
+  .actcard .ct { display: block; font-size: 14.5px; line-height: 1.32; margin: 0 0 6px; }
+  .actcard .ota { display: block; width: 100%; height: auto; max-height: 96px; margin-top: 2px; }
+  .ota-tb { fill: #3b4048; } .ota-dw { fill: #4a515a; } .ota-fc { fill: #22262c; }
+  .ota-dt { fill: #22262c; } .ota-rg { fill: #2b3038; } .ota-kn { fill: #8e979f; }
+  .ota-gl { fill: #7fb0d8; }
+  .actcard.on .ota-tb { fill: #cfd6de; } .actcard.on .ota-dw { fill: #b8c1cb; }
+  .actcard.on .ota-fc, .actcard.on .ota-dt { fill: #7e8792; }
+  .actcard.on .ota-rg { fill: #9aa4b0; } .actcard.on .ota-kn { fill: #eef1f4; }
+  @media (max-width: 1080px) { .page { display: block; } .acts { flex-direction: row; width: auto; } }
+
+  .scrubrow { display: flex; gap: 12px; align-items: center;
+              justify-content: center; margin: 5px auto 0; max-width: 900px; }
+  .scrubrow label { color: #666; font-size: 14px; white-space: nowrap; }
+  #scrub, #speed, #seeing { flex: 1; min-width: 560px; accent-color: #14161a;
+                   height: 22px; cursor: pointer; }
+  .scrubrow label { min-width: 46px; text-align: right; }
+  .benchrow { display: flex; gap: 10px; align-items: center; justify-content: center;
+              flex-wrap: wrap; margin: 6px auto 0; max-width: 1000px; }
+  .benchrow label { color: #666; font-size: 14px; }
+  .benchrow select { font: inherit; padding: 6px 10px; border: 1.5px solid #14161a;
+                     border-radius: 999px; background: #fff; }
+  .benchrow input[type=range] { width: 170px; accent-color: #14161a; cursor: pointer; }
+  /* a group never breaks internally - the slider and its readout stay together */
+  .benchrow .bgrp { display: inline-flex; align-items: center; gap: 10px;
+                    flex: 0 0 auto; white-space: nowrap; }
+  .benchrow span { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 52px; }
+  /* the follow row. Brand rule: people follow SEE THE SHOW (the creator brand),
+     not Sidestep Studio (the studio/publisher). Handles are the standardised ones. */
+  .follow { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline;
+            justify-content: center; margin: 10px auto 0; max-width: 900px;
+            font: 400 13.5px -apple-system, BlinkMacSystemFont, sans-serif; color: #5c6a64; }
+  .follow b { color: #3f4a44; font-weight: 700; letter-spacing: .3px; }
+  .follow a { color: #7a5a2e; text-decoration: none; border-bottom: 1px solid #d8c9ae; }
+  .follow a:hover { color: #14161a; border-bottom-color: #14161a; }
+  .follow .sep { color: #b6b0a4; }
+  #scrubnum, #speednum { color: #14161a; font-variant-numeric: tabular-nums;
+              font-weight: 700; min-width: 88px; text-align: left; }
+</style>
+</head>
+<body>
+
+
+
+<div class="page">
+<aside class="acts">
+  <button class="actcard on" data-a="1">
+    <span class="ct">Same aperture,<br>different focal lengths</span>
+    <svg class="ota" viewBox="0 0 132 100"><rect x="24.1" y="13.5" width="3.0" height="25.5" rx="1.4" class="ota-rg"/><rect x="36.8" y="13.5" width="3.0" height="25.5" rx="1.4" class="ota-rg"/><rect x="18.0" y="15.0" width="27.6" height="22.0" rx="2.4" class="ota-tb"/><rect x="7.0" y="13.5" width="11.0" height="25.1" rx="2.4" class="ota-dw"/><rect x="45.6" y="15.9" width="3.7" height="20.2" rx="1.5" class="ota-tb"/><rect x="49.3" y="21.4" width="3.7" height="9.2" rx="1.4" class="ota-fc"/><circle cx="51.0" cy="33.3" r="2.2" class="ota-kn"/><ellipse cx="8.5" cy="26.0" rx="2.6" ry="11.0" class="ota-gl"/><rect x="50.9" y="61.5" width="3.0" height="25.5" rx="1.4" class="ota-rg"/><rect x="83.5" y="61.5" width="3.0" height="25.5" rx="1.4" class="ota-rg"/><rect x="35.3" y="63.0" width="70.8" height="22.0" rx="2.4" class="ota-tb"/><rect x="7.0" y="61.5" width="28.3" height="25.1" rx="2.4" class="ota-dw"/><rect x="106.1" y="63.9" width="9.4" height="20.2" rx="1.5" class="ota-tb"/><rect x="115.6" y="69.4" width="9.4" height="9.2" rx="1.4" class="ota-fc"/><circle cx="119.8" cy="81.3" r="2.2" class="ota-kn"/><ellipse cx="8.5" cy="74.0" rx="2.6" ry="11.0" class="ota-gl"/></svg>
+  </button>
+  <button class="actcard" data-a="2">
+    <span class="ct">Same focal length,<br>different apertures</span>
+    <svg class="ota" viewBox="0 0 132 100"><rect x="39.7" y="9.5" width="3.9" height="34.8" rx="1.4" class="ota-rg"/><rect x="64.0" y="9.5" width="3.9" height="34.8" rx="1.4" class="ota-rg"/><rect x="28.1" y="11.0" width="52.8" height="30.0" rx="3.3" class="ota-tb"/><rect x="7.0" y="8.9" width="21.1" height="34.2" rx="3.3" class="ota-dw"/><rect x="80.9" y="12.2" width="7.0" height="27.6" rx="1.5" class="ota-tb"/><rect x="88.0" y="19.7" width="7.0" height="12.6" rx="1.4" class="ota-fc"/><circle cx="91.1" cy="35.9" r="3.0" class="ota-kn"/><ellipse cx="8.5" cy="26.0" rx="2.6" ry="15.0" class="ota-gl"/><rect x="39.7" y="64.5" width="3.0" height="18.6" rx="1.4" class="ota-rg"/><rect x="64.0" y="64.5" width="3.0" height="18.6" rx="1.4" class="ota-rg"/><rect x="28.1" y="66.0" width="52.8" height="16.0" rx="1.8" class="ota-tb"/><rect x="7.0" y="64.9" width="21.1" height="18.2" rx="1.8" class="ota-dw"/><rect x="80.9" y="66.6" width="7.0" height="14.7" rx="1.5" class="ota-tb"/><rect x="88.0" y="70.6" width="7.0" height="6.7" rx="1.4" class="ota-fc"/><circle cx="91.1" cy="79.3" r="2.0" class="ota-kn"/><ellipse cx="8.5" cy="74.0" rx="2.6" ry="8.0" class="ota-gl"/></svg>
+  </button>
+  <button class="actcard" data-a="0">
+    <span class="ct">Can my scope split it?<br><small style="opacity:.6">one telescope, your sky</small></span>
+    <svg class="ota" viewBox="0 0 132 100"><circle cx="46" cy="20" r="4" fill="#e8f0ff"/><circle cx="70" cy="20" r="4" fill="#e8f0ff"/><path d="M46 30 L46 36 M70 30 L70 36" stroke="#9aa4b0" stroke-width="1.6"/><path d="M46 33 L70 33" stroke="#9aa4b0" stroke-width="1.6"/><rect x="42.1" y="55.0" width="55.2" height="26.0" rx="2.9" class="ota-tb"/><rect x="20.0" y="53.2" width="22.1" height="29.6" rx="2.9" class="ota-dw"/><rect x="97.3" y="56.0" width="7.4" height="23.9" rx="1.5" class="ota-tb"/><rect x="104.6" y="62.5" width="7.4" height="10.9" rx="1.4" class="ota-fc"/><ellipse cx="21.5" cy="68.0" rx="2.6" ry="13.0" class="ota-gl"/></svg>
+  </button>
+  <button class="actcard" data-a="3">
+    <span class="ct">Real world &mdash;<br>two popular scopes</span>
+    <svg class="ota" viewBox="0 0 132 100"><rect x="25.6" y="17.5" width="3.0" height="16.2" rx="1.4" class="ota-rg"/><rect x="39.4" y="17.5" width="3.0" height="16.2" rx="1.4" class="ota-rg"/><rect x="19.0" y="19.0" width="30.0" height="14.0" rx="1.5" class="ota-tb"/><rect x="7.0" y="18.0" width="12.0" height="16.0" rx="1.5" class="ota-dw"/><rect x="49.0" y="19.6" width="4.0" height="12.9" rx="1.5" class="ota-tb"/><rect x="53.0" y="23.1" width="4.0" height="5.9" rx="1.4" class="ota-fc"/><circle cx="54.8" cy="30.6" r="2.0" class="ota-kn"/><ellipse cx="8.5" cy="26.0" rx="2.6" ry="7.0" class="ota-gl"/><rect x="50.9" y="57.5" width="3.9" height="34.8" rx="1.4" class="ota-rg"/><rect x="83.5" y="57.5" width="3.9" height="34.8" rx="1.4" class="ota-rg"/><rect x="35.3" y="59.0" width="70.8" height="30.0" rx="3.3" class="ota-tb"/><rect x="7.0" y="56.9" width="28.3" height="34.2" rx="3.3" class="ota-dw"/><rect x="106.1" y="60.2" width="9.4" height="27.6" rx="1.5" class="ota-tb"/><rect x="115.6" y="67.7" width="9.4" height="12.6" rx="1.4" class="ota-fc"/><circle cx="119.8" cy="83.9" r="3.0" class="ota-kn"/><ellipse cx="8.5" cy="74.0" rx="2.6" ry="15.0" class="ota-gl"/></svg>
+  </button>
+</aside>
+<main class="stage">
+<h1>Lefty&rsquo;s Focal Length Lecture</h1>
+<blockquote class="thesis">Increasing the focal length doesn&rsquo;t slow a telescope down &mdash;
+it increases the workload, which in turn takes more <em>time</em>.</blockquote>
+<p class="sub2">Each chalk is an equal unit of time &mdash; in this example, arbitrarily, one minute.</p>
+<p class="fine">&ldquo;Finished&rdquo; = only <b>0.01%</b> of the sensor&rsquo;s target still bare. A target never truly fills.</p>
+
+<svg id="scene" viewBox="0 -40 1860 800" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <radialGradient id="haze" cx="50%" cy="40%" r="62%">
+      <stop offset="0%" stop-color="#fff" stop-opacity=".07"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a06a33"/><stop offset="100%" stop-color="#6f4520"/>
+    </linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b98247"/><stop offset="100%" stop-color="#8a5c2c"/>
+    </linearGradient>
+    <linearGradient id="tin" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#8f959d"/><stop offset="45%" stop-color="#d5d9de"/>
+      <stop offset="100%" stop-color="#878d95"/>
+    </linearGradient>
+  </defs>
+
+
+  <!-- ================= table ================= -->
+  <rect x="70"  y="486" width="18" height="214" fill="#8a5c2c"/>
+  <rect x="312" y="486" width="18" height="214" fill="#8a5c2c"/>
+  <rect x="70"  y="616" width="260" height="12" fill="#7a5027"/>
+  <!-- the professor's bookcase -->
+  <g class="classroom">
+    <rect x="1622" y="76"  width="196" height="628" rx="5" fill="#6f4520"/>
+    <rect x="1630" y="84"  width="180" height="612" fill="#42301c"/>
+    <g id="shelves"></g>
+    <rect x="1622" y="696" width="196" height="12" rx="3" fill="#7d4e24"/>
+  </g>
+
+  <rect x="40"  y="470" width="320" height="18" rx="4" fill="url(#wood)"/>
+  <rect x="40"  y="486" width="320" height="7"  rx="2" fill="#6f4520"/>
+  <g class="classroom"><g id="stack"></g></g>
+
+  <!-- ===== both boards are the same sensor, 400 x 400. Only the field
+             of view differs.                                       ===== -->
+  <!-- everything from here to the waste can is the LECTURE set: it belongs to
+       acts 1-3 only, and applyAct() hides every .classroom group on the split
+       test so the bench card is not sharing the stage with act 1's boards. -->
+  <g class="classroom">
+  <rect x="400" y="84"  width="432" height="432" rx="6" fill="url(#frame)"/>
+  <rect x="416" y="100" width="400" height="400" fill="#232e28"/>
+  <rect x="416" y="100" width="400" height="400" fill="url(#haze)"/>
+  <rect x="416" y="100" width="400" height="400" fill="none"
+        stroke="#000" stroke-opacity=".4" stroke-width="3"/>
+  <rect x="400" y="516" width="432" height="16" rx="4" fill="#6f4520"/>
+
+  <rect x="900" y="84"   width="432" height="432" rx="6" fill="url(#frame)"/>
+  <rect x="916" y="100"  width="400" height="400" fill="#232e28"/>
+  <rect x="916" y="100"  width="400" height="400" fill="url(#haze)"/>
+  <rect x="916" y="100"  width="400" height="400" fill="none"
+        stroke="#000" stroke-opacity=".4" stroke-width="3"/>
+  <rect x="900" y="516" width="432" height="16" rx="4" fill="#6f4520"/>
+
+  <text class="tally" id="tallyL" x="586"  y="62" text-anchor="middle"></text>
+  <text class="tally" id="tallyR" x="1146" y="62" text-anchor="middle"></text>
+  <text class="apr"  id="aprL"  x="586"  y="30"  text-anchor="middle"></text>
+  <text class="apr"  id="aprR"  x="1146" y="30"  text-anchor="middle"></text>
+  <text class="frat" id="fratL" x="386"  y="316" text-anchor="end"></text>
+  <text class="frat" id="fratR" x="1346" y="316" text-anchor="start"></text>
+  <text class="fl"  id="flL"  x="616"  y="556" text-anchor="middle"></text>
+  <text class="fl"  id="flR"  x="1116" y="556" text-anchor="middle"></text>
+  <text class="fin" id="finL" x="616"  y="586" text-anchor="middle"></text>
+  <text class="fin" id="finR" x="1116" y="586" text-anchor="middle"></text>
+
+  <g id="dots"></g>
+
+  <!-- ================= waste can — back half ================= -->
+  <ellipse cx="1500" cy="639" rx="38" ry="9" fill="#3b4048"/>
+  <g id="flying"></g>
+  <path d="M1462 639 L1538 639 L1528 700 L1472 700 Z" fill="url(#tin)"/>
+  <path d="M1462 639 L1538 639 L1528 700 L1472 700 Z" fill="none"
+        stroke="#5c626b" stroke-width="2"/>
+  <path d="M1476 645 L1469 697 M1500 645 L1500 698 M1524 645 L1531 697"
+        stroke="#9aa0a8" stroke-width="1.6" fill="none" opacity=".7"/>
+  <ellipse cx="1500" cy="639" rx="38" ry="9"
+           fill="none" stroke="#5c626b" stroke-width="4"/>
+  </g><!-- /.classroom -->
+
+  <!-- ===== over the table: the object (acts) / the bench (test) ===== -->
+  <g id="objcard" transform="translate(0,-110)">
+    <rect x="60" y="84" width="286" height="286" rx="8" fill="#1b2420"
+          stroke="#6f4520" stroke-width="3"/>
+    <text class="paneltitle" x="203" y="112" text-anchor="middle">THE OBJECT</text>
+    <rect id="fovL" fill="none" stroke="#e8dcc0" stroke-width="2"
+          stroke-dasharray="7 6" opacity=".85"/>
+    <rect id="fovR" fill="none" stroke="#ffe9a8" stroke-width="2.5"/>
+    <g id="objref"></g>
+    <text class="panelkey" id="panelkey" x="203" y="356" text-anchor="middle"></text>
+  </g>
+
+  <!-- ===== the bench on the wall: one scope, one pair, a verdict ===== -->
+  <!-- hidden in the markup: the page loads on act 1 without ever calling applyAct(),
+       so without this the split-test card sat on top of THE OBJECT card on the very
+       first screen anyone sees. applyAct() takes over from the first click. -->
+  <g id="bench" transform="translate(0,-110)" style="display:none">
+    <rect x="60" y="84" width="286" height="286" rx="8" fill="#1b2420"
+          stroke="#6f4520" stroke-width="3"/>
+    <text class="benchtitle" x="203" y="110" text-anchor="middle">CAN IT SPLIT THEM?</text>
+    <rect x="76" y="122" width="254" height="192" fill="#0c1210"/>
+    <g id="benchdots"></g>
+    <text class="benchverdict" id="benchverdict" x="203" y="344" text-anchor="middle"></text>
+  </g>
+
+  <text class="takeaway" id="takeaway" x="866" y="652" text-anchor="middle"></text>
+  <!-- panel 3's numbers, sitting at the same height as the waste can rim (y 639).
+       Replaces the takeaway line, which is hidden while panel 3 is up. -->
+  <text class="benchdata" id="benchdata" x="866" y="638" text-anchor="middle"
+        style="display:none">
+    <tspan id="bd1" x="866"></tspan><tspan id="bd2" x="866" dy="30"></tspan>
+  </text>
+
+  <line x1="0" y1="700" x2="1860" y2="700" stroke="#cdc7bd" stroke-width="4"/>
+
+  <g id="figure" transform="translate(320,700)"></g>
+</svg>
+
+<div class="controls">
+  <button id="replay">Replay</button>
+  <button id="pause">Pause</button>
+  <button id="stop">Stop</button>
+  <!-- drag the chalk scrubber and this lights up: it starts the animation AT that
+       chalk instead of from zero. Replay always starts over. -->
+  <button id="resumeAt" disabled>Resume here</button>
+
+  <span class="caption" id="caption">&nbsp;</span>
+</div>
+
+<!-- each control keeps its label, slider and readout together in one .bgrp, so a
+     wrap can only ever happen BETWEEN groups, never between a slider and its number -->
+<div class="benchrow" id="benchrow" style="display:none">
+  <span class="bgrp"><label>scope</label><select id="bScope"></select></span>
+  <span class="bgrp"><label>separation</label>
+    <input id="bSep" type="range" min="0.5" max="12" step="0.1" value="4">
+    <span id="bSepNum">4.0&Prime;</span></span>
+  <span class="bgrp"><label id="bSeeLab">seeing</label>
+    <input id="bSee" type="range" min="0.5" max="6" step="0.1" value="2.5">
+    <span id="bSeeNum">2.5&Prime;</span>
+    <select id="bMode">
+      <option value="atmos">atmospheric seeing</option>
+      <option value="meas">measured FWHM</option>
+    </select></span>
+  <!-- pixel stays live in BOTH modes: sampling is a separate limit on reading the
+       gap, not a blur baked into a measured FWHM. Only guiding dims. -->
+  <span class="bgrp"><label>pixel</label><select id="bPix"></select></span>
+  <span class="bgrp" id="bGuiWrap">
+    <label>guiding</label>
+    <input id="bGui" type="range" min="0" max="2" step="0.05" value="0.6">
+    <span id="bGuiNum">0.60&Prime;</span></span>
+</div>
+
+<div class="scrubrow" id="speedrow">
+  <label for="speed">speed</label>
+  <input id="speed" type="range" min="0" max="5" step="1" value="2">
+  <span id="speednum">4&times;</span>
+</div>
+
+<div class="scrubrow" id="chalkrow">
+  <label for="scrub">chalk</label>
+  <input id="scrub" type="range" min="0" max="495" step="1" value="0">
+  <span id="scrubnum">0 / 495</span>
+</div>
+
+<p class="fine" id="benchnums" style="display:none"></p>
+
+<div class="follow">
+  <b>Free, please follow on:</b>
+  <a href="https://www.instagram.com/see_theshow/" target="_blank" rel="noopener">Instagram</a>
+  <!-- intent/follow pops X's follow dialog instead of just landing on the profile -->
+  <a href="https://x.com/intent/follow?screen_name=see_theshow" target="_blank" rel="noopener">X</a>
+  <a href="https://www.facebook.com/seetheshow87" target="_blank" rel="noopener">Facebook</a>
+  <!-- ?sub_confirmation=1 pops YouTube's subscribe dialog -->
+  <a href="https://www.youtube.com/@See_theShow?sub_confirmation=1" target="_blank" rel="noopener">YouTube</a>
+  <a href="https://app.astrobin.com/u/see_theShow" target="_blank" rel="noopener">AstroBin</a>
+  <span class="sep">&middot;</span>
+  <a href="https://sidestepstudio.com" target="_blank" rel="noopener">sidestepstudio.com</a>
+  <span class="sep">&middot;</span>
+  <a href="./math.html">The math</a>
+  <a href="./contact.html">Contact</a>
+</div>
+
+</main>
+</div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+
+/* ---------- proportions (relative to his feet at 0,0) ---------- */
+const GROUND = 700, SHY = -400, ARM = 200, REST = 162;
+/* so he can touch anything with y between GROUND+SHY±ARM = 100..500 */
+
+const HUES  = ['red', 'green', 'blue'];
+const PRIM  = ['#ff2020', '#20ff40', '#2030ff'];   // UI: tallies, object panel
+/* Dots use PURE channels. Screen-blending red with red can then never leak into
+   green or blue, so a single-colour cluster stays that colour however deep it
+   piles up. White therefore means one thing only: red AND green AND blue landed
+   on the same spot, i.e. the scope could not tell them apart. Real sensors do
+   saturate — that wrinkle is deliberately not modelled here. */
+const DOTC  = ['#ff0000', '#00ff00', '#0000ff'];
+const STICK = ['#ff9a9a', '#9affab', '#9aa6ff'];
+const DOT_R = 10;              /* set by the chalk — never scales */
+
+/* ---------- the object: six clusters ----------
+   Three on an inner triangle, three on a wider outer ring, two of each
+   primary. Distances are in object units, where the inner ring radius = 1.
+   The tight field only reaches 1.89 units, so it sees the inner three and
+   misses the outer three entirely. The wide field reaches 7.55 and gets
+   all six.
+
+   Both sensors are 400 x 400 — only the plate scale differs, 4x:
+     LEFT  s=26.5 -> inner clusters overlap by 10.7. One white blob.
+     RIGHT s=106  -> inner clusters sit 17 apart. Three clean primaries. */
+const RHO   = 0.691;    // cluster radius, in inner-ring units
+const R_IN  = 1;
+/* 5.2, not 4.0. At 4.0 the middle ring sat 52 px out while act 3's inner (RIGHT)
+   field edge is at 43.3 px and a cluster is 9 px in radius - so those three dots
+   STRADDLED the inner line and you could not tell whether they were in the right
+   scope's field or not. 5.2 puts their nearest edge ~50 px out, clear of the line
+   by 6 px, and still 23 px short of the outer ring. */
+const R_MID = 5.2;      // second ring - fills the wide field instead of leaving it black
+const R_OUT = 7.0;      /* outermost ring. 7.0 + RHO = 7.69, and the TIGHTEST wide
+                           field in the deck is Act 3's left board at 8.39 object
+                           units, so every ring still lands on every wide board. */
+/* ================= THE TWO ACTS =================
+   ACT 1  same APERTURE, two focal lengths.  Equal dabs; the plate scale differs.
+   ACT 2  same FOCAL LENGTH, two apertures.  Same plate scale on both boards, so
+          the geometry is IDENTICAL - same cluster size, same positions, same
+          gaps. Only the dab count differs, by aperture squared. The point of
+          Act 2 is that nothing about the resolution moves.               */
+const ACT = {
+  /* ACT 1 IS A THOUGHT EXPERIMENT too. Invented round numbers, no brand names:
+     one 100 mm aperture, two focal lengths five times apart. f/2 against f/10
+     means the f-number claims 25x slower, which is the thing being disproved.
+     k = 5 is as low as this can go: below it the left board's inner three stop
+     overlapping and the white core - the whole payoff - disappears.
+     Real telescopes arrive in ACT 3 and only there. */
+  1: { scale: { left: 21.20, right: 106 }, dabs: { left: 28, right: 500 },
+       perRound: { left: 3, right: 3 }, first: 'left', chalks: { table: 21, floor: 474 },
+       ap: { left: '100 mm aperture', right: '100 mm aperture' },
+       fl: { left: '200 mm focal length', right: '1000 mm focal length' },
+       fr: { left: 'f/2', right: 'f/10' },
+       key: 'outer = LEFT · inner = RIGHT',
+       innerOnly: { left: false, right: true },
+       take: "Same aperture, longer focal length = more work",
+       explain: "<b>Same size hole, one tube twice as long.</b> Both collect the same light every minute. The long one magnifies more, so it has far more sensor to fill &mdash; and filling it takes longer. It never got slower; the job got bigger.",
+       caption: 'ACT 1 — same aperture, two focal lengths',
+       done: 'Same 100 mm aperture, same light. The f/2 board finished at chalk 21; f/10 needed all 495 — it took longer only because it spread the same photons over 25× the area, and got detail the f/2 board can never show.' },
+  /* ACT 2 IS A THOUGHT EXPERIMENT. Round invented numbers on purpose - two
+     800 mm scopes, 100 mm and 200 mm across - so nobody has to stop and work
+     out what a piece of kit is. Real telescopes with real focal lengths,
+     apertures and sensors arrive in ACT 3, and only there. */
+  2: { scale: { left: 106, right: 106 }, dabs: { left: 500, right: 500 },
+       perRound: { left: 16, right: 4 }, first: 'left', chalks: { table: 93, floor: 279 },
+       ap: { left: '200 mm aperture', right: '100 mm aperture' },
+       fl: { left: '800 mm focal length', right: '800 mm focal length' },
+       fr: { left: 'f/4', right: 'f/8' },
+       key: 'both boards see the same field',
+       innerOnly: { left: true, right: true },
+       take: "Same focal length, bigger aperture = faster work",
+       explain: "<b>Same tube length, one hole twice as wide.</b> Identical picture, identical size, identical detail. The wide one just fills it four times faster, because four times the light is arriving. This is the only case where &ldquo;faster&rdquo; means what people think it means.",
+       /* act 2 gets its OWN thesis line above the boards - Pete's wording,
+          2026-08-11. Act 1's thesis is about focal length; this panel is the one
+          case where "faster" is literally true, so it says so up top. */
+       thesis: "Increasing the aperture on identical focal length increases the <em>speed</em> of work done.",
+       caption: 'ACT 2 — same focal length, two apertures',
+       done: 'Identical picture on both boards. f/4 was finished at chalk 93; f/8 needed all 372 — four times the wait, nothing else different. Aperture bought SPEED, not detail.' },
+
+  /* ACT 3 - REAL GEAR, and the only act the viewer can drive.
+       WO RedCat 51        250 mm f/4.9  ->  51 mm of glass
+       SW Evostar 80ED     600 mm f/7.5  ->  80 mm of glass
+     focal length 600/250 = 2.40x   aperture area (80/51)^2 = 2.46x
+     time = 5.76 / 2.46 = 2.34x = (7.5/4.9)^2.
+     ANGULAR SCALE: 1 object unit = 5.7 arcsec, so the cores sit 9.9" apart with
+     2.0" of clear sky between them. That makes 2" seeing the exact break point:
+     better and the Evostar's extra reach pays, worse and it does not. */
+  3: { scale: { left: 25, right: 60 }, dabs: { left: 200, right: 900 },
+       perRound: { left: 12, right: 28 }, first: 'left', chalks: { table: 69, floor: 99 },
+       /* photonR 4, not 8. At 8 the mark alone reached past the shared centre on
+          the small board, so its core was white at ZERO seeing and the slider
+          could not move it. A finer mark lets seeing do the work: the left board
+          whitens around 1.5", the right around 2.8". */
+       /* seeingArcsec is now FIXED at 2.0. Its slider was cut 2026-08-05 - this
+          panel is about focal length and aperture, and a second control labelled
+          "seeing" collided with the split test, which models it properly. The
+          blur stays so the clusters still look real. */
+       photonR: 4, arcsecPerUnit: 5.7, seeingArcsec: 2.0, seeing: 2.0 / 11.4,
+       ap: { left: '51 mm aperture', right: '80 mm aperture' },
+       fl: { left: '250 mm focal length', right: '600 mm focal length' },
+       fr: { left: 'f/4.9', right: 'f/7.5' },
+       key: 'outer = LEFT · inner = RIGHT',
+       innerOnly: { left: false, right: true },
+       take: "Real scopes — both changed at once",
+       explain: "<b>Two scopes people actually own, and both things changed.</b> The Evostar magnifies 2.4&times; more &mdash; nearly six times the area to fill &mdash; and its 80 mm gathers 2.46&times; the light. Set your own seeing below: the cores are 9.9&Prime; apart with 2&Prime; of clear sky, so under 2&Prime; the extra reach pays and over 2&Prime; it does not.",
+       /* act 3's own thesis line - Pete's wording, 2026-08-11. This is the panel
+          where BOTH levers move, so it is the right place to say what the single
+          f-number throws away: it is one number made from two, and on its own it
+          cannot tell you either of them. */
+       thesis: "The f-number says <em>speed</em>, but lowering it at the expense of focal length just means less work is being done for a quick result.",
+       caption: 'ACT 3 — real glass, and both levers move at once',
+       done: 'Both levers moved. 2.4× the focal length is 5.76× the work; the 80 mm supplies 2.46× the light. 5.76 ÷ 2.46 = 2.34, which is exactly (7.5/4.9)². That is all the f-number ever was.' }
+};
+let act = 1;
+/* one token per run(). A second run() bumps it, and the older loop sees the
+   mismatch and returns. Without this, the new run's `halted = false` un-halts the
+   OLD loop too and BOTH animate - the page gets slower every panel switch. */
+let runGen = 0;
+let SCALE = ACT[1].scale;
+/* k = 5.55 is the SAMYANG 135 mm against the ASKAR 107PHQ at 749 mm - the only
+   ratio matching glass Pete owns, so the demo can name real hardware.
+     k = 4     overlap 10.7, white zone 1.8  <- core does NOT merge once the old
+               pastel dots stopped screening up to fake white. Rejected.
+     k = 5.55  overlap 13.3, white zone 4.1  <- HERE. merges, panel breathes.
+     k = 8     overlap 15.4, white zone 5.9  <- merges hardest, panel unreadable.
+   The right board is identical in all three - same gap, same 89% fill. */
+const CENTRE = { left: { x: 616, y: 300 }, right: { x: 1116, y: 300 } };
+
+const CLUSTERS = [
+  { ring: R_IN,  ang: -90, hue: 0, inner: true  },   // red   apex
+  { ring: R_IN,  ang:  30, hue: 1, inner: true  },   // green lower-right
+  { ring: R_IN,  ang: 150, hue: 2, inner: true  },   // blue  lower-left
+  { ring: R_MID, ang:  90, hue: 0, inner: false },
+  { ring: R_MID, ang: 210, hue: 1, inner: false },
+  { ring: R_MID, ang: -30, hue: 2, inner: false },
+  { ring: R_OUT, ang:  30, hue: 0, inner: false },
+  { ring: R_OUT, ang: 150, hue: 1, inner: false },
+  { ring: R_OUT, ang: 270, hue: 2, inner: false }
+];
+
+/* Six photons a round leave the sky. Same aperture, so every cluster catches
+   the SAME light on both boards - 48 dabs each over 48 rounds. The right board
+   is zoomed 4x, so the three outer clusters fall off the sensor: their photons
+   are not redistributed, they simply miss. Left lands 288, right lands 144. */
+const PER_ROUND  = 6;
+/* Fairness beat. The left board's clusters are ~13 px across and the chalk mark
+   is 10 px, so three dabs already cover them solid - the small-scale image is
+   FINISHED almost immediately. The right board's clusters are 73 px and still
+   full of gaps. Hold there and say so, or the left looks like it simply won. */
+const pauseAt = () => ACT[act].chalks.table;
+/* SPEED vs RESOLUTION - that is the entire trade, and the only trade.
+   The left board's clusters are ~13 px across and a chalk mark is 10 px, so one
+   round of chalk already covers them: its picture is COMPLETE at chalk 3 of 48.
+   The right board is spread over 30x more pixels and is still filling in at 48
+   - and it shows structure the left can never show at any exposure.
+   FAST on the left. DETAILED on the right. Same hole, same hour. */
+
+let DABS = ACT[1].dabs;
+
+/* Even packing inside a cluster - sunflower, so the finished disc is uniform.
+   BUT the sunflower runs centre-outward, and photons do not: they land all over
+   the source from the first minute. So we then visit those slots in a spread
+   order (stride coprime with n) - that way ANY prefix already samples the whole
+   disc, and a cluster reaches its true SIZE early instead of growing outward.
+   This matters because Lefty stops early on the left board: with a centre-out
+   order it would freeze as an undersized blob and the inner three would never
+   overlap. */
+function cluster(cx, cy, R, n, blur) {
+  const pts = [], GOLD = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < n; i++) {
+    const r = R * Math.sqrt((i + .5) / n), t = i * GOLD;
+    let px = cx + r * Math.cos(t), py = cy + r * Math.sin(t);
+    if (blur) {
+      /* SEEING. A fixed angle on the sky, so it grows with the plate scale -
+         unlike the detector, which is fixed in pixels. Deterministic scatter
+         so a rebuild lands identically. */
+      const h = Math.sin((i + 1) * 12.9898) * 43758.5453;
+      const a = (h - Math.floor(h)) * Math.PI * 2;
+      const h2 = Math.sin((i + 1) * 78.233) * 43758.5453;
+      const rr = blur * Math.sqrt(h2 - Math.floor(h2));
+      px += rr * Math.cos(a); py += rr * Math.sin(a);
+    }
+    pts.push({ x: px, y: py });
+  }
+  const gcd = (a, b) => b ? gcd(b, a % b) : a;
+  let step = Math.round(n / 1.618) | 1;                 // odd, near n/phi
+  while (gcd(step, n) !== 1) step += 2;
+  const out = [];
+  for (let k = 0; k < n; k++) out.push(pts[(k * step) % n]);
+  return out;
+}
+
+function clusterPoints(b, c) {
+  const s = SCALE[b], t = c.ang * Math.PI / 180;
+  const seeing = (ACT[act].seeing || 0) * s;      // object units -> px on THIS board
+  return cluster(CENTRE[b].x + c.ring * s * Math.cos(t),
+                 CENTRE[b].y + c.ring * s * Math.sin(t),
+                 RHO * s, DABS[b], seeing);
+}
+
+let PATTERN;
+function buildPattern() {
+  PATTERN = {};
+  ['left', 'right'].forEach(b => {
+    PATTERN[b] = CLUSTERS.map(c =>
+      (ACT[act].innerOnly[b] && !c.inner) ? null : clusterPoints(b, c));
+  });
+}
+buildPattern();
+
+/* ---------- the wall panel ----------
+   All six clusters as they really are, with the square each sensor covers.
+   A sensor is 400 units across, so it reaches 200/scale object units. */
+const QP = 13;                          // panel px per object unit: the LEFT
+                                         // field square must stay inside the
+                                         // 166px card -> QP <= 155 / (400/SCALE.left)
+const PC = { x: 203, y: 218 };           // panel sky centre
+
+function drawFields() {
+  [['fovL', 'left'], ['fovR', 'right']].forEach(([id, b]) => {
+    const side = 2 * (200 / SCALE[b]) * QP;
+    const el = document.getElementById(id);
+    el.setAttribute('x', PC.x - side / 2); el.setAttribute('y', PC.y - side / 2);
+    el.setAttribute('width', side); el.setAttribute('height', side);
+    el.style.opacity = (act === 2 && b === 'left') ? 0 : '';   // identical in act 2
+  });
+}
+drawFields();
+
+const objref = document.getElementById('objref');
+CLUSTERS.forEach(c => {
+  const t = c.ang * Math.PI / 180;
+  const el = document.createElementNS(NS, 'circle');
+  el.setAttribute('cx', PC.x + c.ring * QP * Math.cos(t));
+  el.setAttribute('cy', PC.y + c.ring * QP * Math.sin(t));
+  el.setAttribute('r', RHO * QP);
+  el.setAttribute('fill', PRIM[c.hue]);
+  objref.appendChild(el);
+});
+
+/* ---------- Lefty ---------- */
+const BODY = `
+  <g class="legL">
+    <path d="M0 -227 L -27 -123 L -43 -19"/>
+    <path class="shoe" d="M-43 -19 L -80 -11 L -77 3 L -37 3 Z"/>
+  </g>
+  <g class="legR">
+    <path d="M0 -227 L 27 -123 L 43 -19"/>
+    <path class="shoe" d="M43 -19 L 80 -11 L 77 3 L 37 3 Z"/>
+  </g>
+
+  <path d="M-30 -227 L 30 -227"/>
+  <path d="M0 -403 L 0 -227"/>
+
+  <g class="armL">
+    <path d="M0 -400 L -21 -317 L -35 -240"/>
+    <circle class="hand" cx="-37" cy="-227" r="15"/>
+  </g>
+
+  <g class="armR">
+    <path d="M0 -400 L 0 -545"/>
+    <circle class="hand" cx="0" cy="-555" r="16"/>
+    <path class="finger" d="M-13 -566 L 13 -566"/>
+    <rect class="handchalk" x="-9" y="-600" width="18" height="48" rx="8"/>
+  </g>
+
+  <g transform="rotate(-14 0 -398)">
+    <path class="bow" d="M-40 -416 L -9 -398 L -40 -380 Z"/>
+    <path class="bow" d="M40 -416 L 9 -398 L 40 -380 Z"/>
+    <circle class="knot" cx="0" cy="-398" r="9"/>
+  </g>
+
+  <rect class="tagbox" x="-31" y="-346" width="62" height="31" rx="4"/>
+  <rect class="band"   x="-31" y="-346" width="62" height="10" rx="4"/>
+  <text class="tagtext" x="0" y="-321" text-anchor="middle">Lefty</text>
+
+  <circle class="head" cx="0" cy="-453" r="45"/>
+  <path class="hair" d="M-13 -496 L -21 -522"/>
+  <path class="hair" d="M3 -499 L 3 -527"/>
+  <path class="hair" d="M19 -493 L 29 -517"/>
+  <g class="face">
+    <path class="ear"  d="M-41 -463 a 15 15 0 1 0 -3 27"/>
+    <circle class="eye" cx="20" cy="-466" r="6"/>
+    <path class="nose"  d="M40 -453 L 66 -442 L 39 -432"/>
+    <path class="mouth" d="M21 -421 q 13 9 27 1"/>
+  </g>
+  <g class="faceF">
+    <path class="ear"  d="M-41 -463 a 15 15 0 1 0 -3 27"/>
+    <path class="ear"  d="M41 -463 a 15 15 0 1 1 3 27"/>
+    <circle class="eye" cx="-16" cy="-461" r="6"/>
+    <circle class="eye" cx="16"  cy="-461" r="6"/>
+    <path class="nose"  d="M-8 -443 L 0 -429 L 8 -443"/>
+    <path class="mouth" d="M-17 -426 q 17 11 34 0"/>
+  </g>
+`;
+
+const figure = document.getElementById('figure');
+figure.innerHTML = `<g class="halo">${BODY}</g><g class="ink">${BODY}</g>`;
+
+const armR      = figure.querySelectorAll('.armR');
+const armL      = figure.querySelectorAll('.armL');
+const legL      = figure.querySelectorAll('.legL');
+const legR      = figure.querySelectorAll('.legR');
+const handChalk = figure.querySelectorAll('.handchalk');
+const faces     = figure.querySelectorAll('.face');
+const facesF    = figure.querySelectorAll('.faceF');
+const inkChalk  = figure.querySelector('.ink .handchalk');
+
+const setAll  = (n, tf) => n.forEach(e => e.setAttribute('transform', tf));
+const setArm  = a => setAll(armR, `rotate(${a} 0 ${SHY})`);
+/* setFace(0) = FRONT, facing the class (two eyes, two ears, centred nose).
+   setFace(-1 / +1) = three-quarter profile, looking at whatever he is
+   reaching for. He goes back to front whenever his arm drops. */
+let faceDir = 0;
+const setFace = d => {
+  if (d === faceDir) return;
+  faceDir = d;
+  const front = d === 0;
+  faces.forEach(e => {
+    e.style.display = front ? 'none' : '';
+    e.setAttribute('transform', d < 0 ? 'scale(-1,1)' : '');
+  });
+  facesF.forEach(e => e.style.display = front ? '' : 'none');
+};
+setFace(0);
+const setLegs = (l, r) => { setAll(legL, `rotate(${l} 0 -227)`);
+                            setAll(legR, `rotate(${r} 0 -227)`); };
+const setX    = (x, lift = 0) => figure.setAttribute('transform',
+                                  `translate(${x},${GROUND - lift})`);
+const showChalk = (on, col) => {
+  if (act === 0) on = false;      // panel 3: Lefty gestures, he never holds chalk
+  handChalk.forEach(e => e.style.display = on ? '' : 'none');
+  if (col) inkChalk.style.fill = col;
+};
+setAll(armL, `rotate(10 0 ${SHY})`);
+
+const tipAt = (x, a) => ({
+  x: x + ARM * Math.sin(a * Math.PI / 180),
+  y: GROUND + SHY - ARM * Math.cos(a * Math.PI / 180)
+});
+
+/* Two ways to touch (tx,ty): reach right, or across to his left.
+   Take whichever leaves him closest to where he already stands. */
+function solve(tx, ty, curX) {
+  const rel = ty - GROUND;
+  const c = Math.max(-1, Math.min(1, (SHY - rel) / ARM));
+  const a = Math.acos(c) * 180 / Math.PI;
+  const s = ARM * Math.sin(a * Math.PI / 180);
+  const o = [{ th: a, x: tx - s }, { th: -a, x: tx + s }]
+    .filter(v => v.x > 40 && v.x < 1680)
+    .sort((p, q) => Math.abs(p.x - curX) - Math.abs(q.x - curX));
+  return o[0] || { th: a, x: Math.max(40, Math.min(1680, tx - s)) };
+}
+
+/* ---------- the pyramid: 3+5+7+9+11+13 = 48 chalks, 16 of each primary ----
+   Each row is two wider than the one above, so it stacks as a true
+   triangular pile. He unstacks it from the top row down, left to right. */
+const CW = 14, CH = 8, GAP = 3, TABLE_TOP = 470, TCX = 200;
+/* The professor's bookcase, right of the bin. The spare chalk stands on the
+   shelves like books - thin, on end. Seven shelves x 70 = 490 slots, and how
+   much of it is full IS the ratio: act 1 nearly fills it, act 3 barely
+   troubles two shelves. */
+const SHELF_X = 1636, SHELF_W = 168, SHELF_N = 23, PER_SHELF = 21;
+const BW = 6, BH = 20, BGAP = 2, SHELF_H = 26, SHELF_BASE = 690;
+let CHALKS = [], ROUNDS = 0;
+
+/* TABLE: a triangular pile holding exactly the chalks that finish board one.
+   FLOOR: a tall stack to the right of the bin - everything the other board
+   still needs after that. The height of that stack IS the ratio. */
+function buildPile() {
+  const { table, floor } = ACT[act].chalks;
+  /* he takes R+G+B in one trip, so both of these must divide by 3 */
+  console.assert(table % 3 === 0 && (table + floor) % 3 === 0,
+                 'act ' + act + ': chalk counts must be multiples of 3');
+  CHALKS = [];
+  /* Rows widen 3, 5, 7 ... and the LEFTOVER lands in the last row built. That
+     row used to be placed at the bottom, so a row of 15 sat on top of a row of
+     6 and the stack looked like it was floating. Build the widths first, sort
+     them widest-first, and lay them bottom-up so the short row is the apex. */
+  const widths = [];
+  let n = 0, row = 0;
+  while (n < table) {
+    const w = Math.min(3 + row * 2, table - n);
+    widths.push(w); n += w; row++;
+  }
+  widths.sort((a, b) => b - a);                         // widest at the bottom
+  const rows = widths.length;
+  widths.forEach((w, r) => {                            // r = 0 is the bottom row
+    for (let i = 0; i < w; i++)
+      CHALKS.push({ x: 0, y: 0, row: rows - 1 - r, i, w, floor: false });
+  });
+  CHALKS.forEach(c => {
+    const wid = c.w * CW + (c.w - 1) * GAP;
+    c.x = TCX - wid / 2 + CW / 2 + c.i * (CW + GAP);
+    c.y = TABLE_TOP - CH * (rows - c.row) + CH / 2;
+  });
+  const frows = Math.ceil(floor / PER_SHELF);
+  for (let k = 0; k < floor; k++) {                     // onto the shelves,
+    const r = frows - 1 - Math.floor(k / PER_SHELF),    // top shelf used FIRST
+          i = k % PER_SHELF;
+    CHALKS.push({ x: SHELF_X + BW / 2 + i * (BW + BGAP),
+                  y: SHELF_BASE - BH / 2 - r * SHELF_H,
+                  w: BW, h: BH, rx: 1.4, floor: true });
+  }
+  CHALKS.forEach((c, i) => c.hue = i % 3);
+  ROUNDS = CHALKS.length;
+}
+buildPile();
+
+/* shelf boards */
+{
+  const g = document.getElementById('shelves');
+  for (let r = 0; r < SHELF_N; r++) {
+    const b = document.createElementNS(NS, 'rect');
+    b.setAttribute('x', 1630); b.setAttribute('y', SHELF_BASE - 4 - r * SHELF_H);
+    b.setAttribute('width', 180); b.setAttribute('height', 5);
+    b.setAttribute('rx', 2); b.setAttribute('fill', '#8a5a2b');
+    g.appendChild(b);
+  }
+}
+
+const stackG = document.getElementById('stack');
+function drawPile() {
+  stackG.replaceChildren();
+  CHALKS.forEach(c => {
+  const w = c.w || CW, h = c.h || CH;
+  const r = document.createElementNS(NS, 'rect');
+  r.setAttribute('x', c.x - w / 2); r.setAttribute('y', c.y - h / 2);
+  r.setAttribute('width', w); r.setAttribute('height', h);
+  r.setAttribute('rx', c.rx || 3.5);
+  r.setAttribute('fill', STICK[c.hue]);
+  r.setAttribute('stroke', '#8d8778'); r.setAttribute('stroke-width', c.floor ? .7 : 1.4);
+    stackG.appendChild(r);
+    c.el = r;
+  });
+}
+drawPile();
+
+/* ---------- timing ---------- */
+let SPEED = 4;
+let halted = false;                        /* set by Stop; every wait bails out */
+let paused = false, resumeFn = null;       /* Pause holds at the next wait */
+const gate = () => paused ? new Promise(r => (resumeFn = r)) : Promise.resolve();
+const ease = p => p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2) / 2;
+const wait = async ms => {
+  await gate();
+  return halted ? undefined : new Promise(r => setTimeout(r, ms / SPEED));
+};
+async function tween(ms, fn) {
+  await gate();
+  if (halted) { fn(1); return; }                    /* snap to the end pose */
+  return new Promise(res => {
+    const dur = ms / SPEED, t0 = performance.now();
+    (function step(now) {
+      if (halted) { fn(1); return res(); }
+      const p = Math.min(1, (now - t0) / dur);
+      fn(p); p < 1 ? requestAnimationFrame(step) : res();
+    })(t0);
+  });
+}
+
+/* ---------- tallies ---------- */
+const TALLY  = { left: document.getElementById('tallyL'),
+                 right: document.getElementById('tallyR') };
+/* Counted PER CLUSTER, not per board. Same aperture means every cluster that is
+   in frame catches the same light, so these two tallies climb in lockstep to 48
+   while the two boards look nothing alike. That is the whole lesson. */
+const counts = { left: [0, 0, 0], right: [0, 0, 0] };
+
+/* x + y + z = T  — the three primaries and the total that passed the aperture */
+function drawTally(b) {
+  const span = (txt, fill, dx) => {
+    const t = document.createElementNS(NS, 'tspan');
+    t.setAttribute('fill', fill); if (dx) t.setAttribute('dx', dx);
+    t.textContent = txt; return t;
+  };
+  const c = counts[b];
+  /* the tally rides ABOVE the board on the cream page, so it cannot use PRIM (that
+     palette is tuned for the dark object card) - #20ff40 on cream was invisible and
+     the pale total vanished outright. Same three hues, darkened to read on paper. */
+  const INK = ['#c81c1c', '#0d8a2b', '#2436d8'];
+  TALLY[b].replaceChildren(
+    span(c[0], INK[0]),        span('+', '#5c6a64', '14'),
+    span(c[1], INK[1], '14'),  span('+', '#5c6a64', '14'),
+    span(c[2], INK[2], '14'),  span(`= ${c[0]+c[1]+c[2]}`, '#3f4a44', '18'),
+    span('photons', '#5c6a64', '12'));
+}
+
+/* ---------- moves ---------- */
+const dotsG   = document.getElementById('dots');
+const flyingG = document.getElementById('flying');
+const replay  = document.getElementById('replay');
+const stopBtn = document.getElementById('stop');
+const pauseBtn = document.getElementById('pause');
+const resumeBtn = document.getElementById('resumeAt');
+const caption = document.getElementById('caption');
+
+let curX = 320, curA = REST;
+setX(curX); setArm(REST); setLegs(-8, 8); showChalk(false);
+
+async function walkTo(toX) {
+  if (act === 0) return;                 // panel 3 owns Lefty - stale loop keep out
+  const from = curX, dist = Math.abs(toX - from);
+  if (dist < 2) { curX = toX; return; }
+  const beats = Math.max(2, Math.round(dist / 95));
+  await tween(220 + dist * 0.8, p => {
+    setX(from + (toX - from) * ease(p),
+         Math.abs(Math.sin(p * Math.PI * beats)) * 6);
+    const s = Math.sin(p * Math.PI * beats) * 26;
+    setLegs(-s, s);
+  });
+  setLegs(-8, 8); curX = toX;
+}
+
+async function swingArmTo(th, ms = 400) {
+  if (act === 0) return;                 // panel 3 owns Lefty - stale loop keep out
+  if (th === REST) setFace(0);
+  const from = curA;
+  await tween(ms, p => setArm(from + (th - from) * ease(p)));
+  curA = th;
+}
+
+function placeDab(d, b, hue, instant) {
+  const c = document.createElementNS(NS, 'circle');
+  c.setAttribute('class', 'dot');
+  c.setAttribute('cx', d.x); c.setAttribute('cy', d.y);
+  c.setAttribute('fill', DOTC[hue]);
+  const R = ACT[act].photonR || DOT_R;
+  if (instant) { c.setAttribute('r', R); c.style.opacity = 1; dotsG.appendChild(c); return; }
+  c.setAttribute('r', 1);
+  dotsG.appendChild(c);
+  requestAnimationFrame(() => { c.setAttribute('r', R); c.style.opacity = 1; });
+}
+
+/* ---------- scrubber: draw any point in the run directly ---------- */
+const scrub = document.getElementById('scrub');
+const scrubnum = document.getElementById('scrubnum');
+
+/* Once the left board's picture is complete there is nothing left to gain, so
+   Lefty walks away from it and puts every remaining chalk into the right board.
+   Its tally freezes - not because it stopped collecting light, but because we
+   stopped spending time on it. That IS the speed win, made visible. */
+/* Whichever board completes its picture first stops being drawn on; the other
+   runs to the end of the pile. The pile is sized so the slower one finishes. */
+/* The board that completes first is ACT.first, and it completes exactly when the
+   TABLE pile runs out. Everything on the FLOOR is the extra the other board needs. */
+const isFinished = (b, i) => b === ACT[act].first && i >= ACT[act].chalks.table;
+const ACT3_MSG = 'both levers moved — the f-number cannot say which';
+
+/* One chalk = one minute. Whichever board completes says so and converts. */
+const fmtMin = m => m < 60 ? `${m} min`
+                           : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')} m`;
+function markDone(n) {
+  const c = ACT[act].chalks, fin = { left: c.table + c.floor, right: c.table + c.floor };
+  fin[ACT[act].first] = c.table;
+  [['left', 'finL'], ['right', 'finR']].forEach(([b, id]) => {
+    document.getElementById(id).textContent =
+      n >= fin[b] ? `finished at chalk ${fin[b]}  —  ${fmtMin(fin[b])}` : '';
+  });
+}
+
+function drawState(n) {
+  dotsG.replaceChildren(); flyingG.replaceChildren();
+  counts.left = [0, 0, 0]; counts.right = [0, 0, 0];
+  CHALKS.forEach((c, i) => c.el.style.display = i < n ? 'none' : '');
+  for (let i = 0; i < n; i++) {
+    const hue = CHALKS[i].hue, j = Math.floor(i / 3);
+    for (const b of ['left', 'right']) {
+      if (isFinished(b, i)) continue;
+      const k = ACT[act].perRound[b];
+      CLUSTERS.forEach((c, ci) => {
+        if (c.hue !== hue || !PATTERN[b][ci]) return;
+        PATTERN[b][ci].slice(j * k, j * k + k).forEach(d => placeDab(d, b, hue, true));
+      });
+      counts[b][hue] += k;
+    }
+  }
+  drawTally('left'); drawTally('right'); markDone(n);
+  scrubnum.textContent = `${n} / ${ROUNDS}`;
+  caption.textContent = n === 0 ? ACT[act].caption
+                      : n >= ROUNDS ? ACT[act].done
+                      : `chalk ${n} of ${ROUNDS}`;
+}
+
+scrub.addEventListener('input', () => {
+  halted = true; stopBtn.disabled = true; replay.disabled = false;
+  paused = false; pauseBtn.textContent = 'Pause'; pauseBtn.classList.remove('on');
+  if (resumeFn) { const r = resumeFn; resumeFn = null; r(); }
+  setX(200); showChalk(false); setFace(0); setArm(REST); curA = REST;
+  drawState(+scrub.value);
+  syncResume();
+});
+/* "Resume here" is only meaningful when the scrubber is parked somewhere in the
+   middle of a halted run - not at 0 (that is Replay) and not at the end. */
+function syncResume() {
+  const n = +scrub.value;
+  resumeBtn.disabled = act === 0 || n <= 0 || n >= ROUNDS;
+}
+
+/* He takes one of each colour in a single trip, then works through them 1-2-3.
+   Three separate walks to the table for three chalks was most of the runtime. */
+async function pickUp(trio) {
+  if (act === 0) return;                 // panel 3 owns Lefty - stale loop keep out
+  const mx = trio.reduce((a, c) => a + c.x, 0) / trio.length;
+  const my = trio[0].y;
+  const { th, x } = solve(mx, my, curX);
+  await walkTo(x);
+  setFace(mx < x ? -1 : 1);
+  await swingArmTo(th, 380);
+  trio.forEach(c => c.el.style.display = 'none');
+  showChalk(true, PRIM[trio[0].hue]);
+  await wait(130);
+  await swingArmTo(REST, 350);
+}
+
+/* ONE TOUCH PER CLUSTER. He walks to the middle of it, taps once, and that
+   whole round's photons land together. Walking to every single mark made the
+   run length depend on the photon count, which is exactly the wrong thing. */
+async function markGroup(group, b, hue) {
+  if (act === 0) return;                 // panel 3 owns Lefty - stale loop keep out
+  if (!group.length) return;
+  const mx = group.reduce((a, d) => a + d.x, 0) / group.length;
+  const my = group.reduce((a, d) => a + d.y, 0) / group.length;
+  const { th, x } = solve(mx, my, curX);
+  const fromX = curX, fromA = curA, dist = Math.abs(x - fromX);
+  await tween(190 + dist * 0.6, p => {
+    const e = ease(p);
+    setX(fromX + (x - fromX) * e, dist > 25 ? Math.abs(Math.sin(p*Math.PI*2))*4 : 0);
+    setArm(fromA + (th - fromA) * e);
+    if (dist > 25) { const s = Math.sin(p * Math.PI * 2) * 16; setLegs(-s, s); }
+  });
+  setLegs(-8, 8); curX = x; curA = th;
+  setFace(mx < x ? -1 : 1);
+  await tween(95, p => setArm(th + Math.sin(p * Math.PI) * 5));   // the tap
+  setArm(th);
+  group.forEach(d => placeDab(d, b, hue));                        // the cluster blooms
+  await wait(80);
+  await swingArmTo(REST, 280);
+}
+
+async function tossInCan(hue) {
+  if (act === 0) return;                 // panel 3 owns Lefty - stale loop keep out
+  await walkTo(1286);          // left of fratR (x 1346) so he stops covering f/7.5
+  setFace(1);
+  await swingArmTo(212, 300);                 // wind up behind him
+  await swingArmTo(48, 180);                  // whip it forward
+  const from = tipAt(curX, 48);
+  showChalk(false);
+
+  const fly = document.createElementNS(NS, 'rect');
+  fly.setAttribute('x', -CW / 2); fly.setAttribute('y', -CH / 2);
+  fly.setAttribute('width', CW); fly.setAttribute('height', CH);
+  fly.setAttribute('rx', 7);
+  fly.setAttribute('fill', STICK[hue]);
+  fly.setAttribute('stroke', '#8d8778'); fly.setAttribute('stroke-width', 2.5);
+  flyingG.appendChild(fly);
+
+  const to = { x: 1500 + (Math.random() - .5) * 34, y: 660 };
+  await tween(480, p => {
+    const x = from.x + (to.x - from.x) * p;
+    const y = from.y + (to.y - from.y) * p - Math.sin(p * Math.PI) * 130;
+    fly.setAttribute('transform', `translate(${x},${y}) rotate(${p * 560})`);
+  });
+  fly.remove();
+  await swingArmTo(REST, 280);
+  setFace(0);                 // back to the class before the next chalk
+  await wait(180);
+}
+
+/* Once the table pile is empty, board one is finished and the floor mountain
+   goes straight to board two - no walking, no binning, just photons pouring in.
+   This is the only way the true 35x / 4x / 13x is watchable. */
+async function streamRest(from) {
+  from = from - (from % 3);                    // start on a trip boundary
+  showChalk(false); setFace(1);
+  await walkTo(ACT[act].first === 'left' ? 1180 : 700);
+  setFace(ACT[act].first === 'left' ? 1 : -1);
+  await swingArmTo(ACT[act].first === 'left' ? 42 : -42, 260);
+  const target = ACT[act].first === 'left' ? 'right' : 'left';
+  const k = ACT[act].perRound[target];
+  for (let i = from; i < ROUNDS && !halted; i++) {
+    const hue = i % 3, j = Math.floor(i / 3);
+    for (const ci of CLUSTERS.keys())
+      if (CLUSTERS[ci].hue === hue && PATTERN[target][ci])
+        PATTERN[target][ci].slice(j * k, j * k + k)
+          .forEach(d => placeDab(d, target, hue, true));
+    counts[target][hue] += k;
+    CHALKS[i].el.style.display = 'none';
+    if (i % 6 === 0) {
+      drawTally(target); markDone(i + 1);
+      scrub.value = i + 1; scrubnum.textContent = `${i + 1} / ${ROUNDS}`;
+      caption.textContent = `chalk ${i + 1} of ${ROUNDS} — pouring straight into the ${target.toUpperCase()} board`;
+      await tween(26, () => {});
+    }
+  }
+  drawTally(target); markDone(ROUNDS);
+  scrub.value = ROUNDS; scrubnum.textContent = `${ROUNDS} / ${ROUNDS}`;
+  await swingArmTo(REST, 300);
+}
+
+/* ---------- the routine: twelve chalks, six marks a board each ---------- */
+/* run() takes a starting chalk so the scrubber can be used as a seek bar.
+   from is snapped DOWN to a trio boundary - Lefty works three chalks at a time,
+   one of each colour, and starting mid-trio would re-lay dabs drawState() has
+   already drawn. drawState(from) then rebuilds the exact board state, tallies,
+   done-marks and remaining chalk piles, so the loop can just carry on from i. */
+async function run(from = 0) {
+  /* panel 3 has no animation. A run() left over from the previous panel would
+     reset halted and stomp Lefty's pose, so refuse to start. */
+  if (act === 0) return;
+  from = Math.max(0, Math.min(ROUNDS, Math.floor(+from || 0)));
+  from -= from % 3;
+  const mine = ++runGen;
+  halted = false; paused = false; resumeFn = null;
+  pauseBtn.textContent = 'Pause'; pauseBtn.classList.remove('on');
+  replay.disabled = true; stopBtn.disabled = false; resumeBtn.disabled = true;
+  if (from === 0) {
+    scrub.value = 0; scrubnum.textContent = `0 / ${ROUNDS}`; markDone(0);
+    dotsG.replaceChildren(); flyingG.replaceChildren();
+    counts.left = [0, 0, 0]; counts.right = [0, 0, 0];
+    drawTally('left'); drawTally('right');
+    CHALKS.forEach(c => c.el.style.display = '');
+  } else {
+    scrub.value = from;
+    drawState(from);                  /* board, tallies and piles as of chalk `from` */
+  }
+  showChalk(false); curA = REST; setArm(REST);
+  await walkTo(320);
+  await wait(350);
+
+  for (let i = from; i < ROUNDS; i += 3) {
+    if (halted || act === 0 || mine !== runGen) break;
+    const trio = [CHALKS[i], CHALKS[i + 1], CHALKS[i + 2]].filter(Boolean);
+    const j = i / 3;
+    if (trio[0].floor) { await streamRest(i); break; }
+
+    caption.textContent =
+      `chalk ${i + 1}–${i + trio.length} of ${ROUNDS} · ` + (
+        act === 2 ? `${ACT[2].perRound.left} photons left, ${ACT[2].perRound.right} right — 4× the aperture area`
+      : act === 3 ? `${ACT[3].perRound.left} photons left, ${ACT[3].perRound.right} right — ${ACT3_MSG}`
+      : i < ACT[1].chalks.table ? 'same photons into every cluster, both boards'
+                           : 'left is finished — every chalk from here goes to the right');
+
+    await pickUp(trio);
+
+    /* Finish one board completely - red, green, blue - then move to the other.
+       Ping-ponging between boards per colour was impossible to follow. */
+    for (const b of ['left', 'right']) {
+      if (isFinished(b, i)) continue;
+      const k = ACT[act].perRound[b];
+      for (const c of trio) {                    // 1, 2, 3
+        if (halted || act === 0 || mine !== runGen) break;
+        const hue = c.hue;
+        showChalk(true, PRIM[hue]);
+        for (const ci of CLUSTERS.keys())
+          if (CLUSTERS[ci].hue === hue && PATTERN[b][ci])
+            await markGroup(PATTERN[b][ci].slice(j * k, j * k + k), b, hue);
+        counts[b][hue] += k; drawTally(b);
+      }
+    }
+
+    await tossInCan(trio[0].hue);
+    const done = i + trio.length;
+    scrub.value = done; scrubnum.textContent = `${done} / ${ROUNDS}`;
+    markDone(done);
+
+    if (done >= pauseAt() && done - trio.length < pauseAt() && !halted) {
+      const done = ACT[act].first, other = done === 'left' ? 'RIGHT' : 'LEFT';
+      caption.textContent =
+        `the ${done.toUpperCase()} board is finished — every chalk from here goes to the ${other}`;
+      await wait(2400);
+    }
+  }
+
+  if (!halted) {
+    caption.textContent = ACT[act].done;
+    await walkTo(200);
+  } else {
+    caption.textContent = 'stopped · press Replay to start over';
+  }
+  setFace(0); showChalk(false);
+  replay.disabled = false; stopBtn.disabled = true;
+  syncResume();
+}
+
+replay.addEventListener('click', () => run(0));
+resumeBtn.addEventListener('click', () => run(+scrub.value));
+stopBtn.addEventListener('click', () => {
+  halted = true; stopBtn.disabled = true;
+  paused = false; pauseBtn.textContent = 'Pause';
+  if (resumeFn) { const r = resumeFn; resumeFn = null; r(); }
+  syncResume();
+});
+
+pauseBtn.addEventListener('click', () => {
+  paused = !paused;
+  pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+  pauseBtn.classList.toggle('on', paused);
+  if (!paused && resumeFn) { const r = resumeFn; resumeFn = null; r(); }
+});
+
+/* Act 3 is driven by the viewer's own seeing. Worse seeing = a fatter blur =
+   more area to cover = more chalk, on BOTH boards - and past 2" the extra reach
+   stops buying anything, because the fog is wider than the gap. */
+function resizeAct3() {
+  const A = ACT[3], LN = -Math.log(1e-4);
+  A.seeing = A.seeingArcsec / (2 * A.arcsecPerUnit);          // blur radius, object units
+  const need = sc => LN * Math.pow((RHO + A.seeing) * sc / A.photonR, 2);
+  const ch = b => {
+    const n = Math.ceil(need(A.scale[b]) / (A.perRound[b] / 3));
+    return n + ((3 - n % 3) % 3);                              // land on a trip boundary
+  };
+  const t = ch('left'), r = ch('right');
+  A.chalks = { table: t, floor: Math.max(3, r - t) };
+  A.dabs = { left: Math.ceil(need(A.scale.left)) + 40,
+             right: Math.ceil(need(A.scale.right)) + 40 };
+}
+resizeAct3();
+
+/* ================== THE BENCH ==================
+   One telescope, one pair of stars, your sky. Three limits decide it and the
+   answer is whichever is WORST:
+     DIFFRACTION  Dawes = 116 / aperture(mm)      - the glass. Nothing beats it.
+     SEEING       the atmosphere, in arcsec       - your sky tonight.
+     SAMPLING     2.4 x arcsec/px                 - needs ~2.4 px across the gap.
+   The lecture's three acts never show diffraction at all, which is why a 51 mm
+   scope looked like it was losing to focal length when it was losing to physics. */
+const SCOPES = [
+  { n: 'WO RedCat 51',            D: 51,  f: 250  },
+  { n: 'SW Evostar 72ED',         D: 72,  f: 420  },
+  { n: 'SW Evostar 80ED',         D: 80,  f: 600  },
+  { n: 'Askar 107PHQ',            D: 107, f: 749  },
+  { n: 'SW Esprit 120ED',         D: 120, f: 840  },
+  { n: 'Askar 130PHQ',            D: 130, f: 1000 },
+  { n: 'Celestron RASA 8',        D: 203, f: 400  },
+  { n: 'Celestron EdgeHD 8',      D: 203, f: 2032 }
+];
+/* sensor pixel pitch - was a hidden constant, now a dropdown. 3.76 is the
+   2600/533 family and stays the default. */
+const PIXELS = [2.40, 3.76, 4.63, 5.94, 9.00];
+const PIXEL_DEFAULT = 3.76;
+
+const bScope = document.getElementById('bScope');
+/* both numbers get named. "EdgeHD 8 - 203 mm f/10" read as though 203 mm WAS the
+   focal length, which is the exact confusion this whole demo exists to clear up. */
+SCOPES.forEach((s, i) => bScope.add(new Option(
+  `${s.n} — ${s.D} mm aperture, ${s.f} mm focal length (f/${(s.f/s.D).toFixed(1)})`, i)));
+bScope.value = 0;
+const bSep = document.getElementById('bSep'), bSee = document.getElementById('bSee');
+const bSepNum = document.getElementById('bSepNum'), bSeeNum = document.getElementById('bSeeNum');
+const bPix = document.getElementById('bPix');
+PIXELS.forEach(p => bPix.add(new Option(p.toFixed(2) + ' µm', p)));
+bPix.value = PIXEL_DEFAULT;
+const bGui = document.getElementById('bGui'), bGuiNum = document.getElementById('bGuiNum');
+const benchDots = document.getElementById('benchdots');
+const benchVerdict = document.getElementById('benchverdict');
+
+function drawBench() {
+  const sc = SCOPES[+bScope.value], sep = +bSep.value, see = +bSee.value;
+  const pxum = +bPix.value, rms = +bGui.value;
+  /* TWO WAYS TO ENTER THE SKY.
+     atmos = true atmospheric seeing (a DIMM number). We then add glass, pixels
+             and mount on top, in quadrature.
+     meas  = the FWHM you measured off your own sub in PixInsight/NINA. That is
+             the DELIVERED star size - seeing, guiding, focus and optics are
+             ALREADY in it. Adding them again double-counts, so we don't. */
+  const meas   = document.getElementById('bMode').value === 'meas';
+  const dawes  = 116 / sc.D;
+  const arcpx  = 206.265 * pxum / sc.f;
+  const sampl  = 2.4 * arcpx;                       // need ~2.4 px across the gap
+  /* total guide RMS -> FWHM contribution: per-axis = total/sqrt(2), FWHM = 2.355x */
+  const guide  = 1.665 * rms;
+  /* QUADRATURE, not max(). These blurs are independent, so they stack:
+     max() under-reported whenever two were close - 2" + 2" read as 2.0", really 2.83". */
+  /* In measured mode GUIDING is already inside the FWHM you measured, so it is
+     not added again. PIXEL SIZE still counts: sampling is not blur, it is
+     whether your pixels can record the gap at all. Perfectly tight 2.5" stars
+     4" apart still merge at 3.10"/px, because that gap is barely one pixel. */
+  const worst  = meas ? Math.hypot(see, sampl) : Math.hypot(dawes, see, sampl, guide);
+  const ok     = sep > worst;
+  const parts  = meas
+    ? [[see, 'FWHM limited'], [sampl, 'pixel limited']]
+    : [[dawes, 'aperture limited'], [see, 'sky limited'],
+       [sampl, 'pixel limited'],   [guide, 'mount limited']];
+  /* More than one thing can be limiting you. Name every term within 70% of the
+     largest: in quadrature a second term at 0.7x still adds 22% to the total,
+     so removing it would buy an 18% improvement - worth acting on. Below ~50%
+     it adds under 12% and nobody would notice. */
+  const top    = Math.max(...parts.map(p => p[0]));
+  const short  = parts.filter(p => p[0] >= 0.7 * top)
+                      .sort((a, b) => b[0] - a[0])
+                      .map(p => p[1].replace(' limited', ''))
+                      .join(' + ') + ' limited';
+
+  document.getElementById('bSeeLab').textContent = meas ? 'your FWHM' : 'seeing';
+  document.getElementById('bGuiWrap').classList.toggle('dimmed', meas);
+
+  bSepNum.textContent = sep.toFixed(1) + '\u2033';
+  bSeeNum.textContent = see.toFixed(1) + '\u2033';
+  bGuiNum.textContent = rms.toFixed(2) + '\u2033';
+
+  /* draw the pair, blurred by whichever limit is worst */
+  const PX = 254 / 14;                              // panel is 14" wide
+  const cx = 203, cy = 218, half = sep * PX / 2, blur = worst * PX / 2;
+  benchDots.replaceChildren();
+  [-half, half].forEach(dx => {
+    for (let i = 0; i < 260; i++) {
+      const h1 = Math.sin((i + 1) * 12.9898) * 43758.5453;
+      const h2 = Math.sin((i + 1) * 78.233) * 43758.5453;
+      const a = (h1 - Math.floor(h1)) * Math.PI * 2;
+      const r = blur * Math.sqrt(h2 - Math.floor(h2));
+      const c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', cx + dx + r * Math.cos(a));
+      c.setAttribute('cy', cy + r * Math.sin(a));
+      c.setAttribute('r', 2.4); c.setAttribute('fill', '#e8f0ff');
+      c.setAttribute('opacity', .5);
+      benchDots.appendChild(c);
+    }
+  });
+  benchVerdict.setAttribute('fill', ok ? '#7ddc9a' : '#e5806f');
+  benchVerdict.textContent = (ok ? 'SPLIT' : 'MERGED') + '  \u00b7  ' + short;
+  /* the numbers ride at waste-can height, in place of the takeaway line */
+  document.getElementById('bd1').textContent = meas
+    ? `${sc.n}  ·  measured FWHM ${see.toFixed(1)}″ (sky, mount, focus and glass already in it)` +
+      `  ·  pixels ${sampl.toFixed(2)}″ (${arcpx.toFixed(2)}″/px)`
+    : `${sc.n}  ·  glass ${dawes.toFixed(2)}″  ·  sky ${see.toFixed(1)}″` +
+      `  ·  pixels ${sampl.toFixed(2)}″ (${arcpx.toFixed(2)}″/px)  ·  mount ${guide.toFixed(2)}″`;
+  document.getElementById('bd2').textContent = meas
+    ? `stars + sampling in quadrature ${worst.toFixed(2)}″  —  you asked for ${sep.toFixed(1)}″`
+    : `combined in quadrature ${worst.toFixed(2)}″  —  you asked for ${sep.toFixed(1)}″`;
+  caption.textContent = 'the split test — one scope, your sky';
+}
+const bMode = document.getElementById('bMode');
+[bScope, bSep, bSee, bPix, bGui, bMode].forEach(el => {
+  el.addEventListener('input', drawBench);
+  el.addEventListener('change', drawBench);
+});
+bPix.addEventListener('change', drawBench);
+
+/* Panel 3 leaves both chalkboards alone. Lefty just walks over to the split-test
+   card and holds a gesture at it. solve() lands him clear of the card's right
+   edge with the arm swung up toward it. halted is true here, so every tween
+   snaps - he arrives in the pose instantly, which is what Pete asked for. */
+const BENCH_X = 560, BENCH_ARM = -85;   // clear of the card, arm out at 9 o'clock
+function poseAtBench() {
+  const put = () => {
+    showChalk(false);
+    setX(BENCH_X); curX = BENCH_X;
+    setLegs(-8, 8);
+    setFace(-1);                        // looking left, at the card
+    setArm(BENCH_ARM); curA = BENCH_ARM;
+  };
+  put();
+  /* a dying run() from the previous panel keeps snapping poses for a beat -
+     re-assert until it has unwound. */
+  [60, 150, 320, 600, 1000].forEach(t => setTimeout(() => { if (act === 0) put(); }, t));
+}
+/* the thesis line above the boards. Act 1's is the lecture's own thesis and the
+   default everywhere; any act carrying a `thesis` field overrides it. */
+const thesisEl = document.querySelector('.thesis');
+const THESIS_DEFAULT = thesisEl.innerHTML;
+/* the split test's own line in the "long focal length is slow" argument. The two
+   named scopes are the proof case at the panel's default settings: Esprit 120ED
+   0.97 + 2.21 + 2.5 + 1.00 in quadrature = 3.62" against a 4.0" pair, SPLIT;
+   RASA 8, f/2 and 83 mm wider, samples at 1.94"/px = 4.65" and totals 5.41",
+   MERGED and pixel limited. Bigger, faster, and it still cannot see the gap. */
+const THESIS_BENCH = 'Nothing is slow. Esprit 120 splits the pair while the RASA 8, ' +
+  'at f/2 with 83 mm more glass, does not. Focal length here determines if your ' +
+  'pixels can <em>record</em> the gap.';
+function applyAct(a) {
+  halted = true; act = a;
+  thesisEl.innerHTML = a === 0 ? THESIS_BENCH
+                               : ((ACT[a] && ACT[a].thesis) || THESIS_DEFAULT);
+  /* these two must run BEFORE the a===0 early return below, or the bench panel
+     never highlights its own button and the seeing slider survives act 3 -> bench */
+  document.querySelectorAll('.actcard').forEach(b =>
+    b.classList.toggle('on', +b.dataset.a === a));
+  /* the split test owns the whole stage: both boards, their aperture headers,
+     tallies, f-ratio numerals, focal-length captions, finished-at lines, the
+     dot layer, the waste can and the bookcase all belong to acts 1-3. */
+  document.querySelectorAll('.classroom').forEach(g =>
+    g.style.display = a === 0 ? 'none' : '');
+  /* and so do the two framing lines that only make sense while chalk is being
+     poured - the split test spends no time. */
+  document.querySelector('.sub2').style.display = a === 0 ? 'none' : '';
+  document.querySelector('.stage > p.fine').style.display = a === 0 ? 'none' : '';
+  document.getElementById('bench').style.display   = a === 0 ? '' : 'none';
+  document.getElementById('objcard').style.display = a === 0 ? 'none' : '';
+  document.getElementById('benchrow').style.display = a === 0 ? '' : 'none';
+  document.getElementById('benchnums').style.display = 'none';   // retired
+  document.getElementById('benchdata').style.display = a === 0 ? '' : 'none';
+  document.getElementById('takeaway').style.display  = a === 0 ? 'none' : '';
+  /* the split test has no animation, so dim the playback controls it can't use */
+  ['speedrow', 'chalkrow'].forEach(id =>
+    document.getElementById(id).classList.toggle('dimmed', a === 0));
+  [replay, pauseBtn, stopBtn, resumeBtn].forEach(b => b.classList.toggle('dimmed', a === 0));
+  if (a === 0) replay.disabled = pauseBtn.disabled = stopBtn.disabled = resumeBtn.disabled = true;
+  else pauseBtn.disabled = false;        // replay/stop are owned by run()
+  if (a === 0) { drawBench(); poseAtBench(); return; }   // static - no run, just the pose
+  if (a === 3) resizeAct3();
+  SCALE = ACT[a].scale; DABS = ACT[a].dabs;
+  buildPattern(); drawFields(); buildPile(); drawPile();
+  scrub.max = ROUNDS;
+  document.getElementById('aprL').textContent  = ACT[a].ap.left;
+  document.getElementById('aprR').textContent  = ACT[a].ap.right;
+  document.getElementById('fratL').textContent = ACT[a].fr.left;
+  document.getElementById('fratR').textContent = ACT[a].fr.right;
+  document.getElementById('flL').textContent   = ACT[a].fl.left;
+  document.getElementById('flR').textContent   = ACT[a].fl.right;
+  document.getElementById('panelkey').textContent = ACT[a].key;
+  document.getElementById('takeaway').textContent =
+    ACT[a].take.replace('&mdash;', '\u2014');
+  caption.textContent = ACT[a].caption;
+  dotsG.replaceChildren(); flyingG.replaceChildren();
+  counts.left = [0,0,0]; counts.right = [0,0,0];
+  drawTally('left'); drawTally('right');
+  scrub.value = 0; scrubnum.textContent = `0 / ${ROUNDS}`; markDone(0);
+  resumeBtn.disabled = true;
+  setTimeout(run, 60);
+}
+document.querySelectorAll('.actcard').forEach(b =>
+  b.addEventListener('click', () => applyAct(+b.dataset.a)));
+/* speed slider: 1x .. 16x, and one notch past 16x is FINISH - skip to the end */
+const SPEEDS = [1, 2, 4, 8, 16];
+const speed = document.getElementById('speed');
+const speednum = document.getElementById('speednum');
+speed.addEventListener('input', () => {
+  const v = +speed.value;
+  if (v < SPEEDS.length) {
+    SPEED = SPEEDS[v];
+    speednum.textContent = `${SPEED}\u00d7`;
+  } else {
+    speednum.textContent = 'finish';
+    halted = true; stopBtn.disabled = true; replay.disabled = false;
+    setX(200); showChalk(false); setFace(0); setArm(REST); curA = REST;
+    scrub.value = ROUNDS; drawState(ROUNDS);
+  }
+});
+
+document.getElementById('aprL').textContent  = ACT[1].ap.left;
+document.getElementById('aprR').textContent  = ACT[1].ap.right;
+document.getElementById('fratL').textContent = ACT[1].fr.left;
+document.getElementById('fratR').textContent = ACT[1].fr.right;
+document.getElementById('flL').textContent   = ACT[1].fl.left;
+document.getElementById('flR').textContent   = ACT[1].fl.right;
+document.getElementById('panelkey').textContent = ACT[1].key;
+document.getElementById('takeaway').textContent = ACT[1].take.replace('&mdash;', '\u2014');
+drawTally('left'); drawTally('right');
+run();
+</script>
+
+</body>
+</html>

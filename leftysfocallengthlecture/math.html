@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The math behind Lefty's Focal Length Lecture</title>
+<style>
+  html, body { margin: 0; background: #f7f5f1; color: #14161a;
+               font: 400 16.5px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 38px 22px 70px; }
+  h1 { font: 700 30px/1.15 "Bradley Hand", "Segoe Script", cursive; margin: 0 0 8px; letter-spacing: .5px; }
+  h2 { font: 700 21px/1.25 inherit; margin: 44px 0 4px; letter-spacing: .2px; }
+  h2 .pos { display: block; font: 700 11.5px inherit; letter-spacing: 1.6px;
+            text-transform: uppercase; color: #8a6f42; margin-bottom: 5px; }
+  h3 { font: 700 15px inherit; letter-spacing: .3px; margin: 24px 0 2px; color: #3f4a44; }
+  p { margin: 10px 0; }
+  .lede { font: 400 19px/1.45 Georgia, "Times New Roman", serif;
+          border-left: 3px solid #b9945a; padding: 4px 0 4px 22px; margin: 0 0 26px; }
+  .back { display: inline-block; margin-bottom: 20px; font-size: 13.5px; color: #7a5a2e;
+          text-decoration: none; border-bottom: 1px solid #d8c9ae; }
+  .back:hover, a:hover { color: #14161a; border-bottom-color: #14161a; }
+  a { color: #7a5a2e; text-decoration: none; border-bottom: 1px solid #d8c9ae; }
+  .eq { background: #fffefb; border: 1.5px solid #e2ddd3; border-left: 3px solid #8a6f42;
+        border-radius: 8px; padding: 12px 15px; margin: 14px 0; overflow-x: auto;
+        font: 500 14.5px/1.75 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
+  .num { font-variant-numeric: tabular-nums; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 14.5px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #e2ddd3;
+           font-variant-numeric: tabular-nums; }
+  th { font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: #6f6f78; }
+  td.k { color: #3f4a44; font-weight: 700; }
+  ul { margin: 10px 0; padding-left: 22px; }
+  li { margin: 7px 0; }
+  .own { background: #fffefb; border: 1.5px solid #e2ddd3; border-radius: 10px; padding: 4px 18px 14px; }
+  .toc { font-size: 14.5px; background: #fffefb; border: 1.5px solid #e2ddd3;
+         border-radius: 10px; padding: 12px 18px; }
+  .toc a { display: inline-block; margin-right: 14px; }
+  .flag { color: #8a3b2e; font-weight: 700; }
+  footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid #e2ddd3;
+           font-size: 13.5px; color: #5c6a64; }
+  footer b { color: #3f4a44; }
+  footer a { margin-right: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="back" href="./">&larr; back to the lecture</a>
+
+<h1>The math behind the lecture</h1>
+<p class="lede">The demo is a demo &mdash; no equations on the board. This page is the receipt: what each panel is actually computing, the numbers it uses, and every place the model is deliberately simpler than the sky.</p>
+
+<div class="toc">
+  <a href="#thesis">The claim</a><a href="#shared">Shared machinery</a><a href="#p1">Panel 1</a><a href="#p2">Panel 2</a><a href="#p3">The split test</a><a href="#p4">Real world</a><a href="#own">What this model gets wrong on purpose</a><a href="#why">Why it exists</a>
+</div>
+
+<h2 id="thesis">The claim, in one line</h2>
+<p>Increasing focal length does not slow a telescope down. It increases the workload, and the extra work takes extra time.</p>
+<div class="eq">WORK    = focal length&sup2;     (how much sensor the image is spread over)
+SUPPLY  = aperture&sup2;         (how much light arrives per minute)
+TIME    = WORK / SUPPLY   = (focal length / aperture)&sup2; = f-number&sup2;</div>
+<p>Focal length is the decision. Aperture is the funding. The f-number is the invoice &mdash; and because it is a single number made from two, it cannot tell you either one on its own.</p>
+
+<h2 id="shared">The shared machinery</h2>
+<p>Every animated panel runs the same simulation. Only four numbers change between them.</p>
+
+<h3>The board is a sensor</h3>
+<p>Both chalkboards are the same detector: a square 400 &times; 400 units wide. Nothing about the sensor differs between the two boards in any panel. What differs is the <em>plate scale</em> &mdash; how much sky one unit of board covers &mdash; which is set by focal length alone. In the code that is <span class="num">scale</span>, in board units per object unit.</p>
+
+<h3>The object is nine clusters on three rings</h3>
+<p>The target is a fixed pattern: nine star clusters, three of each primary colour, sitting on rings at radius 1, 5.2 and 7 object units. A cluster's radius is 0.691 object units. On the board, a cluster's radius in board units is therefore</p>
+<div class="eq">R = (0.691 + seeing) &times; scale</div>
+<p>where <span class="num">seeing</span> is a blur radius, also in object units. Longer focal length = larger <span class="num">scale</span> = a physically bigger cluster on the same sensor. That is the entire mechanism of the demo.</p>
+
+<h3>One chalk is one minute, and a mark never scales</h3>
+<p>Each stick of chalk is one equal unit of time. A chalk mark is a fixed 10 units across on every board in every panel &mdash; it is the detector's grain, and it does not care what focal length you chose. So the same mark that covers a small cluster in three dabs leaves a big cluster full of holes.</p>
+
+<h3>&ldquo;Finished&rdquo; is a coverage threshold, and the ratio does not depend on it</h3>
+<p>Marks land at random positions inside the cluster. Throw <span class="num">n</span> marks of area <span class="num">a</span> at a cluster of area <span class="num">A</span> and the fraction of the cluster still bare is</p>
+<div class="eq">bare  = (1 &minus; a/A)&#8319;  &asymp;  e<sup>&minus;n&middot;a/A</sup>          a/A = (r/R)&sup2;
+
+finished at bare = 0.01%  &rArr;  n = ln(10&#8308;) &times; (R/r)&sup2; = 9.21 &times; (R/r)&sup2;</div>
+<p>The 0.01% is a choice. It has to be a choice, because coverage is asymptotic &mdash; a target is never truly full. But note what the formula does: the threshold enters as a single multiplier <span class="num">ln(1/bare)</span> that is identical on both boards. <b>Change the threshold and both counts move together; the ratio between the boards does not move at all.</b> That is why the demo can pick a number and still be honest about the comparison.</p>
+
+<h3>What the colours mean</h3>
+<p>Marks are laid in pure red, green and blue and blended with <span class="num">lighten</span> (per-channel maximum). Red over red stays exactly red however deep it piles; white appears only where all three primaries land on the same spot. So <b>white means one thing only: the scope could not tell the three clusters apart.</b> Sensor saturation is not modelled &mdash; that would put white everywhere and destroy the one signal the colour scheme carries.</p>
+
+<h3>Where the chalk comes from</h3>
+<p>The table pile holds exactly the chalks the first board needs to finish. The floor stack is everything the <em>other</em> board still needs after that. The height of the floor stack is the ratio, drawn to scale. Both piles are multiples of three, because Lefty carries one chalk of each colour per trip.</p>
+
+<h2 id="p1"><span class="pos">First down</span>Same aperture, different focal lengths</h2>
+<p><b>What is happening:</b> one 100&nbsp;mm hole, two tube lengths &mdash; 200&nbsp;mm at f/2 and 1000&nbsp;mm at f/10. Identical light arrives at both boards every minute. Six photons per cluster per round, both sides, always.</p>
+<table>
+  <tr><th>&nbsp;</th><th>Left</th><th>Right</th></tr>
+  <tr><td class="k">Aperture</td><td>100 mm</td><td>100 mm</td></tr>
+  <tr><td class="k">Focal length</td><td>200 mm</td><td>1000 mm</td></tr>
+  <tr><td class="k">f-number</td><td>f/2</td><td>f/10</td></tr>
+  <tr><td class="k">Plate scale (board units / object unit)</td><td>21.2</td><td>106</td></tr>
+  <tr><td class="k">Marks needed per cluster</td><td>28</td><td>500</td></tr>
+  <tr><td class="k">Chalks to finish</td><td>21</td><td>495</td></tr>
+</table>
+<div class="eq">focal length ratio  1000 / 200 = 5&times;
+area ratio          5&sup2; = 25&times;                 &lArr; the workload
+light ratio         (100/100)&sup2; = 1&times;           &lArr; the funding
+time ratio          25 / 1 = 25&times; = (10/2)&sup2;</div>
+<p><b>The point:</b> the f-number said 25&times; slower. It was right about the <em>time</em> and wrong about the <em>reason</em>. No photon was lost; the same light was spread over twenty-five times the area, and the f/10 board came away with detail the f/2 board cannot show at any exposure length.</p>
+<p><span class="flag">Own up to it:</span> the piles are rounded up to multiples of three, so what you can actually count on screen is 495 &divide; 21 = 23.6&times;, not a clean 25&times;. The physics is 25; the drawing is rounded.</p>
+
+<h2 id="p2"><span class="pos">Second down</span>Same focal length, different apertures</h2>
+<p><b>What is happening:</b> two 800&nbsp;mm tubes, one 200&nbsp;mm across and one 100&nbsp;mm across. Because focal length is identical, the plate scale is identical &mdash; 106 on both boards. Same cluster size, same positions, same gaps, same everything. <b>Nothing about the resolution moves.</b> Only the delivery rate changes.</p>
+<table>
+  <tr><th>&nbsp;</th><th>Left</th><th>Right</th></tr>
+  <tr><td class="k">Aperture</td><td>200 mm</td><td>100 mm</td></tr>
+  <tr><td class="k">Focal length</td><td>800 mm</td><td>800 mm</td></tr>
+  <tr><td class="k">f-number</td><td>f/4</td><td>f/8</td></tr>
+  <tr><td class="k">Plate scale</td><td>106</td><td>106</td></tr>
+  <tr><td class="k">Marks per chalk</td><td>16</td><td>4</td></tr>
+  <tr><td class="k">Chalks to finish</td><td>93</td><td>372</td></tr>
+</table>
+<div class="eq">light ratio  (200/100)&sup2; = 4&times;
+work ratio   identical  (same focal length, same image scale)
+time ratio   4 / 1 = 4&times; = (8/4)&sup2;      372 / 93 = 4.0 exactly</div>
+<p><b>The point:</b> this is the only case where &ldquo;faster&rdquo; means what people think it means. Aperture bought speed and nothing else &mdash; not framing, not detail. And it is the reason the f-number survives as a shorthand: it happens to be honest here, and people generalise from it.</p>
+
+<h2 id="p3"><span class="pos">Third down</span>Can my scope split it? &mdash; the split test</h2>
+<p><b>What is happening:</b> this panel leaves the chalkboards alone. You pick one real telescope, a real double-star separation, and your own sky, and it answers one question: can that scope separate that pair tonight? Four independent limits are computed and combined.</p>
+<div class="eq">DIFFRACTION   dawes    = 116 / D                     D = aperture in mm
+SEEING        see      = whatever you set, in arcsec
+SAMPLING      arcsec/px = 206.265 &times; p / f            p = pixel pitch µm, f = focal length mm
+              sampl    = 2.4 &times; arcsec/px             need ~2.4 px across the gap
+MOUNT         guide    = 1.665 &times; RMS                 total guide RMS &rarr; FWHM
+
+TOTAL         &radic;(dawes&sup2; + see&sup2; + sampl&sup2; + guide&sup2;)
+VERDICT       SPLIT if separation &gt; TOTAL</div>
+<p><b>Why quadrature and not the worst one:</b> these blurs are independent, so they add as variances, not as a maximum. A plain <span class="num">max()</span> under-reported every time two limits were close &mdash; 2&Prime; of seeing with 2&Prime; of sampling reads as 2.0&Prime; under max() and is really 2.83&Prime;. The verdict text still <em>names</em> the largest single contributor, and names every term within 70% of it, because at 0.7&times; a second term still adds 22% to the total &mdash; removing it would buy you an 18% improvement, which is worth acting on. Below about half the largest, a term adds under 12% and nobody would notice.</p>
+<p><b>The 1.665:</b> guiding is usually quoted as total RMS across both axes. Per axis that is RMS &divide; &radic;2, and a Gaussian's FWHM is 2.355&sigma;, so the blur contribution is 2.355 &divide; &radic;2 = 1.665 &times; RMS.</p>
+<h3>Two ways to enter the sky, and why one of them drops terms</h3>
+<p><b>Atmospheric seeing</b> is a raw sky number (a DIMM-style figure). Glass, pixels and mount then get added on top.</p>
+<p><b>Measured FWHM</b> is the star size you measured off your own sub in PixInsight or N.I.N.A. That number is the <em>delivered</em> result &mdash; seeing, guiding, focus and optics are already inside it. Adding them again double-counts, so the tool doesn't. <b>But pixel size still applies</b>, because sampling is not a blur: it is whether your pixels can <em>record</em> the gap at all. Perfectly tight 2.5&Prime; stars 4&Prime; apart still merge at 3.10&Prime;/px, because that gap is barely one pixel wide.</p>
+<div class="eq">measured mode:  TOTAL = &radic;(FWHM&sup2; + sampl&sup2;)      guiding term dimmed, not added</div>
+<h3>Two worked examples &mdash; both at the panel's defaults</h3>
+<p>4.0&Prime; pair, 2.5&Prime; seeing, 3.76 µm pixels, 0.60&Prime; guide RMS.</p>
+<table>
+  <tr><th>Scope</th><th>Glass</th><th>Pixels</th><th>Mount</th><th>Total</th><th>Verdict</th></tr>
+  <tr><td class="k">SW Esprit 120ED &mdash; 120 mm, 840 mm</td><td>0.97&Prime;</td><td>2.21&Prime; (0.92&Prime;/px)</td><td>1.00&Prime;</td><td>3.62&Prime;</td><td>SPLIT</td></tr>
+  <tr><td class="k">Celestron RASA 8 &mdash; 203 mm, 400 mm</td><td>0.57&Prime;</td><td>4.65&Prime; (1.94&Prime;/px)</td><td>1.00&Prime;</td><td>5.41&Prime;</td><td>MERGED</td></tr>
+  <tr><td class="k">Celestron EdgeHD 8 &mdash; 203 mm, 2032 mm</td><td>0.57&Prime;</td><td>0.92&Prime; (0.38&Prime;/px)</td><td>1.00&Prime;</td><td>2.90&Prime;</td><td>SPLIT</td></tr>
+</table>
+<p><b>The point, and it is the sharpest one on the site:</b> the RASA 8 and the EdgeHD 8 are the same 8 inches of glass under the same sky with the same camera. The f/2 cannot separate the pair and the f/10 can &mdash; because at 400&nbsp;mm the gap lands inside a single pixel. Nothing here is &ldquo;slow&rdquo;. Focal length only decides whether your pixels can record what the aperture and the sky already allowed.</p>
+<p><span class="flag">Own up to it:</span> the drawing shows the pair blurred by the combined figure, as two uniform discs. And <span class="num">2.4</span> pixels across the gap is a working convention, not a law &mdash; two is the bare Nyquist minimum and real detection wants margin.</p>
+
+<h2 id="p4"><span class="pos">Fourth down</span>Real world &mdash; two popular scopes</h2>
+<p><b>What is happening:</b> the only panel with real hardware on the boards, and the only one where <em>both</em> levers move at once &mdash; a William Optics RedCat 51 against a Sky-Watcher Evostar 80ED.</p>
+<table>
+  <tr><th>&nbsp;</th><th>RedCat 51</th><th>Evostar 80ED</th></tr>
+  <tr><td class="k">Aperture</td><td>51 mm</td><td>80 mm</td></tr>
+  <tr><td class="k">Focal length</td><td>250 mm</td><td>600 mm</td></tr>
+  <tr><td class="k">f-number</td><td>f/4.9</td><td>f/7.5</td></tr>
+  <tr><td class="k">Plate scale</td><td>25</td><td>60</td></tr>
+  <tr><td class="k">Chalks to finish</td><td>69</td><td>168</td></tr>
+</table>
+<div class="eq">work    (600/250)&sup2;  = 2.40&sup2; = 5.76&times;
+supply  (80/51)&sup2;    = 2.46&times;
+time    5.76 / 2.46 = 2.34&times;  =  (7.5/4.9)&sup2;      &lArr; that is all the f-number ever was</div>
+<p>This panel is also the one that is drawn at a real angular scale: one object unit is 5.7&Prime;, so the cluster cores sit 9.9&Prime; apart with 2&Prime; of clear sky between them. Seeing is fixed at 2.0&Prime; &mdash; exactly the break-even point, where the Evostar's extra reach stops paying because the fog is wider than the gap. Its chalk counts are the only ones the program derives rather than sets by hand:</p>
+<div class="eq">seeing_units = 2.0&Prime; / (2 &times; 5.7&Prime;) = 0.1754
+R_left  = (0.691 + 0.1754) &times; 25 = 21.7      n = 9.21 &times; (21.7/4)&sup2; = 270
+R_right = (0.691 + 0.1754) &times; 60 = 52.0      n = 9.21 &times; (52.0/4)&sup2; = 1555
+chalks  = ceil(n / marks-per-chalk), rounded up to a multiple of 3  &rarr;  69 and 168</div>
+<p><b>The point:</b> the f-number says speed, but lowering it at the expense of focal length just means less work is being done for a quick result. Two scopes, both levers moved, and one ratio cannot tell you which one moved.</p>
+<p><span class="flag">Own up to it:</span> on screen that comes out as 168 &divide; 69 = 2.43&times; rather than 2.34&times;, because the seeing blur is added to both clusters before the counts are computed and both are then rounded up to a trio boundary.</p>
+
+<h2 id="own">What this model gets wrong on purpose</h2>
+<div class="own">
+<ul>
+  <li><b>A star is drawn as a uniform disc with a hard edge.</b> A real star image is an Airy pattern or a Gaussian &mdash; a bright core with wings. The cartoon merges and splits at roughly the right size, but it has no core and no halo.</li>
+  <li><b>Sampling is not a blur.</b> Pixels discretise; they do not smear. It is folded into the quadrature sum as though it were a blur because that is the only way to get one comparable number, and it is drawn as a disc for the same reason.</li>
+  <li><b>Dawes' limit is an empirical <em>visual</em> double-star criterion, not an FWHM.</b> Putting 116/D into the same sum as a seeing FWHM is apples with oranges. It is the right order of magnitude and the wrong pedigree.</li>
+  <li><b>Cluster radius is half the binding limit</b>, drawn at that panel's arcsec-per-unit. The scale is honest, so merge-versus-split reads fairly, but the clusters are a device, not photometry.</li>
+  <li><b>Photons are deterministic and evenly spread.</b> No Poisson noise, no read noise, no sky background, no extinction, no transparency, no cloud. Every mark lands where the packing says.</li>
+  <li><b>Panels one and two use invented round numbers on purpose.</b> 100 mm at f/2 and f/10, 800 mm at f/4 and f/8. Nobody should have to stop and work out what a piece of kit is; real hardware appears in the fourth panel and the split test, and only there.</li>
+  <li><b>Sensor saturation is not modelled</b> &mdash; deliberately, because white has been given exactly one job: three primaries on the same spot, meaning unresolved.</li>
+  <li><b>Light that falls outside the field is &ldquo;out of frame&rdquo;, not &ldquo;missed&rdquo;</b>, and gets no tally. It was never going to hit that sensor.</li>
+  <li><b>Chalk counts are rounded up to multiples of three</b>, so the on-screen ratios land a few percent off the arithmetic. Both roundings are noted above where they bite.</li>
+  <li><b>Nothing here models tracking error over an exposure, field rotation, filters, or bandwidth.</b> One night, one target, one sensor.</li>
+</ul>
+</div>
+
+<h2 id="why">Why the depiction exists</h2>
+<p>Because &ldquo;f/2 is five times faster than f/10&rdquo; is repeated as though it settled something, and it does not. The f-number is a ratio of the two quantities that actually matter, and a ratio cannot recover either of them. Ask it how much light you gather and it cannot say. Ask it how much sky you cover, or how much detail lands on a pixel, and it cannot say.</p>
+<p>The chalk exists to make the workload visible. You can watch the same light arrive at both boards at the same rate, and watch one board take twenty-five times as long &mdash; not because it was starved, but because it was asked to fill a bigger picture. And the split test exists as the counterweight: once diffraction and seeing and pixel size are on the table, the &ldquo;slow&rdquo; scope is frequently the one that can actually see the thing.</p>
+
+<footer>
+  <p><b>Questions, or something here is wrong?</b> <a href="./contact.html">Send it in</a> &mdash; corrections are welcome, and several are already baked into this page.</p>
+  <p><b>Free, please follow on:</b>
+    <a href="https://www.instagram.com/see_theshow/" target="_blank" rel="noopener">Instagram</a>
+    <a href="https://x.com/intent/follow?screen_name=see_theshow" target="_blank" rel="noopener">X</a>
+    <a href="https://www.facebook.com/seetheshow87" target="_blank" rel="noopener">Facebook</a>
+    <a href="https://www.youtube.com/@See_theShow?sub_confirmation=1" target="_blank" rel="noopener">YouTube</a>
+    <a href="https://app.astrobin.com/u/see_theShow" target="_blank" rel="noopener">AstroBin</a>
+    <a href="https://sidestepstudio.com" target="_blank" rel="noopener">sidestepstudio.com</a>
+  </p>
+</footer>
+
+</div>
+</body>
+</html>
