@@ -4,7 +4,8 @@
 (function () {
   var NAV = [
     { t: 'Apps',             href: '/apps.html' },
-    { t: 'Astrophotography', href: '/astrophotography.html' },
+    { t: 'Capture Blog',     href: '/blog/' },
+    { t: 'Legacy Gallery',   href: '/astrophotography.html' },
     { t: 'Watch',            href: '/watch.html' },
     { t: 'Shop',             href: '/shop.html' },
     { t: 'About',            href: '/about.html' },

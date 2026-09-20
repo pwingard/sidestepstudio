@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wolf&rsquo;s Cave &mdash; the processing, warts and all · Sidestep Studio</title>
+    <meta name="description" content="How Wolf's Cave (vdB 152 / Barnard 175) was processed in Siril and PixInsight — twenty-four versions, every wrong turn included.">
+    <meta property="og:title" content="Wolf&rsquo;s Cave &mdash; the processing, warts and all">
+    <meta property="og:description" content="How Wolf's Cave (vdB 152 / Barnard 175) was processed in Siril and PixInsight — twenty-four versions, every wrong turn included.">
+    <meta property="og:image" content="https://sidestepstudio.com/images/wolfscave-1800.jpg">
+    <meta property="og:type" content="article">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@see_theshow">
+    <meta name="twitter:image" content="https://sidestepstudio.com/images/wolfscave-1800.jpg">
+    <link rel="canonical" href="https://sidestepstudio.com/blog/wolfs-cave-the-processing-warts-and-all.html">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="stylesheet" href="/css/style.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-898TVSPLGS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-898TVSPLGS');
+    </script>
+    <style>
+
+    .post {
+      --bg: #0f1218;
+      --paper: #171c24;
+      --ink: #e8e4d9;
+      --muted: #9aa3b0;
+      --rule: #2a3340;
+      --accent: #c9a86c;
+      --good: #7dba8a;
+      --bad: #d07a6a;
+    }
+    .post * { box-sizing: border-box; }
+    .post, .post {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      line-height: 1.55;
+    }
+    .post .wrap {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 3rem 1.4rem 5rem;
+    }
+    .post header {
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .post .kicker {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      color: var(--accent);
+      margin: 0 0 0.7rem;
+    }
+    .post h1 {
+      font-size: clamp(1.7rem, 4vw, 2.25rem);
+      font-weight: 600;
+      line-height: 1.2;
+      margin: 0 0 0.45rem;
+    }
+    .post .sub {
+      font-style: italic;
+      color: var(--muted);
+      font-size: 1.15rem;
+      margin: 0;
+    }
+    .post h2 {
+      font-size: 1.25rem;
+      margin: 2.4rem 0 0.8rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .post p { margin: 0 0 1rem; }
+    .post strong { font-weight: 650; }
+    .post ul, .post ol { padding-left: 1.25rem; }
+    .post li { margin-bottom: 0.45rem; }
+    .post .meta {
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      padding: 1rem 1.15rem;
+      margin: 1.4rem 0 1.8rem;
+      font-size: 0.95rem;
+    }
+    .post .meta p { margin: 0 0 0.65rem; }
+    .post .meta p:last-child { margin: 0; }
+    .post .haul {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      font-size: 0.92rem;
+      color: var(--muted);
+      border-left: 3px solid var(--accent);
+      padding: 0.15rem 0 0.15rem 0.9rem;
+      margin: 1.2rem 0 0.4rem;
+    }
+    .post .night2 { border-left-color: var(--bad); }
+    .post .night3 { border-left-color: var(--good); }
+    .post hr {
+      border: 0;
+      border-top: 1px solid var(--rule);
+      margin: 2.2rem 0;
+    }
+    .post .postnote {
+      margin-top: 3rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--rule);
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    @media print {
+      html, body { background: #fff; color: #111; }
+      .post .wrap { max-width: none; padding: 0; }
+      .post .meta { background: #f4f4f4; border-color: #ccc; }
+      .post h2, .post .kicker { color: #7a5a20; }
+    }
+        .post { background: transparent; }
+        .post .wrap { max-width: 42rem; margin: 0 auto; padding: 2rem 0 1rem; }
+        .post-back { display: inline-block; margin: 26px 0 0; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+        .post-back:hover { opacity: 0.8; }
+        .post-also { max-width: 42rem; margin: 0 auto; padding: 0 0 8px; font-size: 0.95rem; }
+        .post-also a { color: var(--accent); text-decoration: none; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <a class="logo" href="/">See the Show&rsquo;s Sidestep<span>Studio</span></a>
+        <nav></nav>
+    </div>
+</header>
+<main>
+    <div class="container">
+        <div class="post">
+            <p class="post-also" style="padding-top:22px;"><a class="post-back" href="/photos/wolfscave.html">&larr; Wolf&rsquo;s Cave &mdash; the image</a></p>
+            <article class="wrap">
+                <header>
+                  <p class="kicker">Processing log · September 2026</p>
+                  <h1>Wolf's Cave (vdB 152 / Barnard 175)</h1>
+                  <p class="sub">The processing, warts and all</p>
+                </header>
+            
+                <p>This is the other half of the Wolf's Cave story. The capture log covers what happened under the sky; this is what happened at the desk, in the order it happened, including everything that went wrong.</p>
+                <p>I process in PixInsight with an AI assistant beside me. It doesn't touch PixInsight — it reads the files, measures them, and tells me what changed. Every number below was measured off the actual files, mostly out of the processing history stored inside each XISF, not remembered. Several of the mistakes were the assistant's. Several were mine. They are all here.</p>
+                <div class="meta">
+                  <p><strong>Where it was shot:</strong> my backyard site at The Star Farm in Camden, South Carolina — Bortle 4.5.</p>
+                  <p><strong>What I started with:</strong> 953 of 1,095 subs kept over three nights. L 384 × 90 s (9 h 36 m), R 140 / G 136 / B 131 × 60 s, Ha 20 × 180 s, plus 10 s short sets for the star cores. 17 h 47 m total, at 2.0″/pixel on a 3.49 × 2.33 degree field.</p>
+                  <p><strong>What I ended with:</strong> a second pass, built from scratch, after the first one taught me what not to do.</p>
+                </div>
+                <hr>
+                <h2>Before PixInsight — culling and stacking in Siril</h2>
+                <p><strong>What to throw away, and the rule that saved 62 frames.</strong> The first cull graded on eccentricity and threw out 83 luminance subs from night 2. I stopped it: an elongated but <em>symmetric</em> star is an egg, and BlurXTerminator fixes an egg. What can't be fixed is a comet — a one-sided tail where the mount was kicked mid-exposure and the flux piled up at one end. Eccentricity can't tell them apart; both measure about 1.6. So the assistant wrote a grader that measures, per star, the flux-weighted skew along that star's own long axis: symmetric shapes sit near zero however stretched they are, a tail drives it up. Comets and streaks out, eggs kept. 62 frames came back, and night 2's luminance went from 6h 02m to 7h 29m. I asked to see the difference rather than take it on faith, so it built a gallery of magnified stars: kept round, kept egg, culled comet, culled streak. At 7× the difference is obvious; at full frame it's invisible, which is why I couldn't see it.</p>
+                <p><strong>Final tally: 953 of 1,095 subs kept</strong> — night 1 423 of 438, night 2 186 of 298, night 3 344 of 359.</p>
+                <p><strong>Stacking.</strong> Siril per night: calibrate with that night's own bias, darks and flats, register with global star alignment, stack winsorized sigma clip with additive-with-scaling normalisation. Then the per-night masters were registered onto the long luminance and combined. Both meridian flips crossed cleanly — 1,830 star matches, rotation measured at +179.77°, inliers 1.000 — so the 180° orientation split never became a problem. No debanding: measured column noise 1.56 ADU against 1.83 for rows, so the columns were the <em>cleaner</em> axis. Dithering had done its job.</p>
+                <p><strong>What night 2 was worth, measured.</strong> 65 % more integration bought about half the expected depth. Its frames are genuinely poorer — best FWHM 2.18 px against night 1's 1.77 — and a noise-weighted stack correctly discounts them.</p>
+                <p><strong>Is the hydrogen alpha even real?</strong> One hour on a faint target is easy to imagine. The arc measures 1.32 sigma per pixel in the Ha master, and to check the noise behaved as it should, the assistant stacked half the subs: 0.97 sigma at 30 minutes against 1.32 at 60, which is 96 % of the square-root law. Real, and worth blending — gently.</p>
+                <p><strong>Three mistakes in this stage, all the assistant's:</strong></p>
+                <ul>
+                  <li>It reported the channel masters were misaligned by hundreds to 1,800 pixels. I said that couldn't be right. It was phase correlation, which on a field this rich locks onto the star field instead of the registration, and it gave a different answer every run. The honest check was the dumb one: find the brightest stars in luminance, look in the same box in every other master, read off the offset. Answer: single-digit pixels.</li>
+                  <li>Its stacking script wrote the masters into a scratch folder that it then deleted, and still exited reporting success — because Siril sets its own working directory and the script had passed a relative path. Never hand Siril a relative path.</li>
+                  <li>It built the calibration tree out of symlinked folders, which its own file scan wouldn't follow, so every dark and flat read as missing.</li>
+                </ul>
+                <h2>Pass 1 — Sept 12 to 17 — learning the target the hard way</h2>
+                <p><strong>The blown star cores.</strong> The bright stars were saturated in the 90 s subs, so I shot 10 s sets to repair them. HDRComposition looked perfect on every metric the assistant ran: 96–100 % core recovery, profiles matching within 1 %, noise unchanged. I looked at it and said it was wrong. It took most of a day to find why: HDRComposition had fitted the exposure ratio at 8.01 when the true ratio was 8.47, and that 5 % error cut a <strong>dark trench around every star at 6–9 pixels radius</strong>, plus it swapped 163,775 isolated single pixels across the frame. A clean sweep of metrics only proves the metrics you chose didn't catch it. We rebuilt the repair in PixelMath instead: it only ever adds light, in the top two pixels of a core, and the minimum change anywhere is exactly zero.</p>
+                <p><strong>How we actually did it.</strong> For each channel the assistant measured two numbers off the real stars: the flux ratio between the long and short exposures, and the level where the long frame stops being linear. Ratios came out L 8.47, R 7.61, G 7.28, B 8.25 — not the 9 you would guess from 90 s over 10 s, because the shorter frames lose a slice to the shutter and the read. Then one PixelMath expression per channel: below the threshold keep the long exposure untouched, above it swap in the short one scaled by that ratio, with a narrow feather across the join so nothing steps. Thresholds were L 0.70, R 0.25, G 0.45, B 0.50. Verified afterwards: light was only ever added, only in the top couple of pixels of a core, and below the threshold the file is bit-identical to the original.</p>
+                <p><strong>One trap in it.</strong> A repaired core comes out eight times brighter than the old clipped ceiling, which is past PixInsight's 1.0 limit, and the channel combination quietly truncated several hundred pixels on the first try. The fix was to rescale the whole image down by 0.1158 before combining, so nothing overflows — and that rescale is exactly what made the linear preview look broken.</p>
+                <p><strong>And the lesson for next time: 10 s was still too long.</strong> Reconstructing the true stellar peaks from the unsaturated wings says 49 stars still clip at 10 s, 21 at 3 s, 12 at 2 s and 5 at 1 s. So the short set should be 1 s, not 10. About five of the very brightest stars in this field can't be saved at any sane exposure.</p>
+                <p><strong>Then it turned out not to matter.</strong> After a normal stretch the repaired and unrepaired cores differ by 0.0001. Both saturate at 0.98. The whole star-core saga bought nothing visible.</p>
+                <p><strong>The linear preview lies.</strong> The repaired image looked ringed and posterised on screen. It wasn't. The repair had pushed the data's scale up so far that the background sat below one display level. Stretched properly, the same file holds 40,000 distinct values in a background patch. Never judge a blended linear image by its screen stretch.</p>
+                <p><strong>The red background that wasn't a red background.</strong> I spent two sessions chasing a red cast. Measured across the linear masters, the red ramp changed between nights while the dust didn't — so it was sky gradient, not colour. Fixing it was a gradient job, not a colour job.</p>
+                <p><strong>The mask that couldn't exist.</strong> I wanted to lift filament detail in the dark nebula without touching the background, so we tried to build a mask of the cave. A brightness range mask can't do it: the dark nebula sits on the same side of any threshold as the sky. A local-contrast mask can't either — measured, it was selecting the background mottle, the exact thing I wanted to suppress. Two mornings gone. Then I applied the enhancement globally with no mask at all and measured the background before and after: it hadn't suffered. The machinery was protecting against damage that doesn't happen.</p>
+                <p><strong>LocalHistogramEqualization did nothing, three times.</strong> At amount 0.21, then 0.50, then 0.85, the cave contrast moved about 1 %. Cause: HDRMultiscaleTransform had already redistributed the local contrast, so there was nothing left to equalise. On a chain that contains HDRMT, expect LHE to do almost nothing.</p>
+                <p><strong>Denoising after the stretch made it worse.</strong> It halved the fine grain but pushed the leftovers into the 2–8 pixel blotch band and nearly tripled the colour speckle. That's what "plastic" looks like. The fix was to move denoise, and sharpening, into the linear stage — which is what pass 2 does.</p>
+                <p><strong>The curves that made colour by accident.</strong> My favourite version, 4f, had rich colour. The assistant simulated its five curves and found the saturation was manufactured: each curve crushed the black point, which pushes red, green and blue apart, and five of them stacked up. The same mechanism made the red cast I kept complaining about. You can't keep one and lose the other; they are the same thing. The honest saturation of the data was about 0.11, not 0.42.</p>
+                <p><strong>The correction I had to make twice.</strong> The assistant told me the "red chroma noise" had dropped by 2.5×. I said the red was gone because <em>everything</em> was gone. It re-measured: colour signal had fallen by the same factor. A chroma-noise number means nothing unless you hold the colour constant.</p>
+                <p><strong>The teal.</strong> I said the green-blue cast followed the nebula. The assistant ran a correlation over the whole frame, got 0.007, and told me it was a gradient. I told it my eyes disagreed. It rendered the colour as a picture and looked: sharp, filamentary, tracing the dust exactly — real reflection-nebula colour. The correlation had averaged opposing signs to zero. Since then: render it and look first, measure second.</p>
+                <p><strong>PixInsight crashed twice</strong>, once with two days of uptime, and took the unsaved windows with it. The processed luminance existed only inside a project file, because the disk copies had been in a folder I'd cleared out. Rule now: anything reused gets saved to its own file before anything gets deleted.</p>
+                <p><strong>Where pass 1 ended.</strong> Twenty-three versions. I had the assistant build a flip book of all of them, ranked by measurement, and picked two favourites. Then I decided the whole thing should be rebuilt properly, from the master channel stacks, with nothing carried over but what I'd learned.</p>
+                <hr>
+                <h2>Pass 2 — Sept 18 to 20 — the one that worked</h2>
+                <p><strong>Gradient correction first, and it is the most important step.</strong> I ran three rounds of trials — scale, structure separation, and the scale factors — and the assistant ranked each one on flatness, on how much dust the model contained, and on the corner where the splotch used to be. Winner: scale 768, separation 2, smoothness 10, and all three scale factors at 1.6, which is the class method of raising them together. The sky's green tilt went from 15 % top-to-bottom down to 1.6 %, with no dust in the model at all. Everything downstream inherits this.</p>
+                <p><strong>No nebula-free sky.</strong> For colour calibration I wanted the background patch to be real sky. There isn't any: the assistant scanned every window in the frame on a starless version and the flattest ones were all dust. We used the opaque core of the dark cloud, which is the closest thing to pure sky glow, and also ran a version with no patch at all. The difference after the stretch was about 10 %; I picked the neutral one by eye.</p>
+                <p><strong>Sharpening, which pass 1 never did.</strong> Every BlurXTerminator run in pass 1 was in correct-only mode, so its sharpening values were ignored and my stars stayed soft — that's why they looked blurry and I couldn't find out why. Pass 2 ran it with sharpening on: star widths dropped 25–34 %, with no dark rings and no rise in background noise.</p>
+                <p><strong>Denoise, measured by scale.</strong> At 0.90 the luminance looked plastic to me. Measured: it removes 85 % of the fine grain but only 24 % of the 5–9 pixel mottle — <strong>at any amount</strong>. The amount only decides how much grain is left covering the mottle. At 0.60 the two sit in balance. The mottle itself is a depth problem, not a processing one.</p>
+                <p><strong>How hard to stretch.</strong> This was the question I most wanted answered. The answer: grain divided by sky is about 0.10 no matter how hard you stretch, so no stretch level makes the data cleaner. What matters is <em>where the sky lands</em>. Put it at the level you want in the final and the curves never have to drag it back down — and that drag is exactly what made my earlier version splotchy. Target background 0.120.</p>
+                <p><strong>Curves on L, not on K.</strong> A brightness curve on K pushes the three channels together and desaturates; on CIE lightness it leaves colour alone. Pinned at the sky, with two extra points at the top so the bright tip of vdB 152 keeps its highlights — the earlier version had 2.8 % of that tip flattened to white, this one has 0.3 %.</p>
+                <p><strong>Hydrogen alpha, three times.</strong> At 0.25, matching pass 1, the red was too weak because pass 1's curves had been multiplying colour on the way to the final and these ones don't. At 0.75 it was a touch strong. 0.50 is the one, with the planetary nebula DeHt 5 masked so it keeps its blue centre inside a red rim.</p>
+                <p><strong>The stars, and my girlfriend.</strong> I reduced the small stars with a median transform, three scales removed. She looked at it and said leave all the stars in. She was right — with the full field the dust sits <em>inside</em> the Milky Way instead of floating on grey. We settled on two scales removed, which keeps the sky dense and takes the speckle. Measured, the leftover texture at that scale is the small stars themselves, not noise: stripping the star layer's background entirely moves it by 2 %.</p>
+                <hr>
+                <h2>The assistant's mistakes, since I said everything would be here</h2>
+                <ul>
+                  <li>It told me a file was "the keeper" based on a chroma-noise number, when the image was simply desaturated.</li>
+                  <li>It answered a visual question with a correlation coefficient instead of rendering the map and looking.</li>
+                  <li>It said "lower left" twice while I was looking at the image the other way round; it had mixed portrait and landscape.</li>
+                  <li>It blamed a rise in blotchiness on the denoise. Re-measured in one fixed patch, the denoise wasn't responsible — the star layer was.</li>
+                  <li>It told me a mask had protected the planetary nebula. The file's own history showed the mask never applied, and the red had gone straight into the middle of it.</li>
+                  <li>It compared a linear number to a stretched one and called them the same measurement.</li>
+                  <li>It wrote a script with a bug it had written down and recorded as a rule the day before.</li>
+                  <li>Twice it answered "just do this and this and this" when I'd asked for one keystroke.</li>
+                </ul>
+                <p>The pattern in all of them: a number reported without its control, or an answer given from memory instead of from the file. What works is the opposite — read the file, render the picture, and when I say my eyes see something, test harder instead of restating the statistic.</p>
+                <hr>
+                <h2>What this target changed for good</h2>
+                <ol>
+                  <li>Gradient correction is the most important step. Trial several settings and rank them; never run it once and move on.</li>
+                  <li>Fix everything that can only be fixed while linear — gradient, colour, sharpening, denoise, narrowband — before stretching.</li>
+                  <li>Stretch so the sky lands where you want it in the final. Curves should lift the subject, never drag the background down.</li>
+                  <li>Brightness curves go on L, saturation goes on S, and both go on while the image is starless.</li>
+                  <li>Denoise removes grain, never mottle. If the mottle bothers you, that's more integration, not more denoise.</li>
+                  <li>Save every reusable intermediate as its own file. A window or a project file is not a backup.</li>
+                  <li>Read the settings out of the file's own history. Icon names lie; histories don't.</li>
+                  <li>Measure a colour claim with saturation beside it, and a noise claim with signal beside it.</li>
+                  <li>Render derived maps as pictures and look at them before trusting a single correlation number.</li>
+                  <li>Judge a version against the one before it on the same measurements, in the same orientation, or the comparison means nothing.</li>
+                </ol>
+                <p><strong>What it cost:</strong> six days, twenty-three versions in the first pass and one in the second. The second pass took two days because the first one had already made every mistake.</p>
+            
+                <div class="postnote">
+                  Wolf&rsquo;s Cave processing log &middot; Sept 12&ndash;20, 2026 &middot; companion to the capture log
+                </div>
+              </article>
+            <p class="post-also">Companion piece: <a href="/blog/wolfs-cave-three-nights-warts-and-all.html">Wolf&rsquo;s Cave &mdash; three nights, warts and all &rarr;</a></p>
+        </div>
+    </div>
+</main>
+<footer></footer>
+<script src="/js/site.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture Blog · Sidestep Studio</title>
+    <meta name="description" content="Capture and processing logs from Sidestep Studio — how each image was actually made, including everything that went wrong.">
+    <meta property="og:title" content="Capture Blog · Sidestep Studio">
+    <meta property="og:description" content="How each image was actually made, including everything that went wrong.">
+    <meta property="og:image" content="https://sidestepstudio.com/images/wolfscave-1800.jpg">
+    <meta property="og:url" content="https://sidestepstudio.com/blog/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@see_theshow">
+    <meta name="twitter:image" content="https://sidestepstudio.com/images/wolfscave-1800.jpg">
+    <link rel="canonical" href="https://sidestepstudio.com/blog/">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="stylesheet" href="/css/style.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-898TVSPLGS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-898TVSPLGS');
+    </script>
+    <style>
+        .log-intro { color: var(--muted); margin: 6px 0 34px; }
+        .log-entry { display: flex; gap: 24px; align-items: flex-start; padding: 26px 0; border-top: 1px solid var(--border); }
+        .log-shot { flex: 0 0 220px; width: 220px; display: block; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+        .log-shot img { width: 100%; height: auto; display: block; }
+        .log-copy { flex: 1 1 auto; min-width: 0; }
+        .log-copy h3 { font-size: 1.35rem; font-weight: 700; color: #fff; margin: 0 0 4px; }
+        .log-copy h3 a { color: inherit; text-decoration: none; }
+        .log-copy h3 a:hover { color: var(--accent); }
+        .log-date { color: var(--muted); font-size: 0.85rem; margin: 0 0 10px; }
+        .log-copy p.blurb { color: var(--muted); margin: 0 0 14px; font-size: 0.95rem; max-width: 640px; }
+        .log-links { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 0; }
+        .log-links a { color: var(--accent); text-decoration: none; font-size: 0.92rem; font-weight: 600; }
+        .log-links a:hover { opacity: 0.8; }
+        .log-current { display: inline-block; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 2px 9px; margin-bottom: 8px; }
+        @media (max-width: 700px) { .log-entry { flex-direction: column; gap: 14px; } .log-shot { flex: 0 0 auto; width: 100%; max-width: 320px; } }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <a class="logo" href="/">See the Show&rsquo;s Sidestep<span>Studio</span></a>
+        <nav></nav>
+    </div>
+</header>
+<main>
+    <div class="container">
+        <section style="padding-top:34px;">
+            <h2 style="font-weight:700; color:#fff; margin:0;">Capture Blog</h2>
+            <p class="log-intro">How each image was actually made &mdash; the nights, the failures, and the processing that followed. Written from the N.I.N.A. and PHD2 logs and the files&rsquo; own processing histories, not from memory. Every image that has held the front page ends up here.</p>
+
+            <!-- newest first -->
+            <article class="log-entry">
+                <a class="log-shot" href="/photos/wolfscave.html">
+                    <img src="/images/wolfscave-med.jpg" alt="Wolf's Cave — vdB 152 and Barnard 175 in Cepheus" width="723" height="1100" loading="lazy">
+                </a>
+                <div class="log-copy">
+                    <span class="log-current">Current front page</span>
+                    <h3><a href="/photos/wolfscave.html">Wolf&rsquo;s Cave</a></h3>
+                    <p class="log-date">vdB 152 / Barnard 175, in Cepheus &nbsp;·&nbsp; September 12&ndash;20, 2026</p>
+                    <p class="blurb">About 20.7 hours over three nights on an Askar refractor and an ASI2600MM Pro &mdash; then six days and twenty-four versions to process it. Both logs include every mistake, mine and the machine&rsquo;s.</p>
+                    <p class="log-links">
+                        <a href="/blog/wolfs-cave-three-nights-warts-and-all.html">The capture &rarr;</a>
+                        <a href="/blog/wolfs-cave-the-processing-warts-and-all.html">The processing &rarr;</a>
+                        <a href="/photos/wolfscave.html">The image &rarr;</a>
+                    </p>
+                </div>
+            </article>
+
+        </section>
+    </div>
+</main>
+<footer></footer>
+<script src="/js/site.js" defer></script>
+</body>
+</html>
