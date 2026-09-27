@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Pacman Nebula (NGC 281) &mdash; how the final was made · Sidestep Studio</title>
+    <meta name="description" content="How the Pacman Nebula, NGC 281, was made from a Celestron Origin through a triband filter — split into HOO, six sessions merged, banding removed, finished in PixInsight.">
+    <meta property="og:title" content="The Pacman Nebula (NGC 281) &mdash; how the final was made">
+    <meta property="og:description" content="How the Pacman Nebula, NGC 281, was made from a Celestron Origin through a triband filter — split into HOO, six sessions merged, banding removed, finished in PixInsight.">
+    <meta property="og:image" content="https://sidestepstudio.com/images/pacman-1800.jpg">
+    <meta property="og:url" content="https://sidestepstudio.com/blog/pacman-how-the-final-was-made.html">
+    <meta property="og:type" content="article">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@see_theshow">
+    <meta name="twitter:image" content="https://sidestepstudio.com/images/pacman-1800.jpg">
+    <link rel="canonical" href="https://sidestepstudio.com/blog/pacman-how-the-final-was-made.html">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="stylesheet" href="/css/style.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-898TVSPLGS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-898TVSPLGS');
+    </script>
+    <style>
+
+    .post {
+      --bg: #0f1218;
+      --paper: #171c24;
+      --ink: #e8e4d9;
+      --muted: #9aa3b0;
+      --rule: #2a3340;
+      --accent: #c9a86c;
+      --good: #7dba8a;
+      --bad: #d07a6a;
+    }
+    .post * { box-sizing: border-box; }
+    .post, .post {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      line-height: 1.55;
+    }
+    .post .wrap {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 3rem 1.4rem 5rem;
+    }
+    .post header {
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .post .kicker {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      color: var(--accent);
+      margin: 0 0 0.7rem;
+    }
+    .post h1 {
+      font-size: clamp(1.7rem, 4vw, 2.25rem);
+      font-weight: 600;
+      line-height: 1.2;
+      margin: 0 0 0.45rem;
+    }
+    .post .sub {
+      font-style: italic;
+      color: var(--muted);
+      font-size: 1.15rem;
+      margin: 0;
+    }
+    .post h2 {
+      font-size: 1.25rem;
+      margin: 2.4rem 0 0.8rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .post p { margin: 0 0 1rem; }
+    .post strong { font-weight: 650; }
+    .post ul, .post ol { padding-left: 1.25rem; }
+    .post li { margin-bottom: 0.45rem; }
+    .post .meta {
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      padding: 1rem 1.15rem;
+      margin: 1.4rem 0 1.8rem;
+      font-size: 0.95rem;
+    }
+    .post .meta p { margin: 0 0 0.65rem; }
+    .post .meta p:last-child { margin: 0; }
+    .post .haul {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      font-size: 0.92rem;
+      color: var(--muted);
+      border-left: 3px solid var(--accent);
+      padding: 0.15rem 0 0.15rem 0.9rem;
+      margin: 1.2rem 0 0.4rem;
+    }
+    .post .night2 { border-left-color: var(--bad); }
+    .post .night3 { border-left-color: var(--good); }
+    .post hr {
+      border: 0;
+      border-top: 1px solid var(--rule);
+      margin: 2.2rem 0;
+    }
+    .post .postnote {
+      margin-top: 3rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--rule);
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    @media print {
+      html, body { background: #fff; color: #111; }
+      .post .wrap { max-width: none; padding: 0; }
+      .post .meta { background: #f4f4f4; border-color: #ccc; }
+      .post h2, .post .kicker { color: #7a5a20; }
+    }
+        .post { background: transparent; }
+        .post .wrap { max-width: 42rem; margin: 0 auto; padding: 2rem 0 1rem; }
+        .post-back { display: inline-block; margin: 26px 0 0; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+        .post-back:hover { opacity: 0.8; }
+        .post-also { max-width: 42rem; margin: 0 auto; padding: 0 0 8px; font-size: 0.95rem; }
+        .post-also a { color: var(--accent); text-decoration: none; }
+        .post .step-list { counter-reset: none; padding-left: 1.6rem; }
+        .post .step-list li { margin-bottom: 0.7rem; }
+        .post .step-list li::marker { color: var(--accent); font-weight: 600; }
+        .post .callout { background: var(--paper); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 8px; padding: 1rem 1.15rem; margin: 1.6rem 0; font-size: 0.97rem; }
+        .post .callout.warn { border-left-color: var(--bad); }
+        .post .callout p:last-child { margin: 0; }
+        .post .post-hero { margin: 0 0 1.8rem; }
+        .post .post-hero img { width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid var(--rule); }
+        .post code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.86em; background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 0.05em 0.35em; color: var(--ink); overflow-wrap: anywhere; }
+
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <a class="logo" href="/">See the Show&rsquo;s Sidestep<span>Studio</span></a>
+        <nav></nav>
+    </div>
+</header>
+<main>
+    <div class="container">
+        <div class="post">
+            <p class="post-also" style="padding-top:22px;"><a class="post-back" href="/photos/pacman.html">&larr; The Pacman Nebula &mdash; the image</a></p>
+            <article class="wrap">
+                <header>
+                  <p class="kicker">Processing log · September 2026</p>
+                  <h1>The Pacman Nebula (NGC 281), HOO</h1>
+                  <p class="sub">How the final was made</p>
+                </header>
+                <figure class="post-hero"><a href="/photos/pacman.html"><img src="/images/pacman-med.jpg" alt="The Pacman Nebula, NGC 281 — a glowing red and white cloud with a dark dust lane forming the mouth, in a dense star field" width="1100" height="573"></a></figure>
+                <div class="meta">
+                  <p><strong>Target:</strong> NGC 281 (Sh2-184) with the open cluster IC 1590, in Cassiopeia. Solved centre 00h52m40s +56°39′37″, 2.463″/px.</p>
+                  <p><strong>Rig:</strong> Celestron Origin, RASA 6″ 335 mm f/2.2, Origin678C colour camera (IMX678, 2 µm, GBRG), <strong>Antlia Triband RGB Ultra</strong> (~25 nm bands: red holds Hα+NII+SII, green/blue hold OIII). ISO 1000, uncooled, 17.7–22.5 °C.</p>
+                  <p><strong>Data:</strong> 6.5 h in one night, 25–26 September 2026, six Origin sessions — <strong>1,040 × 15 s (4.33 h) + 391 × 20 s (2.17 h)</strong>, all kept.</p>
+                  <p><strong>Where it was shot:</strong> my backyard site at The Star Farm in Camden, South Carolina — Bortle 4.5.</p>
+                </div>
+                <h2>Why HOO, not SHO</h2>
+                <p>SII (672 nm) and Hα (656 nm) land in the same red band on the same red pixels, so they cannot be separated. HOO is the most this filter can honestly give.</p>
+                <h2>Stacking in Siril</h2>
+                <ol class="step-list">
+                  <li><strong>Darks matched per session</strong> by exposure + ISO, then closest temperature, from a fresh set: dark0019/0022 (15 s, 19.1/20.8 °C) and dark0020/0021 (20 s, 19.8/20.3 °C). <strong>The Origin's own stacks were ignored</strong> — it calibrated with June 34 °C darks, and a 30 s dark for the 20 s subs.</li>
+                  <li>On this camera the 15–20 s master darks sit <strong>below</strong> the bias (4872 vs 5000 ADU), so there is no dark current to scale: temperature mismatch handled with a <strong>location-based bad-pixel map</strong> (<code>find_hot</code> on the dark), not <code>-opt</code>.</li>
+                  <li>Calibrate on the raw CFA, then <strong><code>seqextract_HaOIII</code></strong> before any debayer: red pixels → Hα, green+blue → OIII. Output is half-size, 1928×1090 — each pixel is a 2×2 block, <strong>4.0 µm effective</strong>. That is the true Hα resolution of a Bayer camera; a debayer only interpolates the rest.</li>
+                  <li>Each session stacked per channel (winsorized 3/3, additive+scale).</li>
+                </ol>
+                <h2>Merging and cleaning the masters</h2>
+                <ol class="step-list" start="5">
+                  <li><strong>Six sessions merged with Siril star registration</strong> — all 12 masters in one sequence on one reference, so Hα and OIII come out already aligned. (<code>combine_nights.py</code> was tried first and blurred stars 4.25 → 5.37 px: it aligns in 8 px steps. Retired for merges; my rule since: <strong>alignment is always Siril</strong>.) Result: stars 4.6 px, noise ÷2.2 Hα, ÷3 OIII vs the best session.</li>
+                  <li><strong>Row + column banding removed</strong> on the linear masters — <code>tools/deband_rowcol.py</code>. The Origin barely dithered (~4 px between subs), so fixed-pattern noise didn't average out. Columns/rows 11%/10% → 7%/3% of pixel noise. (<code>deband.py</code> made columns worse here, 11% → 20%.)</li>
+                  <li><strong>Pre-cropped to full coverage of all six sessions</strong>, 1928×1090 → <strong>1887×983</strong> (L 28 · T 95 · R 13 · B 12). The uncropped top band, covered by only some sessions, is what gave an earlier version its top-green / bottom-red sky.</li>
+                </ol>
+                <h2>PixInsight — linear</h2>
+                <ol class="step-list" start="8">
+                  <li>ChannelCombination R = Hα, G = B = OIII; ImageSolver at 4.0 µm / 335 mm.</li>
+                  <li><strong>SPFC</strong> narrowband mode, psfMinSNR 40.</li>
+                  <li><strong>MGC</strong> with MARS (DR1 + DR2): gradient scale 512, structure separation 5, smoothness 10. HOO works with MARS; SHO would not — MARS has no SII.</li>
+                  <li><strong>SPCC</strong> narrowband 656.3 / 500.7 / 500.7 nm at <strong>25 nm</strong> bandwidth.</li>
+                  <li><strong>BlurX</strong> correct-only, then a stars-only pass at 0.50. <strong>MLDenoise</strong> 0.90.</li>
+                  <li><strong>StarX</strong> (linear, unscreen off).</li>
+                  <li><strong>OIII lift while linear</strong>: PixelMath R <code>$T</code>, G/B <code>($T-med($T))*1.3+med($T)</code> — the <code>med()</code> form lifts the nebula without tinting the sky. (A plain <code>$T*1.3</code> turned the sky teal; a post-stretch highlight curve flattened the core.)</li>
+                </ol>
+                <h2>PixInsight — non-linear</h2>
+                <ol class="step-list" start="15">
+                  <li><strong>GHS</strong> stretch factor 6.27, local intensity 0.05, SP 0.000722, highlight protection 1.0; then black point 0.038.</li>
+                  <li>Curves on the starless; BlurX non-stellar 0.78.</li>
+                  <li>Second StarX on the stretched image, curves lifting the faint outer Hα, stars screened back: <code>~(~F6*~(F6_stars*1))</code>.</li>
+                </ol>
+                <hr>
+                <h2>Result</h2>
+                <p>Sky near neutral (median 17/12/12), faint outer Hα 47/31/31, core 236/231/231, 0.04% clipped. Signed bottom-right with &ldquo;(Origin)&rdquo;.</p>
+                <div class="callout">
+                  <p><strong>Known and accepted:</strong> a faint top-teal / bottom-red sky tint (BackgroundNeutralization can't fix a gradient — it made the sky redder in one try); core white rather than teal, because ×1.3 only brings OIII level with Hα there.</p>
+                </div>
+                <div class="postnote">
+                  Pacman Nebula processing log &middot; serial 870192 &middot; September 25&ndash;26, 2026
+                </div>
+              </article>
+            <p class="post-also"><a href="/photos/pacman.html"><strong>The image &rarr;</strong> The Pacman Nebula &mdash; full size, with the story of the object</a></p>
+        </div>
+    </div>
+</main>
+<footer></footer>
+<script src="/js/site.js" defer></script>
+</body>
+</html>

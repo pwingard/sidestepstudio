@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Dark Shark (LDN 1235) &mdash; how the final was made · Sidestep Studio</title>
+    <meta name="description" content="How the Dark Shark, LDN 1235, was processed in Siril and PixInsight — gradient correction on a dark nebula, star-core repair, and colour with nothing subtracted.">
+    <meta property="og:title" content="The Dark Shark (LDN 1235) &mdash; how the final was made">
+    <meta property="og:description" content="How the Dark Shark, LDN 1235, was processed in Siril and PixInsight — gradient correction on a dark nebula, star-core repair, and colour with nothing subtracted.">
+    <meta property="og:image" content="https://sidestepstudio.com/images/darkshark-1800.jpg">
+    <meta property="og:url" content="https://sidestepstudio.com/blog/dark-shark-how-the-final-was-made.html">
+    <meta property="og:type" content="article">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@see_theshow">
+    <meta name="twitter:image" content="https://sidestepstudio.com/images/darkshark-1800.jpg">
+    <link rel="canonical" href="https://sidestepstudio.com/blog/dark-shark-how-the-final-was-made.html">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="stylesheet" href="/css/style.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-898TVSPLGS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-898TVSPLGS');
+    </script>
+    <style>
+
+    .post {
+      --bg: #0f1218;
+      --paper: #171c24;
+      --ink: #e8e4d9;
+      --muted: #9aa3b0;
+      --rule: #2a3340;
+      --accent: #c9a86c;
+      --good: #7dba8a;
+      --bad: #d07a6a;
+    }
+    .post * { box-sizing: border-box; }
+    .post, .post {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      line-height: 1.55;
+    }
+    .post .wrap {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 3rem 1.4rem 5rem;
+    }
+    .post header {
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .post .kicker {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      color: var(--accent);
+      margin: 0 0 0.7rem;
+    }
+    .post h1 {
+      font-size: clamp(1.7rem, 4vw, 2.25rem);
+      font-weight: 600;
+      line-height: 1.2;
+      margin: 0 0 0.45rem;
+    }
+    .post .sub {
+      font-style: italic;
+      color: var(--muted);
+      font-size: 1.15rem;
+      margin: 0;
+    }
+    .post h2 {
+      font-size: 1.25rem;
+      margin: 2.4rem 0 0.8rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .post p { margin: 0 0 1rem; }
+    .post strong { font-weight: 650; }
+    .post ul, .post ol { padding-left: 1.25rem; }
+    .post li { margin-bottom: 0.45rem; }
+    .post .meta {
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      padding: 1rem 1.15rem;
+      margin: 1.4rem 0 1.8rem;
+      font-size: 0.95rem;
+    }
+    .post .meta p { margin: 0 0 0.65rem; }
+    .post .meta p:last-child { margin: 0; }
+    .post .haul {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      font-size: 0.92rem;
+      color: var(--muted);
+      border-left: 3px solid var(--accent);
+      padding: 0.15rem 0 0.15rem 0.9rem;
+      margin: 1.2rem 0 0.4rem;
+    }
+    .post .night2 { border-left-color: var(--bad); }
+    .post .night3 { border-left-color: var(--good); }
+    .post hr {
+      border: 0;
+      border-top: 1px solid var(--rule);
+      margin: 2.2rem 0;
+    }
+    .post .postnote {
+      margin-top: 3rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--rule);
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    @media print {
+      html, body { background: #fff; color: #111; }
+      .post .wrap { max-width: none; padding: 0; }
+      .post .meta { background: #f4f4f4; border-color: #ccc; }
+      .post h2, .post .kicker { color: #7a5a20; }
+    }
+        .post { background: transparent; }
+        .post .wrap { max-width: 42rem; margin: 0 auto; padding: 2rem 0 1rem; }
+        .post-back { display: inline-block; margin: 26px 0 0; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+        .post-back:hover { opacity: 0.8; }
+        .post-also { max-width: 42rem; margin: 0 auto; padding: 0 0 8px; font-size: 0.95rem; }
+        .post-also a { color: var(--accent); text-decoration: none; }
+        .post .step-list { counter-reset: none; padding-left: 1.6rem; }
+        .post .step-list li { margin-bottom: 0.7rem; }
+        .post .step-list li::marker { color: var(--accent); font-weight: 600; }
+        .post .callout { background: var(--paper); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 8px; padding: 1rem 1.15rem; margin: 1.6rem 0; font-size: 0.97rem; }
+        .post .callout.warn { border-left-color: var(--bad); }
+        .post .callout p:last-child { margin: 0; }
+        .post .post-hero { margin: 0 0 1.8rem; }
+        .post .post-hero img { width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid var(--rule); }
+        .post code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.86em; background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 0.05em 0.35em; color: var(--ink); overflow-wrap: anywhere; }
+
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <a class="logo" href="/">See the Show&rsquo;s Sidestep<span>Studio</span></a>
+        <nav></nav>
+    </div>
+</header>
+<main>
+    <div class="container">
+        <div class="post">
+            <p class="post-also" style="padding-top:22px;"><a class="post-back" href="/photos/darkshark.html">&larr; The Dark Shark &mdash; the image</a></p>
+            <article class="wrap">
+                <header>
+                  <p class="kicker">Processing log · September 2026</p>
+                  <h1>The Dark Shark (LDN 1235)</h1>
+                  <p class="sub">How the final was made</p>
+                </header>
+                <figure class="post-hero"><a href="/photos/darkshark.html"><img src="/images/darkshark-med.jpg" alt="The Dark Shark, LDN 1235 — a grey-brown dust cloud shaped like a shark across a star field in Cepheus, with two small blue reflection nebulae" width="1100" height="729"></a></figure>
+                <div class="meta">
+                  <p><strong>Target:</strong> LDN 1235, the Dark Shark, in Cepheus. Solved centre 22h04m43.5s +73°06′09″, 2.0112″/px.</p>
+                  <p><strong>Rig:</strong> Askar 80/384 at solved FL 386.0 + ZWO ASI2600MM Pro, gain 100 / offset 50, −5 °C.</p>
+                  <p><strong>Data:</strong> 15.39 h over four nights, 15–18 September 2026 — <strong>L 311 × 90 s (7.78 h) · r 181 (3.02 h) · g 162 (2.70 h) · b 114 (1.90 h)</strong>, plus 1 s short sets per filter for star cores.</p>
+                  <p><strong>Where it was shot:</strong> my backyard site at The Star Farm in Camden, South Carolina — Bortle 4.5.</p>
+                </div>
+                <h2>Linear</h2>
+                <ol class="step-list">
+                  <li><strong>Per-night stacking in Siril</strong>, each night on its own calibration, then merged by inverse variance (<code>tools/combine_nights.py</code>).</li>
+                  <li><strong>Crop</strong> to true common coverage, 6248×4176 → <strong>6158×4082</strong> (offset dy 45, dx 37), Gaia plate solution attached.</li>
+                  <li><strong>SPFC</strong> — Antlia V-Pro R/G/B, IMX455 QE, Generic UV-IR-CUT for luminance.</li>
+                  <li><strong>MGC at gradient scale 1536</strong>, not the 768 inherited from Wolf's Cave. Measured over 24 trials: at 768 the ~2048 px band loses 10% of its signal and on a dark nebula that band <strong>is</strong> the dust; at 1536 it loses 2%. Scale is the only MGC control that matters — the scale factor k, including per-channel values, changed nothing.</li>
+                  <li><strong>SPCC</strong> — limit magnitude 15 with Automatic OFF, min detection SNR 25.</li>
+                  <li><strong>Star cores</strong> repaired from the 1 s shorts (<code>tools/pm_star_cores.py</code>), k per channel R 52.9 / G 38.1 / B 57.9 / L 100.5, then rescaled so nothing clips.</li>
+                  <li><strong>Gradient polish</strong> — <code>tools/sky_flatten.py</code> degree 3, sky found by iterative sigma clipping. Luminance 1.79% → 0.92%, colour 1.21/1.61/2.06% → 1.09/1.09/1.22%, 92.7% of object contrast kept. This is what makes the large MGC scale free.</li>
+                  <li><strong>BlurX</strong> (correct-only off) then <strong>MLDenoise</strong> 0.90 colour / 0.60 luminance.</li>
+                </ol>
+                <h2>Stretch</h2>
+                <ol class="step-list" start="9">
+                  <li><strong>GHS</strong> on each: SP at the measured sky, b 2, D 7; black point; then HistogramTransformation to land the sky exactly on 0.15. <strong>A GHS result is only reproducible from the same file with the same settings — never carry a midtone between sessions.</strong></li>
+                  <li><strong>StarX on BOTH</strong> the colour and the luminance. Both sides of a CIELab combine must be starless; the stars go back at the end and the colour star layer already carries their luminance.</li>
+                  <li><strong>CIELab combine</strong>, NoiseX (colour + frequency separation, scale 2), four curves on L and S, BlurX non-stellar 0.25 / stars 0.00.</li>
+                </ol>
+                <h2>Colour — nothing subtracted</h2>
+                <ol class="step-list" start="12">
+                  <li><strong><code>tools/hue_boost.py</code></strong> — amber, centre 30°, width 30, gain 3.5; then blue, centre 220°, width 45, gain 4.0 with <code>protect=0.999</code>. A raised-cosine hue window with a hard guard that forces the green band to zero weight, so green and magenta finish <strong>exactly</strong> where the data left them. The blue pass is headroom-limited per pixel, which kept its colour while dropping blown cores from 13,345 to 417.</li>
+                  <li><strong><code>tools/local_contrast.py</code></strong> — radius 600, strength 1.0, luminance only, channels rescaled equally so hue and saturation survive.</li>
+                  <li><strong>Stars screened back</strong>: <code>1 − (1−starless)(1−stars)</code>.</li>
+                </ol>
+                <div class="callout warn">
+                  <p><strong>No SCNR and no Selective Colour.</strong> SCNR was tried and dropped: it does not remove a tint, it converts green into magenta (green 0.39% → 0.14% of the dust, magenta 0.04% → 0.34%). My rule — scale a whole effect back rather than subtract a component.</p>
+                </div>
+                <hr>
+                <h2>What the audit says was lost</h2>
+                <p>Measured with <code>tools/process_audit.py</code>, stretch against final: <strong>every hue band gained</strong>, but unevenly — yellow +1616%, orange +972%, against <strong>cyan +166% and azure +149%</strong>. The reflection-nebula colours were outvoted rather than removed. 4,938 pixels (0.0196% of the frame) clipped to black, from the contrast pass having a ceiling guard but no floor guard. Star core colour rose from 0.002 to 0.037. Detail up at every scale.</p>
+                <div class="callout">
+                  <p><strong>Known and accepted:</strong> chroma mottle at 64 px, green 0.37% and magenta 0.10% of the lit dust. Six approaches failed to remove it; the cure is more blue integration — b had 1.90 h against r's 3.02 h.</p>
+                </div>
+                <div class="postnote">
+                  Dark Shark processing log &middot; serial 870191 &middot; September 15&ndash;18, 2026
+                </div>
+              </article>
+            <p class="post-also"><a href="/photos/darkshark.html"><strong>The image &rarr;</strong> The Dark Shark &mdash; full size, with the story of the object</a></p>
+        </div>
+    </div>
+</main>
+<footer></footer>
+<script src="/js/site.js" defer></script>
+</body>
+</html>
