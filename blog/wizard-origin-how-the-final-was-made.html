@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Wizard Nebula (NGC 7380) &mdash; how the final was made · Sidestep Studio</title>
+    <meta name="description" content="How the Wizard Nebula, NGC 7380, was made from a Celestron Origin through a triband filter — a cable-wrapped night culled, split into HOO, true-colour stars from a second stack, finished in PixInsight.">
+    <meta property="og:title" content="The Wizard Nebula (NGC 7380) &mdash; how the final was made">
+    <meta property="og:description" content="How the Wizard Nebula, NGC 7380, was made from a Celestron Origin through a triband filter — a cable-wrapped night culled, split into HOO, true-colour stars from a second stack, finished in PixInsight.">
+    <meta property="og:image" content="https://sidestepstudio.com/images/wizard-origin-2026-09-full.jpg">
+    <meta property="og:url" content="https://sidestepstudio.com/blog/wizard-origin-how-the-final-was-made.html">
+    <meta property="og:type" content="article">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@see_theshow">
+    <meta name="twitter:image" content="https://sidestepstudio.com/images/wizard-origin-2026-09-full.jpg">
+    <link rel="canonical" href="https://sidestepstudio.com/blog/wizard-origin-how-the-final-was-made.html">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="stylesheet" href="/css/style.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-898TVSPLGS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-898TVSPLGS');
+    </script>
+    <style>
+
+    .post {
+      --bg: #0f1218;
+      --paper: #171c24;
+      --ink: #e8e4d9;
+      --muted: #9aa3b0;
+      --rule: #2a3340;
+      --accent: #c9a86c;
+      --good: #7dba8a;
+      --bad: #d07a6a;
+    }
+    .post * { box-sizing: border-box; }
+    .post, .post {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      line-height: 1.55;
+    }
+    .post .wrap {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 3rem 1.4rem 5rem;
+    }
+    .post header {
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .post .kicker {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      color: var(--accent);
+      margin: 0 0 0.7rem;
+    }
+    .post h1 {
+      font-size: clamp(1.7rem, 4vw, 2.25rem);
+      font-weight: 600;
+      line-height: 1.2;
+      margin: 0 0 0.45rem;
+    }
+    .post .sub {
+      font-style: italic;
+      color: var(--muted);
+      font-size: 1.15rem;
+      margin: 0;
+    }
+    .post h2 {
+      font-size: 1.25rem;
+      margin: 2.4rem 0 0.8rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .post p { margin: 0 0 1rem; }
+    .post strong { font-weight: 650; }
+    .post ul, .post ol { padding-left: 1.25rem; }
+    .post li { margin-bottom: 0.45rem; }
+    .post .meta {
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      padding: 1rem 1.15rem;
+      margin: 1.4rem 0 1.8rem;
+      font-size: 0.95rem;
+    }
+    .post .meta p { margin: 0 0 0.65rem; }
+    .post .meta p:last-child { margin: 0; }
+    .post .haul {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      font-size: 0.92rem;
+      color: var(--muted);
+      border-left: 3px solid var(--accent);
+      padding: 0.15rem 0 0.15rem 0.9rem;
+      margin: 1.2rem 0 0.4rem;
+    }
+    .post .night2 { border-left-color: var(--bad); }
+    .post .night3 { border-left-color: var(--good); }
+    .post hr {
+      border: 0;
+      border-top: 1px solid var(--rule);
+      margin: 2.2rem 0;
+    }
+    .post .postnote {
+      margin-top: 3rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--rule);
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    @media print {
+      html, body { background: #fff; color: #111; }
+      .post .wrap { max-width: none; padding: 0; }
+      .post .meta { background: #f4f4f4; border-color: #ccc; }
+      .post h2, .post .kicker { color: #7a5a20; }
+    }
+        .post { background: transparent; }
+        .post .wrap { max-width: 42rem; margin: 0 auto; padding: 2rem 0 1rem; }
+        .post-back { display: inline-block; margin: 26px 0 0; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+        .post-back:hover { opacity: 0.8; }
+        .post-also { max-width: 42rem; margin: 0 auto; padding: 0 0 8px; font-size: 0.95rem; }
+        .post-also a { color: var(--accent); text-decoration: none; }
+        .post .step-list { counter-reset: none; padding-left: 1.6rem; }
+        .post .step-list li { margin-bottom: 0.7rem; }
+        .post .step-list li::marker { color: var(--accent); font-weight: 600; }
+        .post .callout { background: var(--paper); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 8px; padding: 1rem 1.15rem; margin: 1.6rem 0; font-size: 0.97rem; }
+        .post .callout.warn { border-left-color: var(--bad); }
+        .post .callout p:last-child { margin: 0; }
+        .post .post-hero { margin: 0 0 1.8rem; }
+        .post .post-hero img { width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid var(--rule); }
+        .post code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.86em; background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 0.05em 0.35em; color: var(--ink); overflow-wrap: anywhere; }
+
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <a class="logo" href="/">See the Show&rsquo;s Sidestep<span>Studio</span></a>
+        <nav></nav>
+    </div>
+</header>
+<main>
+    <div class="container">
+        <div class="post">
+            <p class="post-also" style="padding-top:22px;"><a class="post-back" href="/photos/wizard-origin-2026-09.html">&larr; The Wizard Nebula &mdash; the image</a></p>
+            <article class="wrap">
+                <header>
+                  <p class="kicker">Processing log · September 2026</p>
+                  <h1>The Wizard Nebula (NGC 7380), HOO with true-colour stars</h1>
+                  <p class="sub">How the final was made</p>
+                </header>
+                <figure class="post-hero"><a href="/photos/wizard-origin-2026-09.html"><img src="/images/wizard-origin-2026-09-med.jpg" alt="The Wizard Nebula, NGC 7380 — a glowing pink and white cloud carved by dark pillars of dust, in a field of orange, white and blue stars" width="1100" height="685"></a></figure>
+                <div class="meta">
+                  <p><strong>Target:</strong> Sh2-142, the Wizard Nebula, around the young open cluster NGC 7380 (discovered by Caroline Herschel, 1787), in Cepheus. About 7,200 light-years away in the Perseus arm; the cluster is roughly 5 million years old.</p>
+                  <p><strong>Rig:</strong> Celestron Origin, RASA 6″ 335 mm f/2.2, Origin678C colour camera (IMX678, 2 µm, GBRG), <strong>Antlia Triband RGB Ultra</strong>. ISO 1000, uncooled, 20.7–23.9 °C.</p>
+                  <p><strong>Data:</strong> one night, 26–27 September 2026, nine Origin sessions — <strong>834 × 15 s shot, 777 kept = 3 h 14 m</strong>.</p>
+                  <p><strong>Where it was shot:</strong> my backyard site at The Star Farm in Camden, South Carolina — Bortle 4.</p>
+                </div>
+                <h2>The night: a wrapped power cable</h2>
+                <p>The Origin runs one-hour sessions so it re-centres, and between sessions it swings back toward the pole and out again. On this target that swing wound the power cable round the mount, and three sessions near the end were dragged off target. Every sub was graded (<code>tools/origin_sub_qc.py</code>): star shape, star count against the <strong>whole night&rsquo;s</strong> median (two sessions were bad from start to finish, so a per-session median would have hidden them) and the pointing in each header. <strong>49 culled</strong> — 34 of them more than 10′ off target, and the rest with no stars, streaked, or thin. The culls are kept, not deleted.</p>
+                <div class="callout">
+                  <p><strong>The fix for next time</strong> turned out to be in Celestron&rsquo;s own manual: plug the power in <em>before</em> switching on, and the start position becomes a neutral point it never turns more than half a turn from.</p>
+                </div>
+                <h2>Why HOO, not SHO</h2>
+                <p>SII (672 nm) and Hα (656 nm) land in the same red band on the same red pixels, so they can&rsquo;t be separated. HOO is the most this filter can honestly give.</p>
+                <h2>Stacking in Siril</h2>
+                <ol class="step-list">
+                  <li>Each session calibrated on its own with the matching 15 s dark (20.8 °C, against 21–24 °C lights) and a location-based bad-pixel map.</li>
+                  <li><strong>Split before any debayer:</strong> red pixels → Hα, green + blue → OIII (<code>seqextract_HaOIII</code>). Half-size frames, each pixel a 2×2 block — 4.0 µm effective, 2.46″/px.</li>
+                  <li><strong>The same calibrated subs split a second way for the stars:</strong> R, G, G, B as four separate planes on the same 2×2 grid, stacked as a true-colour star master. HOO stars can only be red, cyan or white; these keep their real colours.</li>
+                  <li>Six sessions merged with Siril star registration, one reference for all channels. Row and column banding from the Origin&rsquo;s small dithers removed on the linear masters (9%/8% → 4%/3% of the noise). Cropped to the area every session covered, 1910 × 1061.</li>
+                  <li>A one-pass stack of all 777 subs was tried against the per-session merge: no sharper (4.51 vs 4.53 px) and noisier, so the merge stayed. The softness is in the data, not the stacking.</li>
+                </ol>
+                <h2>PixInsight — linear</h2>
+                <p>ChannelCombination R = Hα, G = B = OIII; ImageSolver at 4 µm / 335 mm; SPFC narrowband; MultiscaleGradientCorrection with the MARS survey (it works for HOO — MARS has no SII, so SHO couldn&rsquo;t use it); SPCC narrowband 656.3 / 500.7 / 500.7 nm at 25 nm; BlurXTerminator correct-only then stars 0.50; MLDenoise 0.90; and an <strong>OIII lift while linear</strong>, <code>($T-med($T))*1.3+med($T)</code> on green and blue — the <code>med()</code> form lifts the nebula without tinting the sky.</p>
+                <h2>PixInsight — non-linear</h2>
+                <p>GHS stretch (factor 6.27, local intensity 0.05), black point 0.058; BlurX non-stellar 0.80; StarXTerminator to split the stars off; HDRMultiscaleTransform (6 layers) on the starless nebula; three curves; a second BlurX non-stellar pass at 0.80.</p>
+                <h2>The stars</h2>
+                <p>From the true-colour stack: StarXTerminator, BlurX on the stars (0.50), a PixelMath stretch <code>((3^5.04)*$T)/((3^5.04-1)*$T+1)</code>, ColorSaturation, and <strong>MultiscaleMedianTransform with layers 1–2 off</strong> to trim the swarm of small stars the Origin&rsquo;s wide field produces. A HistogramTransformation black point then removed faint coloured &ldquo;worms&rdquo; — noise that StarX had carved into squiggles. Screened back onto the starless image: <code>~(~starless*~stars)</code>. Cropped to 1655 × 1031.</p>
+                <hr>
+                <h2>Result</h2>
+                <p>Highlights at 194 of 255, sky 12/7/7, 0.04 % clipped; true-colour stars (orange, white, blue) over an HOO nebula.</p>
+                <div class="callout">
+                  <p><strong>This chain is now the template for every Origin image.</strong></p>
+                </div>
+                <div class="postnote">
+                  Wizard Nebula processing log &middot; serial 870193 &middot; September 26&ndash;27, 2026
+                </div>
+              </article>
+            <p class="post-also"><a href="/photos/wizard-origin-2026-09.html"><strong>The image &rarr;</strong> The Wizard Nebula &mdash; full size, with the story of the object</a></p>
+        </div>
+    </div>
+</main>
+<footer></footer>
+<script src="/js/site.js" defer></script>
+</body>
+</html>
