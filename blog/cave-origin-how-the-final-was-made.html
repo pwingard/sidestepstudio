@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Cave Nebula (Sh2-155) &mdash; how the final was made · Sidestep Studio</title>
+    <meta name="description" content="How the Cave Nebula, Sh2-155, was made from a Celestron Origin through a triband filter — walking noise traced to a warm June dark, fresh darks, HOO split from a colour camera, true-colour stars from a second stack, finished in PixInsight.">
+    <meta property="og:title" content="The Cave Nebula (Sh2-155) &mdash; how the final was made">
+    <meta property="og:description" content="How the Cave Nebula, Sh2-155, was made from a Celestron Origin through a triband filter — walking noise traced to a warm June dark, fresh darks, HOO split from a colour camera, true-colour stars from a second stack, finished in PixInsight.">
+    <meta property="og:image" content="https://sidestepstudio.com/images/cave-origin-2026-10-full.jpg">
+    <meta property="og:url" content="https://sidestepstudio.com/blog/cave-origin-how-the-final-was-made.html">
+    <meta property="og:type" content="article">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@see_theshow">
+    <meta name="twitter:image" content="https://sidestepstudio.com/images/cave-origin-2026-10-full.jpg">
+    <link rel="canonical" href="https://sidestepstudio.com/blog/cave-origin-how-the-final-was-made.html">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="stylesheet" href="/css/style.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-898TVSPLGS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-898TVSPLGS');
+    </script>
+    <style>
+
+    .post {
+      --bg: #0f1218;
+      --paper: #171c24;
+      --ink: #e8e4d9;
+      --muted: #9aa3b0;
+      --rule: #2a3340;
+      --accent: #c9a86c;
+      --good: #7dba8a;
+      --bad: #d07a6a;
+    }
+    .post * { box-sizing: border-box; }
+    .post, .post {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      line-height: 1.55;
+    }
+    .post .wrap {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 3rem 1.4rem 5rem;
+    }
+    .post header {
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .post .kicker {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      color: var(--accent);
+      margin: 0 0 0.7rem;
+    }
+    .post h1 {
+      font-size: clamp(1.7rem, 4vw, 2.25rem);
+      font-weight: 600;
+      line-height: 1.2;
+      margin: 0 0 0.45rem;
+    }
+    .post .sub {
+      font-style: italic;
+      color: var(--muted);
+      font-size: 1.15rem;
+      margin: 0;
+    }
+    .post h2 {
+      font-size: 1.25rem;
+      margin: 2.4rem 0 0.8rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .post p { margin: 0 0 1rem; }
+    .post strong { font-weight: 650; }
+    .post ul, .post ol { padding-left: 1.25rem; }
+    .post li { margin-bottom: 0.45rem; }
+    .post .meta {
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      padding: 1rem 1.15rem;
+      margin: 1.4rem 0 1.8rem;
+      font-size: 0.95rem;
+    }
+    .post .meta p { margin: 0 0 0.65rem; }
+    .post .meta p:last-child { margin: 0; }
+    .post .haul {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      font-size: 0.92rem;
+      color: var(--muted);
+      border-left: 3px solid var(--accent);
+      padding: 0.15rem 0 0.15rem 0.9rem;
+      margin: 1.2rem 0 0.4rem;
+    }
+    .post .night2 { border-left-color: var(--bad); }
+    .post .night3 { border-left-color: var(--good); }
+    .post hr {
+      border: 0;
+      border-top: 1px solid var(--rule);
+      margin: 2.2rem 0;
+    }
+    .post .postnote {
+      margin-top: 3rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--rule);
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    @media print {
+      html, body { background: #fff; color: #111; }
+      .post .wrap { max-width: none; padding: 0; }
+      .post .meta { background: #f4f4f4; border-color: #ccc; }
+      .post h2, .post .kicker { color: #7a5a20; }
+    }
+        .post { background: transparent; }
+        .post .wrap { max-width: 42rem; margin: 0 auto; padding: 2rem 0 1rem; }
+        .post-back { display: inline-block; margin: 26px 0 0; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+        .post-back:hover { opacity: 0.8; }
+        .post-also { max-width: 42rem; margin: 0 auto; padding: 0 0 8px; font-size: 0.95rem; }
+        .post-also a { color: var(--accent); text-decoration: none; }
+        .post .step-list { counter-reset: none; padding-left: 1.6rem; }
+        .post .step-list li { margin-bottom: 0.7rem; }
+        .post .step-list li::marker { color: var(--accent); font-weight: 600; }
+        .post .callout { background: var(--paper); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 8px; padding: 1rem 1.15rem; margin: 1.6rem 0; font-size: 0.97rem; }
+        .post .callout.warn { border-left-color: var(--bad); }
+        .post .callout p:last-child { margin: 0; }
+        .post .post-hero { margin: 0 0 1.8rem; }
+        .post .post-hero img { width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid var(--rule); }
+        .post code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.86em; background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 0.05em 0.35em; color: var(--ink); overflow-wrap: anywhere; }
+
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <a class="logo" href="/">See the Show&rsquo;s Sidestep<span>Studio</span></a>
+        <nav></nav>
+    </div>
+</header>
+<main>
+    <div class="container">
+        <div class="post">
+            <p class="post-also" style="padding-top:22px;"><a class="post-back" href="/photos/cave-origin-2026-10.html">&larr; The Cave Nebula &mdash; the image</a></p>
+            <article class="wrap">
+                <header>
+                  <p class="kicker">Processing log · October 2026</p>
+                  <h1>The Cave Nebula (Sh2-155), HOO with true-colour stars</h1>
+                  <p class="sub">How the final was made</p>
+                </header>
+                <figure class="post-hero"><a href="/photos/cave-origin-2026-10.html"><img src="/images/cave-origin-2026-10-med.jpg" alt="The Cave Nebula, Sh2-155 — a bright white and pink rim of glowing gas beside a dark lane of dust, in a field laced with faint red hydrogen and orange, white and blue stars" width="1100" height="623"></a></figure>
+                <div class="meta">
+                  <p><strong>Target:</strong> Sh2-155, the Cave Nebula (Caldwell 9), in Cepheus, about 2,400 light-years away: the bright edge of the Cepheus B molecular cloud, lit by young hot stars of the Cepheus OB3 association. The dark dust lane along the bright rim is the &ldquo;cave&rdquo;.</p>
+                  <p><strong>Rig:</strong> Celestron Origin, RASA 6″ 335 mm f/2.2, Origin678C colour camera (IMX678, 2 µm, GBRG), <strong>Antlia Triband RGB Ultra</strong>. ISO 1000, uncooled, 24.0–28.1 °C.</p>
+                  <p><strong>Data:</strong> one night, 30 September – 1 October 2026, nine Origin sessions: <strong>1,793 × 15 s shot, 1,751 kept = 7.3 h</strong>. Waning gibbous moon.</p>
+                  <p><strong>Where:</strong> The Star Farm, Camden, South Carolina — Bortle 4.</p>
+                </div>
+                <h2>The walking-noise story</h2>
+                <p>The first stack came out streaked with &ldquo;walking noise&rdquo;: fine lines in the faint background. The imaging-side Claude measured the cause: the Origin&rsquo;s dither moves the frame only east–west, and the first two sessions had been calibrated with a 15 s dark from June shot at 34.4 °C against 28 °C lights — 37 % too strong, turning every warm pixel into a hole that the one-way dither then dragged into a line. Old darks at the &ldquo;right&rdquo; temperature made it worse still (the sensor&rsquo;s warm pixels change over months). The fix was <strong>fresh darks</strong>: the Origin&rsquo;s own darks recaptured the next evening at 27.1 °C, plus the 26 September set at 20.8 °C, each scaled to its session&rsquo;s temperature (k = 1 + 0.029 × ΔT), and a per-session walking-noise filter. Drizzle and one-pass stacking were tested and did not help.</p>
+                <h2>Stacking (Siril)</h2>
+                <ol class="step-list">
+                  <li>Graded every sub (<code>origin_cull.py</code>): 42 culled — 5 streaked, 28 thin (haze), 2 comet-shaped, 7 end-of-night slew. Culls kept in <code>raw/_culled_kept</code>.</li>
+                  <li>Each session calibrated on its own with the freshest matching dark, scaled to temperature, and a bad-pixel map.</li>
+                  <li>Split before debayer: red pixels → Hα, green + blue → OIII (half-size, 2.46″/px). The same subs split again into R, G, G, B for true-colour stars.</li>
+                  <li>Per-session walking-noise filter, sessions merged with star registration on one grid, row/column banding removed, cropped to full coverage (1859 × 1054). RGB star channels balanced on green.</li>
+                </ol>
+                <h2>PixInsight (Pete)</h2>
+                <p>Origin HOO template: ChannelCombination, ImageSolver, SPFC, MGC (MARS), SPCC narrowband, BlurX, MLDenoise, OIII lift, GHS, black point, BlurX, StarXTerminator, HDRMT. The template&rsquo;s three curves crushed the Cave&rsquo;s faint nebula, so they were replaced with <strong>one faint-nebula lift curve</strong> (K 0.20 → 0.30), then a black point to sink the speckle in the darkest areas. Stars: balanced RGB stack, GHS, StarX, BlurX stars, ColorSaturation, MMT small-star trim, HT black point; screened back onto the starless. A deeper, more speckled version is kept in <code>finals/versions</code>.</p>
+                <hr>
+                <h2>Result</h2>
+                <p>1857 × 1052, signed bottom-left with (Origin). AstroBin gets the true final (p99 147); web/FB/HC&amp;M get a lifted copy (p99 181).</p>
+                <div class="postnote">
+                  Cave Nebula processing log &middot; serial 870194 &middot; September 30 &ndash; October 1, 2026
+                </div>
+              </article>
+            <p class="post-also"><a href="/photos/cave-origin-2026-10.html"><strong>The image &rarr;</strong> The Cave Nebula &mdash; full size, with the story of the object</a></p>
+        </div>
+    </div>
+</main>
+<footer></footer>
+<script src="/js/site.js" defer></script>
+</body>
+</html>
