@@ -39,7 +39,7 @@
   .hero .ph b { color:#ffc27a; font-weight:600; cursor:pointer; } .hero .ph a { color:#cfe0ff; }
   .remind { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:12px 0 4px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:14px; }
   .remind input { background:#1b2232; color:inherit; border:1px solid #2a3346; border-radius:6px; padding:4px 6px; font:inherit; }
-  .remind button { background:#2b5cff; color:#fff; border:0; border-radius:6px; padding:6px 12px; font:inherit; cursor:pointer; }
+  .remind select { background:#1b2232; color:inherit; border:1px solid #2a3346; border-radius:6px; padding:4px 6px; font:inherit; cursor:pointer; }
   .remind .dim { color:var(--dim); font-size:12px; }
   .head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
   .hero { position:relative; width:300px; aspect-ratio:3/2; border-radius:12px; border:1px solid var(--line); overflow:hidden; flex:none; display:flex; align-items:center; justify-content:center; color:#ffffff88; font-size:12px; background-size:cover; background-position:center; }
@@ -92,7 +92,7 @@
     <div class="hero" id="hero">image</div>
   </div>
   <!-- shooting it? a one-time calendar reminder to send the finished image (Pete 2026-10-26: "allow them to schedule a clendar reminder at a future date to upload their image of this obj") -->
-  <div class="remind" id="remind">🔔 Shooting <b id="rmName"></b>? Remind me on <input type="date" id="rmDate"> to send my image <button type="button" id="rmGo">Add to my calendar</button> <span class="dim">This will download a reminder that you can open and add to your calendar. One event, nothing else.</span></div>
+  <div class="remind" id="remind">🔔 Shooting <b id="rmName"></b>? Remind me on <input type="date" id="rmDate"> to send my image <select id="rmGo" aria-label="Add to my calendar"><option value="">Add to my calendar ▾</option><option value="apple">Apple</option><option value="google">Google</option><option value="outlook">Outlook</option></select> <span class="dim">Apple: this will download a reminder that you can open and add to your calendar. One event, nothing else.</span></div>
 
   <section class="card">
     <h2>Tonight <span class="h2sub" id="where"></span> <a class="h2sub" id="locbtn" href="#">📍 use my location</a></h2>
@@ -165,13 +165,24 @@ function reminderICS(ymd, url) {
     `SUMMARY:${esc('Send my ' + NAME + ' image to Moon Merle')}`, `DESCRIPTION:${esc('Finished your ' + NAME + '? Upload it here: ' + url)}`, `URL:${url}`,
     'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc('Send my ' + NAME + ' image')}`, 'TRIGGER:PT0M', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
 }
+// Google and Outlook: their own add-event pages, already filled in, so it's one Save (Pete 2026-10-26: "drop down … Apple Goog Outlook")
+function reminderLinks(ymd, url) {
+  const st = new Date(ymd + 'T19:00:00'), en = new Date(st.getTime() + 15*6e4), z = d => d.toISOString().replace(/\.\d+Z$/, 'Z');
+  const title = 'Send my ' + NAME + ' image to Moon Merle', body = 'Finished your ' + NAME + '? Upload it here: ' + url, q = encodeURIComponent;
+  return {
+    google: 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + q(title) + '&dates=' + z(st).replace(/[-:]/g, '') + '/' + z(en).replace(/[-:]/g, '') + '&details=' + q(body),
+    outlook: 'https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=' + q(title) + '&startdt=' + q(z(st)) + '&enddt=' + q(z(en)) + '&body=' + q(body),
+  };
+}
 {
   document.getElementById('rmName').textContent = NAME;
   const di = document.getElementById('rmDate'), iso = t => new Date(t - new Date(t).getTimezoneOffset()*6e4).toISOString().slice(0, 10);
   di.min = iso(Date.now() + 864e5); di.value = iso(Date.now() + 30*864e5);   // a month out to start; tomorrow at the earliest
-  document.getElementById('rmGo').onclick = () => {
-    if (!di.value) return;
+  const go = document.getElementById('rmGo');
+  go.onchange = () => {
+    const how = go.value; go.value = ''; if (!how || !di.value) return;
     const url = true /* test copy on sidestepstudio.com: keep ?o= and the moonmerle.com link */ ? 'https://moonmerle.com/' + SLUG : location.origin + '/' + SLUG;
+    if (how !== 'apple') return window.open(reminderLinks(di.value, url)[how], '_blank', 'noopener');
     const a = document.createElement('a'); a.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(reminderICS(di.value, url));
     a.download = 'Moon_Merle_reminder_' + SLUG + '.ics'; document.body.append(a); a.click(); a.remove();
   };
